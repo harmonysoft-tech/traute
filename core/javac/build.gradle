@@ -1,0 +1,5 @@
+dependencies {
+    compileOnly files(org.gradle.internal.jvm.Jvm.current().toolsJar)
+
+    testCompile project(':core:test').sourceSets.test.output
+}
