@@ -1,5 +1,6 @@
 package tech.harmonysoft.oss.traute;
 
+import edu.umd.cs.findbugs.annotations.NonNull;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.junit.Before;
@@ -9,6 +10,7 @@ import tech.harmonysoft.oss.traute.util.SimpleFileManager;
 import tech.harmonysoft.oss.traute.util.SimpleSourceFile;
 import tech.harmonysoft.oss.traute.util.TestConstants;
 
+import javax.annotation.Nonnull;
 import javax.tools.JavaCompiler;
 import javax.tools.ToolProvider;
 import java.io.StringWriter;
@@ -72,6 +74,14 @@ public abstract class AbstractTrauteTest {
     }
 
     /**
+     * @return      additional {@code javac} arguments to use. It's allowed to return an empty list
+     */
+    @NotNull
+    protected List<String> getAdditionalCompilerArgs() {
+        return emptyList();
+    }
+
+    /**
      * @return  {@code @NotNull} annotations defined by the end-user
      */
     @NotNull
@@ -81,40 +91,32 @@ public abstract class AbstractTrauteTest {
 
     @Test
     public void default_jetBrains() {
-        doTestArgument("org.jetbrains.annotations.NotNull");
+        doTestArgument(NotNull.class.getName());
     }
 
     @Test
     public void default_jsr305() {
-        doTestArgument("javax.annotation.Nonnull");
+        doTestArgument(Nonnull.class.getName());
     }
 
     @Test
     public void default_javaEE() {
-        doTestArgument("javax.validation.constraints.NotNull");
+        doTestArgument(javax.validation.constraints.NotNull.class.getName());
     }
 
     @Test
     public void default_findBugs() {
-        doTestArgument("edu.umd.cs.findbugs.annotations.NonNull");
+        doTestArgument(NonNull.class.getName());
     }
 
     @Test
     public void default_android() {
-        doTestArgument("android.support.annotation.NonNull");
+        doTestArgument(android.support.annotation.NonNull.class.getName());
     }
 
     @Test
     public void default_eclipse() {
-        doTestArgument("org.eclipse.jdt.annotation.NonNull");
-    }
-
-    /**
-     * @return      additional {@code javac} arguments to use. It's allowed to return an empty list
-     */
-    @NotNull
-    protected List<String> getAdditionalCompilerArgs() {
-        return emptyList();
+        doTestArgument(org.eclipse.jdt.annotation.NonNull.class.getName());
     }
 
     private void doTestArgument(@NotNull String qualifiedAnnotationClassName) {
@@ -126,29 +128,26 @@ public abstract class AbstractTrauteTest {
     private void doTestArgument_singleImport(@NotNull String qualifiedAnnotationClassName) {
         int lastDotIndex = qualifiedAnnotationClassName.lastIndexOf('.');
         String annotationName = qualifiedAnnotationClassName.substring(lastDotIndex + 1);
-        doTest(qualifiedAnnotationClassName,
-               String.format("public void %s(@%s String s) {}", METHOD_NAME, annotationName),
-               "null"
-        );
+        doTestExpectNpe(qualifiedAnnotationClassName,
+                        String.format("public void %s(@%s String s) {}", METHOD_NAME, annotationName));
     }
 
     private void doTestArgument_wildcardImport(@NotNull String qualifiedAnnotationClassName) {
         int lastDotIndex = qualifiedAnnotationClassName.lastIndexOf('.');
         String annotationName = qualifiedAnnotationClassName.substring(lastDotIndex + 1);
-        doTest(String.format("%s.*", qualifiedAnnotationClassName.substring(0, lastDotIndex)),
-               String.format("public void %s(@%s String s) {}", METHOD_NAME, annotationName),
-               "null"
-        );
+        doTestExpectNpe(String.format("%s.*", qualifiedAnnotationClassName.substring(0, lastDotIndex)),
+                        String.format("public void %s(@%s String s) {}", METHOD_NAME, annotationName));
     }
 
     private void doTestArgument_qualifiedInPlaceName(@NotNull String qualifiedAnnotationClassName) {
-        doTest(null,
-               String.format("public void %s(@%s String s) {}", METHOD_NAME, qualifiedAnnotationClassName),
-               "null");
+        doTestExpectNpe(null,
+                        String.format("public void %s(@%s String s) {}", METHOD_NAME, qualifiedAnnotationClassName));
     }
 
-    private void doTest(@Nullable String importString, @NotNull String testMethod, @NotNull String callArguments) {
-        String testSource = prepareSourceText(importString, testMethod, callArguments);
+    private void doTestExpectNpe(@Nullable String importString,
+                                 @NotNull String testMethod)
+    {
+        String testSource = prepareSourceText(importString, testMethod, "null");
         byte[] compiledTestSource = compile(testSource);
         boolean gotNpe = false;
         try {
@@ -157,10 +156,39 @@ public abstract class AbstractTrauteTest {
             gotNpe = true;
         }
         if (!gotNpe) {
-            fail(String.format("Expected to get a NullPointerException on attempt to call 'new Test().test(%s)' "
+            fail(String.format("Expected to get a NullPointerException on attempt to call 'new Test().test(null)' "
                                + "for the source below but that didn't happen.%n%nSource:%n%n%s",
-                               callArguments, testSource
+                               testSource
             ));
+        }
+    }
+
+    @Test
+    public void argumentIndex() {
+        doTestArgumentIndex("null, 1", 0);
+        doTestArgumentIndex("1, null", 1);
+    }
+
+    private void doTestArgumentIndex(@NonNull String callArguments, int expectedIndexToBeReported) {
+        String annotation = NotNull.class.getName();
+        String testSource = prepareSourceText(
+                annotation,
+                String.format("public void %s(@NotNull Integer i1, @NotNull Integer i2) {}", METHOD_NAME),
+                callArguments
+        );
+        byte[] compiledTestSource = compile(testSource);
+        boolean passed = false;
+        try {
+            run(compiledTestSource);
+        } catch (NullPointerException e) {
+            String message = e.getMessage();
+            assert message != null;
+            assert message.contains("#" + expectedIndexToBeReported);
+            passed = true;
+        }
+        if (!passed) {
+            fail(String.format("Expected to get a NPE on attempt to execute the source below but that "
+                               + "didn't happen:%n%n%s", testSource));
         }
     }
 
