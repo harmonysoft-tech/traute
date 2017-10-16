@@ -80,8 +80,33 @@ public abstract class AbstractTrauteTest {
     }
 
     @Test
-    public void default_jetBrainsNotNull() {
+    public void default_jetBrains() {
         doTestArgument("org.jetbrains.annotations.NotNull");
+    }
+
+    @Test
+    public void default_jsr305() {
+        doTestArgument("javax.annotation.Nonnull");
+    }
+
+    @Test
+    public void default_javaEE() {
+        doTestArgument("javax.validation.constraints.NotNull");
+    }
+
+    @Test
+    public void default_findBugs() {
+        doTestArgument("edu.umd.cs.findbugs.annotations.NonNull");
+    }
+
+    @Test
+    public void default_android() {
+        doTestArgument("android.support.annotation.NonNull");
+    }
+
+    @Test
+    public void default_eclipse() {
+        doTestArgument("org.eclipse.jdt.annotation.NonNull");
     }
 
     /**

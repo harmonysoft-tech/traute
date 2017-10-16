@@ -12,10 +12,11 @@ import com.sun.tools.javac.util.Log;
 import com.sun.tools.javac.util.Names;
 import org.jetbrains.annotations.NotNull;
 
-import javax.lang.model.element.Name;
 import java.util.*;
 
 import static com.sun.tools.javac.util.List.nil;
+import static java.util.Arrays.asList;
+import static java.util.Collections.unmodifiableSet;
 
 /**
  * <p>A {@code javac} plugin which inserts {@code null}-checks for target method arguments and returns from method.</p>
@@ -78,6 +79,26 @@ public class TrauteJavacPlugin implements Plugin {
      * */
     public static final String NAME = "Traute";
 
+    private static final Set<String> DEFAULT_ANNOTATIONS = unmodifiableSet(new HashSet<>(asList(
+            // Used by IntelliJ by default - https://www.jetbrains.com/help/idea/nullable-and-notnull-annotations.html
+            "org.jetbrains.annotations.NotNull",
+
+            // JSR-305 - status=dormant - https://jcp.org/en/jsr/detail?id=305
+            "javax.annotation.Nonnull",
+
+            // JavaEE - https://docs.oracle.com/javaee/7/api/javax/validation/constraints/NotNull.html
+            "javax.validation.constraints.NotNull",
+
+            // FindBugs - http://findbugs.sourceforge.net/api/edu/umd/cs/findbugs/annotations/NonNull.html
+            "edu.umd.cs.findbugs.annotations.NonNull",
+
+            // Android - https://developer.android.com/reference/android/support/annotation/NonNull.html
+            "android.support.annotation.NonNull",
+
+            // Eclipse - http://help.eclipse.org/oxygen/index.jsp?topic=%2Forg.eclipse.jdt.doc.user%2Ftasks%2Ftask-using_null_annotations.htm
+            "org.eclipse.jdt.annotation.NonNull"
+    )));
+
     /**
      * <p>
      *     There is a possible case that javac implementation is changed not in a backward compatible way in
@@ -120,70 +141,93 @@ public class TrauteJavacPlugin implements Plugin {
                     return;
                 }
 
+                Log log = Log.instance(context);
+                if (log == null) {
+                    throw new RuntimeException(getProblemMessage(
+                            "get a javac logger from the current javac context but got <null>"
+                    ));
+                }
+
                 CompilationUnitTree compilationUnit = e.getCompilationUnit();
                 if (compilationUnit == null) {
-                    report(context, getProblemMessage("get a prepared compilation unit object but got <null>"));
+                    report(log, getProblemMessage("get a prepared compilation unit object but got <null>"));
                     return;
                 }
                 TreeMaker treeMaker = TreeMaker.instance(context);
                 if (treeMaker == null) {
-                    report(context, getProblemMessage(
+                    report(log, getProblemMessage(
                             "get an AST factory from the current javac context but got <null>"
                     ));
                     return;
                 }
                 Names names = Names.instance(context);
                 if (names == null) {
-                    report(context, getProblemMessage(
+                    report(log, getProblemMessage(
                             "get a name table from the current javac context but got <null>"
                     ));
                     return;
                 }
-                compilationUnit.accept(new TreeScanner<Void, Void>() {
-                    @Override
-                    public Void visitMethod(MethodTree method, Void o) {
-                        BlockTree bodyBlock = method.getBody();
-                        if (!(bodyBlock instanceof JCTree.JCBlock)) {
-                            report(context, getProblemMessage(String.format(
-                                    "get a %s instance in the method AST but got %s",
-                                    JCTree.JCBlock.class.getName(), bodyBlock.getClass().getName()
-                            )));
-                            return o;
-                        }
-                        JCTree.JCBlock jcBlock = (JCTree.JCBlock) bodyBlock;
-                        SortedSet<ParameterToInstrumentInfo> variablesToCheck = new TreeSet<>();
-                        int argumentIndex = 0;
-                        for (VariableTree variable : method.getParameters()) {
-                            if (variable == null) {
-                                continue;
-                            }
-                            Optional<String> annotation = findNotNullAnnotation(variable);
-                            if (annotation.isPresent()) {
-                                variablesToCheck.add(new ParameterToInstrumentInfo(annotation.get(),
-                                                                                   variable,
-                                                                                   argumentIndex));
-                            }
-                            argumentIndex++;
-                        }
-                        int argumentsNumber = method.getParameters().size();
-                        for (ParameterToInstrumentInfo info : variablesToCheck) {
-                            addCheck(info, jcBlock, treeMaker, names, argumentsNumber);
-                        }
-                        return o;
-                    }
-                }, null);
+                process(new PluginContext(DEFAULT_ANNOTATIONS, compilationUnit, treeMaker, names, log));
             }
         });
+    }
+
+    private void process(@NotNull PluginContext context) {
+        context.ast.accept(new TreeScanner<Void, Void>() {
+            @Override
+            public Void visitImport(ImportTree node, Void v) {
+                if (!node.isStatic()) {
+                    context.addImport(node.getQualifiedIdentifier().toString());
+                }
+                return v;
+            }
+
+            @Override
+            public Void visitMethod(MethodTree method, Void v) {
+                BlockTree bodyBlock = method.getBody();
+                if (!(bodyBlock instanceof JCTree.JCBlock)) {
+                    report(context.log, getProblemMessage(String.format(
+                            "get a %s instance in the method AST but got %s",
+                            JCTree.JCBlock.class.getName(), bodyBlock.getClass().getName()
+                    )));
+                    return v;
+                }
+                JCTree.JCBlock jcBlock = (JCTree.JCBlock) bodyBlock;
+                SortedSet<ParameterToInstrumentInfo> variablesToCheck = new TreeSet<>();
+                int argumentIndex = 0;
+                for (VariableTree variable : method.getParameters()) {
+                    if (variable == null) {
+                        continue;
+                    }
+                    Optional<String> annotation = findNotNullAnnotation(variable, context.imports, context.annotations);
+                    if (annotation.isPresent()) {
+                        variablesToCheck.add(new ParameterToInstrumentInfo(annotation.get(),
+                                                                           variable,
+                                                                           argumentIndex));
+                    }
+                    argumentIndex++;
+                }
+                int argumentsNumber = method.getParameters().size();
+                for (ParameterToInstrumentInfo info : variablesToCheck) {
+                    addCheck(info, jcBlock, context.astFactory, context.symbolsTable, argumentsNumber);
+                }
+                return v;
+            }
+        }, null);
     }
 
     /**
      * Checks if given method parameter {@code AST} element is marked by any configured {@code @NotNull} annotation.
      *
      * @param variable  method parameter {@code AST} element to check
+     * @param imports   current source's imports
      * @return          target annotation's name in case the one is found
      */
     @NotNull
-    private static Optional<String> findNotNullAnnotation(@NotNull VariableTree variable) {
+    private static Optional<String> findNotNullAnnotation(@NotNull VariableTree variable,
+                                                          @NotNull Set<String> imports,
+                                                          @NotNull Set<String> supportedAnnotations)
+    {
         ModifiersTree modifiers = variable.getModifiers();
         if (modifiers == null) {
             return Optional.empty();
@@ -197,14 +241,26 @@ public class TrauteJavacPlugin implements Plugin {
             if (type == null) {
                 continue;
             }
-            Name name = type.accept(new TreeScanner<Name, Void>() {
-                @Override
-                public Name visitIdentifier(IdentifierTree node, Void aVoid) {
-                    return node.getName();
+            String parameterAnnotation = annotation.getAnnotationType().toString();
+            if (supportedAnnotations.contains(parameterAnnotation)) {
+                // Qualified annotation, like 'void test(@javax.annotation.Nonnul String s) {}'
+                return Optional.of(parameterAnnotation);
+            }
+            for (String anImport : imports) {
+                // Support an import like 'import org.jetbrains.annotations.*;'
+                if (anImport.endsWith(".*")) {
+                    String candidate = anImport.substring(0, anImport.length() - 1) + parameterAnnotation;
+                    if (supportedAnnotations.contains(candidate)) {
+                        return Optional.of(candidate);
+                    }
+                    continue;
                 }
-            }, null);
-            if (name.contentEquals("NotNull")) {
-                return Optional.of("NotNull");
+                if (!supportedAnnotations.contains(anImport)) {
+                    continue;
+                }
+                if (anImport.endsWith(parameterAnnotation)) {
+                    return Optional.of(anImport);
+                }
             }
         }
         return Optional.empty();
@@ -275,14 +331,42 @@ public class TrauteJavacPlugin implements Plugin {
     /**
      * Shows given problem message to the end-user if necessary.
      *
-     * @param context   current javac context
+     * @param log       {@code javac} logger
      * @param message   a problem message to show
      */
-    private void report(@NotNull Context context, @NotNull String message) {
+    private void report(@NotNull Log log, @NotNull String message) {
         // Do not report a problem more than once
         if (!problemReported) {
-            Log.instance(context).rawWarning(-1, message);
+            log.rawWarning(-1, message);
             problemReported = true;
+        }
+    }
+
+    private static class PluginContext {
+
+        public final Set<String> annotations = new HashSet<>();
+        public final Set<String> imports     = new HashSet<>();
+
+        @NotNull public final CompilationUnitTree ast;
+        @NotNull public final TreeMaker           astFactory;
+        @NotNull public final Names               symbolsTable;
+        @NotNull public final Log                 log;
+
+        public PluginContext(@NotNull Collection<String> annotations,
+                             @NotNull CompilationUnitTree ast,
+                             @NotNull TreeMaker astFactory,
+                             @NotNull Names symbolsTable,
+                             @NotNull Log log)
+        {
+            this.log = log;
+            this.annotations.addAll(annotations);
+            this.ast = ast;
+            this.astFactory = astFactory;
+            this.symbolsTable = symbolsTable;
+        }
+
+        public void addImport(@NotNull String importText) {
+            imports.add(importText);
         }
     }
 
