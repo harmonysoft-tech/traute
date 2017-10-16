@@ -17,16 +17,40 @@ import java.lang.reflect.Method;
 import java.util.*;
 
 import static java.util.Arrays.asList;
+import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static org.junit.Assert.fail;
 
-// TODO den add doc
+/**
+ * <p>Defines common scenarios and checks for all {@code @NotNull}-instrumentation approaches (javac, asm).</p>
+ * <p>
+ *     The main idea is to do the following:
+ *     <ul>
+ *       <li>define a number of test scenarios (sources to be instrumented)</li>
+ *       <li>compile every test source in-memory using {@link JavaCompiler} api</li>
+ *       <li>load compiled class in the current process</li>
+ *       <li>
+ *           start {@code main()} method in the compiled class and ensure that an {@link NullPointerException}
+ *           is thrown
+ *       </li>
+ *       <li>
+ *           delegate to concrete implementation test setup details, e.g. allow to
+ *           {@link #getAdditionalCompilerArgs() modify javac arguments}
+ *           (necessary for the implementation based on {@code javac} plugins api) and
+ *           {@link #getTargetAnnotationsToUse() emulate user's setup for @NotNull annotations}
+ *       </li>
+ *     </ul>
+ * </p>
+ */
 public abstract class AbstractTrauteTest {
 
+    /** Name of the method to be instrumented in the test sources. */
     private static final String METHOD_NAME = "test";
 
+    /** Arguments to call {@code main()} in the compiled test sources. */
     private static final Object[] MAIN_ARGUMENTS = { new String[0]};
 
+    /** Test sources template. All concrete tests fulfill it. */
     private static final String CLASS_TEMPLATE =
             "package " + TestConstants.PACKAGE + ";\n" +
             "%s\n" +
@@ -39,6 +63,7 @@ public abstract class AbstractTrauteTest {
             "  }\n" +
             "}";
 
+    /** Emulates user's setup for the {@code @NotNull} annotations to use. */
     private final Set<String> targetAnnotationsToUse = new HashSet<>();
 
     @Before
@@ -46,14 +71,26 @@ public abstract class AbstractTrauteTest {
         targetAnnotationsToUse.clear();
     }
 
+    /**
+     * @return  {@code @NotNull} annotations defined by the end-user
+     */
+    @NotNull
+    protected Set<String> getTargetAnnotationsToUse() {
+        return targetAnnotationsToUse;
+    }
+
     @Test
     public void default_jetBrainsNotNull() {
         doTestArgument("org.jetbrains.annotations.NotNull");
     }
 
-    // TODO den add doc
+    /**
+     * @return      additional {@code javac} arguments to use. It's allowed to return an empty list
+     */
     @NotNull
-    protected abstract List<String> getAdditionalCompilerArgs();
+    protected List<String> getAdditionalCompilerArgs() {
+        return emptyList();
+    }
 
     private void doTestArgument(@NotNull String qualifiedAnnotationClassName) {
         doTestArgument_singleImport(qualifiedAnnotationClassName);
@@ -102,6 +139,14 @@ public abstract class AbstractTrauteTest {
         }
     }
 
+    /**
+     * Applies given data to the {@link #CLASS_TEMPLATE test source template}.
+     *
+     * @param importString  an expression for the {@code import} keyword (if any)
+     * @param testMethod    {@value #METHOD_NAME}() method body
+     * @param callArguments arguments to use for calling the {@value #METHOD_NAME}() method
+     * @return              complete test source for the given arguments. It's assumed to be properly formatted
+     */
     @NotNull
     private static String prepareSourceText(@Nullable String importString,
                                             @NotNull String testMethod,
@@ -129,6 +174,12 @@ public abstract class AbstractTrauteTest {
         return String.format(CLASS_TEMPLATE, completeImportString, indentedTestMethod, callArguments);
     }
 
+    /**
+     * Compiles given test source using in-memory {@link JavaCompiler}.
+     *
+     * @param text      test source to compile
+     * @return          compiled binaries for the given source
+     */
     @NotNull
     private byte[] compile(@NotNull String text) {
         StringWriter output = new StringWriter();
@@ -175,6 +226,11 @@ public abstract class AbstractTrauteTest {
         return o.get();
     }
 
+    /**
+     * Calls {@code main()} method on the given compiled test source binaries.
+     *
+     * @param compiledClass     compiled test source binaries
+     */
     private static void run(@NotNull byte[] compiledClass) {
         ClassLoader classLoader = new ClassLoader() {
             @Override

@@ -2,15 +2,15 @@ package tech.harmonysoft.oss.traute.util;
 
 import org.jetbrains.annotations.NotNull;
 
-import javax.tools.FileObject;
-import javax.tools.ForwardingJavaFileManager;
-import javax.tools.JavaFileObject;
-import javax.tools.StandardJavaFileManager;
+import javax.tools.*;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 
-// TODO den add doc
+/**
+ * Plugs into the {@link JavaCompiler} infrastructure to be able to capture compiled binaries
+ * for the test source and {@link #getCompiled() expose them}.
+ */
 public class SimpleFileManager extends ForwardingJavaFileManager<StandardJavaFileManager> {
 
     private final List<SimpleClassFile> compiled = new ArrayList<>();
@@ -30,6 +30,9 @@ public class SimpleFileManager extends ForwardingJavaFileManager<StandardJavaFil
         return result;
     }
 
+    /**
+     * @return  compiled binaries processed by the current class
+     */
     @NotNull
     public List<SimpleClassFile> getCompiled() {
         return compiled;

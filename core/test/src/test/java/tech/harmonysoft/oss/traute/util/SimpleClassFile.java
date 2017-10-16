@@ -9,6 +9,9 @@ import java.io.OutputStream;
 import java.net.URI;
 import java.util.Optional;
 
+/**
+ * Compiled test binaries holder.
+ */
 public class SimpleClassFile extends SimpleJavaFileObject {
 
     private ByteArrayOutputStream out;
