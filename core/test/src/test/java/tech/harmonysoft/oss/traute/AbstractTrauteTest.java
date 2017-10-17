@@ -5,6 +5,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.junit.Before;
 import org.junit.Test;
+import tech.harmonysoft.oss.traute.fixture.NN;
 import tech.harmonysoft.oss.traute.util.SimpleClassFile;
 import tech.harmonysoft.oss.traute.util.SimpleFileManager;
 import tech.harmonysoft.oss.traute.util.SimpleSourceFile;
@@ -22,6 +23,7 @@ import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 /**
@@ -265,6 +267,75 @@ public abstract class AbstractTrauteTest {
         if (!passed) {
             fail(String.format("Expected to get an IllegalArgumentException exception on attempt to execute the "
                                + "source below but that didn't happen:%n%n%s", testSource));
+        }
+    }
+
+    @Test
+    public void customAnnotations_reducedNumber() {
+        targetAnnotationsToUse.add(Nonnull.class.getName());
+        String testSource = prepareSourceText(
+                null,
+                String.format("public void %s(@%s Integer i1, @%s Integer i2) {}",
+                              METHOD_NAME, NotNull.class.getName(), Nonnull.class.getName()),
+                "null, null"
+        );
+        byte[] compiledTestSource = compile(testSource);
+        boolean passed = false;
+        try {
+            run(compiledTestSource);
+        } catch (NullPointerException e) {
+            assertTrue("Expected that no null-check is generated for a default annotation which is "
+                       + "not mentioned in the custom @NotNull annotations setting", e.getMessage().contains("i2"));
+            passed = true;
+        }
+        if (!passed) {
+            fail(String.format("Expected to get a NPE on attempt to execute the source below but that "
+                               + "didn't happen:%n%n%s", testSource));
+        }
+    }
+
+    @Test
+    public void customAnnotations_moreThanOne() {
+        targetAnnotationsToUse.addAll(asList(Nonnull.class.getName(), NotNull.class.getName()));
+        String testSource = prepareSourceText(
+                null,
+                String.format("public void %s(@%s Integer i1, @%s Integer i2) {}",
+                              METHOD_NAME, org.eclipse.jdt.annotation.NonNull.class.getName(), Nonnull.class.getName()),
+                "null, null"
+        );
+        byte[] compiledTestSource = compile(testSource);
+        boolean passed = false;
+        try {
+            run(compiledTestSource);
+        } catch (NullPointerException e) {
+            assertTrue("Expected that no null-check is generated for a default annotation which is "
+                       + "not mentioned in the custom @NotNull annotations setting", e.getMessage().contains("i2"));
+            passed = true;
+        }
+        if (!passed) {
+            fail(String.format("Expected to get a NPE on attempt to execute the source below but that "
+                               + "didn't happen:%n%n%s", testSource));
+        }
+    }
+
+    @Test
+    public void customAnnotations_trulyCustom() {
+        targetAnnotationsToUse.add(NN.class.getName());
+        String testSource = prepareSourceText(
+                NN.class.getName(),
+                String.format("public void %s(@%s Integer i1) {}", METHOD_NAME, NN.class.getSimpleName()),
+                "null"
+        );
+        byte[] compiledTestSource = compile(testSource);
+        boolean passed = false;
+        try {
+            run(compiledTestSource);
+        } catch (NullPointerException e) {
+            passed = true;
+        }
+        if (!passed) {
+            fail(String.format("Expected to get a NPE on attempt to execute the source below but that "
+                               + "didn't happen:%n%n%s", testSource));
         }
     }
 

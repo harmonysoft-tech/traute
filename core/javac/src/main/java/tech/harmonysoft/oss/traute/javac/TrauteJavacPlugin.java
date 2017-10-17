@@ -4,6 +4,7 @@ import com.sun.source.tree.*;
 import com.sun.source.util.*;
 import com.sun.tools.javac.api.BasicJavacTask;
 import com.sun.tools.javac.code.TypeTag;
+import com.sun.tools.javac.processing.JavacProcessingEnvironment;
 import com.sun.tools.javac.tree.JCTree;
 import com.sun.tools.javac.tree.TreeMaker;
 import com.sun.tools.javac.util.Context;
@@ -16,7 +17,6 @@ import java.util.*;
 
 import static com.sun.tools.javac.util.List.nil;
 import static java.util.Arrays.asList;
-import static java.util.Collections.unmodifiableSet;
 
 /**
  * <p>A {@code javac} plugin which inserts {@code null}-checks for target method arguments and returns from method.</p>
@@ -78,6 +78,26 @@ public class TrauteJavacPlugin implements Plugin {
      * Current plugin's name. It should be used with the {@code -Xplugin} setting, i.e. {@code -Xplugin:Traute}
      * */
     public static final String NAME = "Traute";
+
+    /**
+     * <p>
+     *     Compiler's option name to use for specifying custom {@code @NotNull} annotations to use
+     *     ({@value #ANNOTATIONS_SEPARATOR}-separated).
+     * </p>
+     * <p>
+     *     This is not mandatory setting as default annotations are used otherwise. Only given annotations are
+     *     checked if this argument is specified.
+     * </p>
+     * <p>
+     *     Example: consider a situation when given parameter's value is
+     *     {@code 'org.eclipse.jdt.annotation.NonNull:android.support.annotation.NonNull'} (eclipse and android
+     *     annotations). That means that a method which parameter is marked by, say
+     *     {@code org.jetbrains.annotations.NotNull} won't trigger {@code null}-check generation by the plugin.
+     * </p>
+     */
+    public static final String OPTION_ANNOTATIONS_NOT_NULL = "traute.annotations.not.null";
+
+    private static final String ANNOTATIONS_SEPARATOR = ":";
 
     private static final Set<String> DEFAULT_ANNOTATIONS = new HashSet<>(asList(
             // Used by IntelliJ by default - https://www.jetbrains.com/help/idea/nullable-and-notnull-annotations.html
@@ -171,7 +191,28 @@ public class TrauteJavacPlugin implements Plugin {
                     ));
                     return;
                 }
-                process(new PluginContext(DEFAULT_ANNOTATIONS, compilationUnit, treeMaker, names, log));
+                Set<String> notNullAnnotationsToUse = DEFAULT_ANNOTATIONS;
+                JavacProcessingEnvironment environment = JavacProcessingEnvironment.instance(context);
+                if (environment == null) {
+                    report(log, String.format(
+                            "Can't check if custom @NotNull annotation are specified (through a -A%s javac option) "
+                            + "- can't get a %s instance from the current javac context. %s",
+                            OPTION_ANNOTATIONS_NOT_NULL, JavacProcessingEnvironment.class.getName(),
+                            getProblemMessageSuffix()));
+                } else {
+                    Map<String, String> options = environment.getOptions();
+                    if (options != null) {
+                        String customAnnotationsString = options.get(OPTION_ANNOTATIONS_NOT_NULL);
+                        if (customAnnotationsString != null) {
+                            customAnnotationsString = customAnnotationsString.trim();
+                            String[] customAnnotations = customAnnotationsString.split(ANNOTATIONS_SEPARATOR);
+                            if (customAnnotations.length > 0) {
+                                notNullAnnotationsToUse = new HashSet<>(asList(customAnnotations));
+                            }
+                        }
+                    }
+                }
+                process(new PluginContext(notNullAnnotationsToUse, compilationUnit, treeMaker, names, log));
             }
         });
     }
@@ -338,8 +379,13 @@ public class TrauteJavacPlugin implements Plugin {
     private String getProblemMessage(@NotNull String details) {
         return String.format(
                 "NotNull-instrumentation failed, it might be that javac implementation has significantly changed "
-                + "- '%s' javac plugin expected to %s", getName(), details
+                + "- '%s' javac plugin expected to %s. %s", getName(), details, getProblemMessageSuffix()
         );
+    }
+
+    @NotNull
+    private static String getProblemMessageSuffix() {
+        return "Please contact the Traute plugin's author via traute.java@gmail.com";
     }
 
     /**
