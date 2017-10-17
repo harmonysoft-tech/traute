@@ -17,7 +17,7 @@ import java.util.List;
  *     </ul>
  * </p>
  */
-public class JavacTrauteTest extends AbstractTrauteTest {
+public class TrauteJavacPluginTest extends AbstractTrauteTest {
 
     @NotNull
     @Override
