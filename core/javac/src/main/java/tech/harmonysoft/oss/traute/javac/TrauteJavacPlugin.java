@@ -209,7 +209,13 @@ public class TrauteJavacPlugin implements Plugin {
                 }
                 int argumentsNumber = method.getParameters().size();
                 for (ParameterToInstrumentInfo info : variablesToCheck) {
-                    addCheck(info, jcBlock, context.astFactory, context.symbolsTable, argumentsNumber);
+                    TreeMaker astFactoryToUse = context.astFactory;
+                    if (info.variable instanceof JCTree) {
+                        // Mark our AST factory with the variable's offset in order to see corresponding
+                        // line in the stack trace when an NPE is thrown.
+                        astFactoryToUse = astFactoryToUse.at(((JCTree) info.variable).pos);
+                    }
+                    addCheck(info, jcBlock, astFactoryToUse, context.symbolsTable, argumentsNumber);
                 }
                 return v;
             }

@@ -21,6 +21,7 @@ import java.util.*;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
 /**
@@ -192,6 +193,34 @@ public abstract class AbstractTrauteTest {
         }
     }
 
+    @Test
+    public void lineNumberInNpeTrace() {
+        String annotation = NotNull.class.getName();
+        String testSource = prepareSourceText(
+                annotation,
+                String.format("public void %s(@NotNull Integer i,\n                   @NotNull Integer i2) {}",
+                              METHOD_NAME),
+                "1, null"
+        );
+        int i = testSource.indexOf("@NotNull Integer i2");
+        long expectedLine = testSource.substring(0, i).chars().filter(c -> c == '\n').count() + 1;
+        byte[] compiledTestSource = compile(testSource);
+        boolean passed = false;
+        try {
+            run(compiledTestSource);
+        } catch (NullPointerException e) {
+            StackTraceElement[] stackTrace = e.getStackTrace();
+            assert stackTrace.length > 0;
+            assertEquals("Expected that a NPE thrown from the plugin-introduced check points to the valid line",
+                         expectedLine, stackTrace[0].getLineNumber());
+            passed = true;
+        }
+        if (!passed) {
+            fail(String.format("Expected to get a NPE on attempt to execute the source below but that "
+                               + "didn't happen:%n%n%s", testSource));
+        }
+    }
+
     /**
      * Applies given data to the {@link #CLASS_TEMPLATE test source template}.
      *
@@ -216,8 +245,8 @@ public abstract class AbstractTrauteTest {
         }
         int methodEnd = testMethod.lastIndexOf('}');
         int bodyEnd = methodEnd > 0 ? testMethod.lastIndexOf('\n', methodEnd) : methodEnd;
-        if (bodyEnd < 0) {
-            bodyEnd = testMethod.lastIndexOf('}');
+        if (bodyEnd <= bodyStart) {
+            bodyEnd = methodEnd;
         }
         String testMethodDeclaration = testMethod.substring(0, declarationEnd);
         String testMethodBody = testMethod.substring(bodyStart, bodyEnd);
