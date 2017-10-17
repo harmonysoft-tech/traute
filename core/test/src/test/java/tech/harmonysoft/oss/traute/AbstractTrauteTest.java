@@ -54,7 +54,7 @@ public abstract class AbstractTrauteTest {
     private static final Object[] MAIN_ARGUMENTS = { new String[0]};
 
     /** Test sources template. All concrete tests fulfill it. */
-    private static final String CLASS_TEMPLATE =
+    private static final String PARAMETER_TEST_CLASS_TEMPLATE =
             "package " + TestConstants.PACKAGE + ";\n" +
             "%s\n" +
             "public class " + TestConstants.CLASS_NAME + " {\n" +
@@ -65,6 +65,25 @@ public abstract class AbstractTrauteTest {
             "    new " + TestConstants.CLASS_NAME + "()." + METHOD_NAME + "(%s);\n" +
             "  }\n" +
             "}";
+
+    private static final String METHOD_TEST_CLASS_TEMPLATE = String.format(
+            "package %s;\n" +
+            "\n" +
+            "public class %s {\n" +
+            "\n" +
+            "  @%s\n" +
+            "  public Integer test() {\n" +
+            "    %%s\n" +
+            "  }\n" +
+            "\n" +
+            "  private Integer count() {\n" +
+            "      return null;\n" +
+            "  }\n" +
+            "\n" +
+            "  public static void main(String[] args) {\n" +
+            "    new Test().test();\n" +
+            "  }\n" +
+            "}", TestConstants.PACKAGE, TestConstants.CLASS_NAME, NotNull.class.getName());
 
     /** Emulates user's setup for the {@code @NotNull} annotations to use. */
     private final Set<String> targetAnnotationsToUse = new HashSet<>();
@@ -148,7 +167,7 @@ public abstract class AbstractTrauteTest {
     private void doTestExpectNpe(@Nullable String importString,
                                  @NotNull String testMethod)
     {
-        String testSource = prepareSourceText(importString, testMethod, "null");
+        String testSource = prepareSourceTextForParameterTest(importString, testMethod, "null");
         byte[] compiledTestSource = compile(testSource);
         boolean gotNpe = false;
         try {
@@ -172,7 +191,7 @@ public abstract class AbstractTrauteTest {
 
     private void doTestArgumentIndex(@NonNull String callArguments, int expectedIndexToBeReported) {
         String annotation = NotNull.class.getName();
-        String testSource = prepareSourceText(
+        String testSource = prepareSourceTextForParameterTest(
                 annotation,
                 String.format("public void %s(@NotNull Integer i1, @NotNull Integer i2) {}", METHOD_NAME),
                 callArguments
@@ -195,7 +214,7 @@ public abstract class AbstractTrauteTest {
 
     @Test
     public void lineNumberInNpeTrace() {
-        String testSource = prepareSourceText(
+        String testSource = prepareSourceTextForParameterTest(
                 NotNull.class.getName(),
                 String.format("public void %s(@NotNull Integer i,\n                   @NotNull Integer i2) {}",
                               METHOD_NAME),
@@ -226,7 +245,7 @@ public abstract class AbstractTrauteTest {
                 "byte", "short", "char", "int", "long", "float", "double"
         };
         for (String primitiveType : primitiveTypes) {
-            String testSource = prepareSourceText(
+            String testSource = prepareSourceTextForParameterTest(
                     NotNull.class.getName(),
                     String.format("public void %s(@NotNull %s arg) {}", METHOD_NAME, primitiveType),
                     "(" + primitiveType + ")1"
@@ -240,7 +259,7 @@ public abstract class AbstractTrauteTest {
 
     @Test
     public void lineNumbersAfterNullCheck() {
-        String testSource = prepareSourceText(
+        String testSource = prepareSourceTextForParameterTest(
                 NotNull.class.getName(),
                 String.format("public void %s(@NotNull Integer i) {\n" +
                               "  if (System.currentTimeMillis() > 1) {\n" +
@@ -271,7 +290,7 @@ public abstract class AbstractTrauteTest {
     @Test
     public void customAnnotations_reducedNumber() {
         targetAnnotationsToUse.add(Nonnull.class.getName());
-        String testSource = prepareSourceText(
+        String testSource = prepareSourceTextForParameterTest(
                 null,
                 String.format("public void %s(@%s Integer i1, @%s Integer i2) {}",
                               METHOD_NAME, NotNull.class.getName(), Nonnull.class.getName()),
@@ -295,7 +314,7 @@ public abstract class AbstractTrauteTest {
     @Test
     public void customAnnotations_moreThanOne() {
         targetAnnotationsToUse.addAll(asList(Nonnull.class.getName(), NotNull.class.getName()));
-        String testSource = prepareSourceText(
+        String testSource = prepareSourceTextForParameterTest(
                 null,
                 String.format("public void %s(@%s Integer i1, @%s Integer i2) {}",
                               METHOD_NAME, org.eclipse.jdt.annotation.NonNull.class.getName(), Nonnull.class.getName()),
@@ -319,7 +338,7 @@ public abstract class AbstractTrauteTest {
     @Test
     public void customAnnotations_trulyCustom() {
         targetAnnotationsToUse.add(NN.class.getName());
-        String testSource = prepareSourceText(
+        String testSource = prepareSourceTextForParameterTest(
                 NN.class.getName(),
                 String.format("public void %s(@%s Integer i1) {}", METHOD_NAME, NN.class.getSimpleName()),
                 "null"
@@ -379,7 +398,98 @@ public abstract class AbstractTrauteTest {
     }
 
     /**
-     * Applies given data to the {@link #CLASS_TEMPLATE test source template}.
+     * Applies given data to the {@link #METHOD_TEST_CLASS_TEMPLATE test source template}.
+     *
+     * @param testMethodBody test method body
+     * @return               test class text
+     */
+    @NotNull
+    private static String prepareSourceTextForMethodTest(@NotNull String testMethodBody) {
+        return String.format(METHOD_TEST_CLASS_TEMPLATE,
+                             "    " + testMethodBody.replaceAll("\n", "\n    "));
+    }
+
+    private void doMethodTest(@NotNull String testMethodBody) {
+        String testSource = String.format(METHOD_TEST_CLASS_TEMPLATE,
+                                          testMethodBody.replaceAll("\n", "\n    "));
+        byte[] compiledTestSource = compile(testSource);
+        boolean passed = false;
+        try {
+            run(compiledTestSource);
+        } catch (NullPointerException e) {
+            passed = true;
+        }
+        if (!passed) {
+            fail(String.format("Expected to get an NullPointerException on attempt to execute the source "
+                               + "below but that didn't happen:%n%n%s", testSource));
+        }
+    }
+
+    @Test
+    public void methodReturn_fromIfWithBraces() {
+        doMethodTest(
+                "" +
+                "if (true) {\n" +
+                "  return count();\n" +
+                "}\n" +
+                "return 10;"
+        );
+    }
+
+    @Test
+    public void methodReturn_fromIfWithoutBraces() {
+        doMethodTest(
+                "" +
+                "if (true) \n" +
+                "  return count();\n" +
+                "return 10;"
+        );
+    }
+
+    @Test
+    public void methodReturn_fromIfWithoutBracesSameLine() {
+        doMethodTest(
+                "" +
+                "if (true) return count();\n" +
+                "return 10;"
+        );
+    }
+
+    @Test
+    public void methodReturn_fromElseWithBraces() {
+        doMethodTest(
+                "" +
+                "if (false) {\n" +
+                "  return 1;\n" +
+                "} else {\n" +
+                "  return count();\n" +
+                "}"
+        );
+    }
+
+    @Test
+    public void methodReturn_fromElseWithoutBraces() {
+        doMethodTest(
+                "" +
+                "if (false) {\n" +
+                "  return 1;\n" +
+                "} else\n" +
+                "  return count();"
+        );
+    }
+
+    @Test
+    public void methodReturn_fromElseWithoutBracesSameLine() {
+        doMethodTest(
+                "" +
+                "if (false) {\n" +
+                "  return 1;\n" +
+                "} else return count();"
+        );
+    }
+
+    /**
+     * Applies given data to the {@link #PARAMETER_TEST_CLASS_TEMPLATE test source template}.
      *
      * @param importString  an expression for the {@code import} keyword (if any)
      * @param testMethod    {@value #METHOD_NAME}() method body
@@ -387,9 +497,9 @@ public abstract class AbstractTrauteTest {
      * @return              complete test source for the given arguments. It's assumed to be properly formatted
      */
     @NotNull
-    private static String prepareSourceText(@Nullable String importString,
-                                            @NotNull String testMethod,
-                                            @NotNull String callArguments)
+    private static String prepareSourceTextForParameterTest(@Nullable String importString,
+                                                            @NotNull String testMethod,
+                                                            @NotNull String callArguments)
     {
         String completeImportString = importString == null ? "" : String.format("%nimport %s;%n", importString);
 
@@ -410,7 +520,7 @@ public abstract class AbstractTrauteTest {
         String indentedTestMethodBody = "  " + testMethodBody.replaceAll("\n", "\n    ");
         String indentedTestMethod = String.format("  %s%n%s%n  }", testMethodDeclaration, indentedTestMethodBody);
 
-        return String.format(CLASS_TEMPLATE, completeImportString, indentedTestMethod, callArguments);
+        return String.format(PARAMETER_TEST_CLASS_TEMPLATE, completeImportString, indentedTestMethod, callArguments);
     }
 
     /**

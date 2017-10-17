@@ -12,7 +12,6 @@ import java.util.*;
 import java.util.function.Consumer;
 
 import static java.util.Arrays.asList;
-import static tech.harmonysoft.oss.traute.javac.ProblemReporter.getProblemMessageSuffix;
 
 /**
  * Inspects {@code AST} built by {@link JavaCompiler}, finds places where to apply {@code null}-checks
@@ -24,6 +23,8 @@ public class AstVisitor extends TreeScanner<Void, Void> {
             "byte", "short", "char", "int", "long", "float", "double"
     ));
 
+    private Stack<StatementTree> parents = new Stack<>();
+
     @NotNull private final CompilationUnitProcessingContext    context;
     @NotNull private final Consumer<ParameterToInstrumentInfo> parameterInstrumenter;
     @NotNull private final Consumer<ReturnToInstrumentInfo>    returnInstrumenter;
@@ -31,7 +32,6 @@ public class AstVisitor extends TreeScanner<Void, Void> {
     private JCTree.JCExpression methodReturnType;
     private String              methodNotNullAnnotation;
     private int                 tmpVariableCounter;
-    private JCTree.JCBlock      parent;
 
     public AstVisitor(@NotNull CompilationUnitProcessingContext context,
                       @NotNull Consumer<ParameterToInstrumentInfo> parameterInstrumenter,
@@ -101,7 +101,7 @@ public class AstVisitor extends TreeScanner<Void, Void> {
                 methodReturnType = null;
                 methodNotNullAnnotation = null;
                 tmpVariableCounter = 1;
-                parent = null;
+                parents.clear();
             }
         } else {
             return v;
@@ -134,32 +134,6 @@ public class AstVisitor extends TreeScanner<Void, Void> {
             // line in the stack trace when an NPE is thrown.
             astFactory.at(((JCTree) astNode).pos);
         }
-    }
-
-    @Override
-    public Void visitBlock(BlockTree node, Void aVoid) {
-        if (node instanceof JCTree.JCBlock) {
-            parent = (JCTree.JCBlock) node;
-        } else {
-            context.getProblemReporter().report(String.format(
-                    "Can't instrument NotNull method return - found an AST %s in a place where %s is expected. %s",
-                    node.getClass().getName(), JCTree.JCBlock.class.getName(), getProblemMessageSuffix()));
-        }
-        return super.visitBlock(node, aVoid);
-    }
-
-    @Override
-    public Void visitReturn(ReturnTree node, Void aVoid) {
-        if (methodNotNullAnnotation != null && methodReturnType != null && parent != null) {
-            mayBeSetPosition(node, context.getAstFactory());
-            returnInstrumenter.accept(new ReturnToInstrumentInfo(context,
-                                                                 methodNotNullAnnotation,
-                                                                 node,
-                                                                 methodReturnType,
-                                                                 getTmpVariableName(),
-                                                                 parent));
-        }
-        return super.visitReturn(node, aVoid);
     }
 
     /**
@@ -233,5 +207,39 @@ public class AstVisitor extends TreeScanner<Void, Void> {
             }
         }
         return Optional.empty();
+    }
+
+    @Override
+    public Void visitBlock(BlockTree node, Void aVoid) {
+        parents.push(node);
+        try {
+            return super.visitBlock(node, aVoid);
+        } finally {
+            parents.pop();
+        }
+    }
+
+    @Override
+    public Void visitIf(IfTree node, Void aVoid) {
+        parents.push(node);
+        try {
+            return super.visitIf(node, aVoid);
+        } finally {
+            parents.pop();
+        }
+    }
+
+    @Override
+    public Void visitReturn(ReturnTree node, Void aVoid) {
+        if (methodNotNullAnnotation != null && methodReturnType != null && !parents.isEmpty()) {
+            mayBeSetPosition(node, context.getAstFactory());
+            returnInstrumenter.accept(new ReturnToInstrumentInfo(context,
+                                                                 methodNotNullAnnotation,
+                                                                 node,
+                                                                 methodReturnType,
+                                                                 getTmpVariableName(),
+                                                                 parents.peek()));
+        }
+        return super.visitReturn(node, aVoid);
     }
 }

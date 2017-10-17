@@ -1,6 +1,7 @@
 package tech.harmonysoft.oss.traute.javac;
 
 import com.sun.source.tree.ReturnTree;
+import com.sun.source.tree.StatementTree;
 import com.sun.tools.javac.tree.JCTree;
 import org.jetbrains.annotations.NotNull;
 
@@ -14,14 +15,14 @@ public class ReturnToInstrumentInfo {
     @NotNull private final ReturnTree                       returnExpression;
     @NotNull private final JCTree.JCExpression              returnType;
     @NotNull private final String                           tmpVariableName;
-    @NotNull private final JCTree.JCBlock                   parent;
+    @NotNull private final StatementTree                    parent;
 
     public ReturnToInstrumentInfo(@NotNull CompilationUnitProcessingContext context,
                                   @NotNull String notNullAnnotation,
                                   @NotNull ReturnTree returnExpression,
                                   @NotNull JCTree.JCExpression returnType,
                                   @NotNull String tmpVariableName,
-                                  @NotNull JCTree.JCBlock parent)
+                                  @NotNull StatementTree parent)
     {
         this.context = context;
         this.notNullAnnotation = notNullAnnotation;
@@ -106,7 +107,7 @@ public class ReturnToInstrumentInfo {
      * @return  parent {@code AST} element for the target {@code return} expression to check
      */
     @NotNull
-    public JCTree.JCBlock getParent() {
+    public StatementTree getParent() {
         return parent;
     }
 }

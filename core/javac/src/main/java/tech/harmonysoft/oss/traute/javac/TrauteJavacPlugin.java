@@ -1,11 +1,7 @@
 package tech.harmonysoft.oss.traute.javac;
 
-import com.sun.source.tree.CompilationUnitTree;
-import com.sun.source.tree.ExpressionTree;
-import com.sun.source.util.JavacTask;
-import com.sun.source.util.Plugin;
-import com.sun.source.util.TaskEvent;
-import com.sun.source.util.TaskListener;
+import com.sun.source.tree.*;
+import com.sun.source.util.*;
 import com.sun.tools.javac.api.BasicJavacTask;
 import com.sun.tools.javac.code.TypeTag;
 import com.sun.tools.javac.processing.JavacProcessingEnvironment;
@@ -227,24 +223,93 @@ public class TrauteJavacPlugin implements Plugin {
     }
 
     private static void instrumentMethodReturn(@NotNull ReturnToInstrumentInfo info) {
-        Optional<List<JCTree.JCStatement>> o = buildReturnCheck(info);
-        if (!o.isPresent()) {
+        Optional<JCTree.JCBlock> blockOptional = getBlockForMethodReturnInstrumentation(info);
+        if (!blockOptional.isPresent()) {
             return;
         }
-        List<JCTree.JCStatement> statements = info.getParent().getStatements();
+        Optional<List<JCTree.JCStatement>> returnCheckOptional = buildReturnCheck(info);
+        if (!returnCheckOptional.isPresent()) {
+            return;
+        }
+        JCTree.JCBlock block = blockOptional.get();
+        List<JCTree.JCStatement> statements = block.getStatements();
         for (int i = 0; i < statements.size(); i++) {
             JCTree.JCStatement statement = statements.get(i);
             if (statement == info.getReturnExpression()) {
-                List<JCTree.JCStatement> newStatements = o.get();
+                List<JCTree.JCStatement> newStatements = returnCheckOptional.get();
                 for (int j = i + 1; j < statements.size(); j++) {
                     newStatements = newStatements.append(statements.get(j));
                 }
                 for (int j = i - 1; j >= 0; j--) {
                     newStatements = newStatements.prepend(statements.get(j));
                 }
-                info.getParent().stats = newStatements;
+                block.stats = newStatements;
+                return;
             }
         }
+        // When control flow reaches this place, that means that the block is empty, so, we just populate it
+        // with new instructions.
+        block.stats = returnCheckOptional.get();
+    }
+
+    /**
+     * <p>
+     *     Tries to find a code block ({@code {}}) AST element which should be used as a generated
+     *     {@code null}-check holder.
+     * </p>
+     * <p>
+     *     The trick here is that there is a possible case that we need to instrument a return which is not
+     *     contained in a code block, like below:
+     *     <pre>
+     *         if (something) {
+     *             return result;
+     *         }
+     *     </pre>
+     *     Here we need to insert a code block instead of the return expression and return it.
+     * </p>
+     *
+     * @param info data holder for the target {@code 'return'} expression to instrument
+     * @return     a code block to use as a parent for the plugin-introduced {@code null}-check (if any)
+     */
+    @NotNull
+    private static Optional<JCTree.JCBlock> getBlockForMethodReturnInstrumentation(
+            @NotNull ReturnToInstrumentInfo info)
+    {
+        JCTree.JCBlock result = info.getParent().accept(new SimpleTreeVisitor<JCTree.JCBlock, Void>() {
+
+            @Override
+            public JCTree.JCBlock visitBlock(BlockTree node, Void aVoid) {
+                if (node instanceof JCTree.JCBlock) {
+                    return (JCTree.JCBlock) node;
+                } else {
+                    report(JCTree.JCBlock.class, node.getClass());
+                    return null;
+                }
+            }
+
+            @Override
+            public JCTree.JCBlock visitIf(IfTree node, Void aVoid) {
+                if (!(node instanceof JCTree.JCIf)) {
+                    report(JCTree.JCIf.class, node.getClass());
+                    return null;
+                }
+                JCTree.JCIf jcIf = (JCTree.JCIf) node;
+                JCTree.JCBlock block = info.getCompilationUnitProcessingContext().getAstFactory().Block(0, List.nil());
+                if (jcIf.thenpart == info.getReturnExpression()) {
+                    jcIf.thenpart = block;
+                } else if (jcIf.elsepart == info.getReturnExpression()) {
+                    jcIf.elsepart = block;
+                }
+                return block;
+            }
+
+            private void report(@NotNull Class<?> expected, @NotNull Class<?> actual) {
+                info.getCompilationUnitProcessingContext().getProblemReporter().reportDetails(
+                        String.format("find an AST element of type %s but got %s", expected.getName(), actual.getName())
+                );
+            }
+        }, null);
+        return Optional.ofNullable(result);
     }
 
     @NotNull
