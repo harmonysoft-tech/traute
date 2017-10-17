@@ -79,7 +79,7 @@ public class TrauteJavacPlugin implements Plugin {
      * */
     public static final String NAME = "Traute";
 
-    private static final Set<String> DEFAULT_ANNOTATIONS = unmodifiableSet(new HashSet<>(asList(
+    private static final Set<String> DEFAULT_ANNOTATIONS = new HashSet<>(asList(
             // Used by IntelliJ by default - https://www.jetbrains.com/help/idea/nullable-and-notnull-annotations.html
             "org.jetbrains.annotations.NotNull",
 
@@ -97,7 +97,11 @@ public class TrauteJavacPlugin implements Plugin {
 
             // Eclipse - http://help.eclipse.org/oxygen/index.jsp?topic=%2Forg.eclipse.jdt.doc.user%2Ftasks%2Ftask-using_null_annotations.htm
             "org.eclipse.jdt.annotation.NonNull"
-    )));
+    ));
+
+    private static final Set<String> PRIMITIVE_TYPES = new HashSet<>(asList(
+            "byte", "short", "char", "int", "long", "float", "double"
+    ));
 
     /**
      * <p>
@@ -197,6 +201,10 @@ public class TrauteJavacPlugin implements Plugin {
                 int argumentIndex = 0;
                 for (VariableTree variable : method.getParameters()) {
                     if (variable == null) {
+                        continue;
+                    }
+                    Tree type = variable.getType();
+                    if (type != null && PRIMITIVE_TYPES.contains(type.toString())) {
                         continue;
                     }
                     Optional<String> annotation = findNotNullAnnotation(variable, context.imports, context.annotations);

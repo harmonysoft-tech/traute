@@ -195,9 +195,8 @@ public abstract class AbstractTrauteTest {
 
     @Test
     public void lineNumberInNpeTrace() {
-        String annotation = NotNull.class.getName();
         String testSource = prepareSourceText(
-                annotation,
+                NotNull.class.getName(),
                 String.format("public void %s(@NotNull Integer i,\n                   @NotNull Integer i2) {}",
                               METHOD_NAME),
                 "1, null"
@@ -218,6 +217,24 @@ public abstract class AbstractTrauteTest {
         if (!passed) {
             fail(String.format("Expected to get a NPE on attempt to execute the source below but that "
                                + "didn't happen:%n%n%s", testSource));
+        }
+    }
+
+    @Test
+    public void primitiveMethodArguments() {
+        String[] primitiveTypes = {
+                "byte", "short", "char", "int", "long", "float", "double"
+        };
+        for (String primitiveType : primitiveTypes) {
+            String testSource = prepareSourceText(
+                    NotNull.class.getName(),
+                    String.format("public void %s(@NotNull %s arg) {}", METHOD_NAME, primitiveType),
+                    "(" + primitiveType + ")1"
+            );
+            byte[] compiledTestSource = compile(testSource);
+            run(compiledTestSource);
+            // We expect that no instrumentation occurs for primitive types, otherwise we get a compilation
+            // error on attempt to compile a check like 'if (arg == null)' where 'arg' is, say, 'int'.
         }
     }
 
