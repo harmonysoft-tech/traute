@@ -1,5 +1,7 @@
+import org.gradle.internal.jvm.Jvm
+
 dependencies {
-    compileOnly files(org.gradle.internal.jvm.Jvm.current().toolsJar)
+    compileOnly files(Jvm.current().toolsJar)
 
     testCompile project(':core:test').sourceSets.test.output
     testCompile project(path: ':core:test', configuration: 'testCompile')
