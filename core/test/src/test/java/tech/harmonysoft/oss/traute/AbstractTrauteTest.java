@@ -22,9 +22,7 @@ import java.util.*;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
 
 /**
  * <p>Defines common scenarios and checks for all {@code @NotNull}-instrumentation approaches (javac, asm).</p>
@@ -336,6 +334,47 @@ public abstract class AbstractTrauteTest {
         if (!passed) {
             fail(String.format("Expected to get a NPE on attempt to execute the source below but that "
                                + "didn't happen:%n%n%s", testSource));
+        }
+    }
+
+    @Test
+    public void methodReturn_noDoubleEvaluation() {
+        String testSource = String.format(
+                "package %s;\n" +
+                "\n" +
+                "public class %s {\n" +
+                "\n" +
+                "  static int counter;\n" +
+                "\n" +
+                "  @%s\n" +
+                "  public Integer test() {\n" +
+                "    return count();\n" +
+                "  }\n" +
+                "\n" +
+                "  private Integer count() {\n" +
+                "      counter++;\n" +
+                "      return null;\n" +
+                "  }\n" +
+                "\n" +
+                "  public static void main(String[] args) {\n" +
+                "    try {\n" +
+                "      new Test().test();\n" +
+                "    } catch (NullPointerException e) {\n" +
+                "      throw new IllegalStateException(String.valueOf(counter));\n" +
+                "    }\n" +
+                "  }\n" +
+                "}", TestConstants.PACKAGE, TestConstants.CLASS_NAME, NotNull.class.getName());
+        byte[] compiledTestSource = compile(testSource);
+        boolean passed = false;
+        try {
+            run(compiledTestSource);
+        } catch (IllegalStateException e) {
+            assertEquals("'return' expression should be evaluated only once", "1", e.getMessage());
+            passed = true;
+        }
+        if (!passed) {
+            fail(String.format("Expected to get an IllegalStateException on attempt to execute the source "
+                               + "below but that didn't happen:%n%n%s", testSource));
         }
     }
 
