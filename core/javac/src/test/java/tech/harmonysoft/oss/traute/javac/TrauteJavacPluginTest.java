@@ -5,6 +5,11 @@ import tech.harmonysoft.oss.traute.AbstractTrauteTest;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
+
+import static java.util.stream.Collectors.joining;
+import static tech.harmonysoft.oss.traute.javac.TrauteJavacPlugin.NAME;
+import static tech.harmonysoft.oss.traute.javac.TrauteJavacPlugin.OPTION_ANNOTATIONS_NOT_NULL;
 
 /**
  * <p>
@@ -22,9 +27,13 @@ public class TrauteJavacPluginTest extends AbstractTrauteTest {
     @NotNull
     @Override
     protected List<String> getAdditionalCompilerArgs() {
-        // TODO den deliver target annotations
         List<String> result = new ArrayList<>();
-        result.add("-Xplugin:" + TrauteJavacPlugin.NAME);
+        result.add("-Xplugin:" + NAME);
+        Set<String> targetAnnotationsToUse = getTargetAnnotationsToUse();
+        if (!targetAnnotationsToUse.isEmpty()) {
+            String optionValue = targetAnnotationsToUse.stream().collect(joining(":"));
+            result.add(String.format("-A%s=%s", OPTION_ANNOTATIONS_NOT_NULL, optionValue));
+        }
         return result;
     }
 }
