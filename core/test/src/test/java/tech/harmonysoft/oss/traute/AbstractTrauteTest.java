@@ -238,6 +238,36 @@ public abstract class AbstractTrauteTest {
         }
     }
 
+    @Test
+    public void lineNumbersAfterNullCheck() {
+        String testSource = prepareSourceText(
+                NotNull.class.getName(),
+                String.format("public void %s(@NotNull Integer i) {\n" +
+                              "  if (System.currentTimeMillis() > 1) {\n" +
+                              "    throw new IllegalArgumentException();\n" +
+                              "  }\n" +
+                              "}", METHOD_NAME),
+                "1"
+        );
+        byte[] compiledTestSource = compile(testSource);
+        int i = testSource.indexOf("new IllegalArgumentException()");
+        long expectedLine = testSource.substring(0, i).chars().filter(c -> c == '\n').count() + 1;
+        boolean passed = false;
+        try {
+            run(compiledTestSource);
+        } catch (IllegalArgumentException e) {
+            StackTraceElement[] stackTrace = e.getStackTrace();
+            assert stackTrace.length > 0;
+            assertEquals("Expected that an exception thrown after a plugin-introduced check points to "
+                         + "the valid line", expectedLine, stackTrace[0].getLineNumber());
+            passed = true;
+        }
+        if (!passed) {
+            fail(String.format("Expected to get an IllegalArgumentException exception on attempt to execute the "
+                               + "source below but that didn't happen:%n%n%s", testSource));
+        }
+    }
+
     /**
      * Applies given data to the {@link #CLASS_TEMPLATE test source template}.
      *
