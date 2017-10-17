@@ -1,7 +1,11 @@
 package tech.harmonysoft.oss.traute.javac;
 
-import com.sun.source.tree.*;
-import com.sun.source.util.*;
+import com.sun.source.tree.CompilationUnitTree;
+import com.sun.source.tree.ExpressionTree;
+import com.sun.source.util.JavacTask;
+import com.sun.source.util.Plugin;
+import com.sun.source.util.TaskEvent;
+import com.sun.source.util.TaskListener;
 import com.sun.tools.javac.api.BasicJavacTask;
 import com.sun.tools.javac.code.TypeTag;
 import com.sun.tools.javac.processing.JavacProcessingEnvironment;
@@ -13,7 +17,10 @@ import com.sun.tools.javac.util.Log;
 import com.sun.tools.javac.util.Names;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.*;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 
 import static com.sun.tools.javac.util.List.nil;
 import static java.util.Arrays.asList;
@@ -119,25 +126,6 @@ public class TrauteJavacPlugin implements Plugin {
             "org.eclipse.jdt.annotation.NonNull"
     ));
 
-    private static final Set<String> PRIMITIVE_TYPES = new HashSet<>(asList(
-            "byte", "short", "char", "int", "long", "float", "double"
-    ));
-
-    /**
-     * <p>
-     *     There is a possible case that javac implementation is changed not in a backward compatible way in
-     *     a new release. This plugin might stop working then (e.g. new approach should be used for fetching
-     *     {@code AST} builder).
-     * </p>
-     * <p>
-     *     We don't want to generate numerous errors for the compilation then but report at most once.
-     * </p>
-     * <p>
-     *     This flag allows to check if a problem has already been reported.
-     * </p>
-     */
-    private boolean problemReported;
-
     @Override
     public String getName() {
         return NAME;
@@ -146,7 +134,7 @@ public class TrauteJavacPlugin implements Plugin {
     @Override
     public void init(JavacTask task, String... args) {
         if (!(task instanceof BasicJavacTask)) {
-            throw new RuntimeException(getProblemMessage(String.format(
+            throw new RuntimeException(ProblemReporter.getProblemMessage(String.format(
                     "get an instance of type %s in init() method but got %s (%s)",
                     BasicJavacTask.class.getName(), task.getClass().getName(), task
             )));
@@ -167,38 +155,35 @@ public class TrauteJavacPlugin implements Plugin {
 
                 Log log = Log.instance(context);
                 if (log == null) {
-                    throw new RuntimeException(getProblemMessage(
+                    throw new RuntimeException(ProblemReporter.getProblemMessage(
                             "get a javac logger from the current javac context but got <null>"
                     ));
                 }
+                ProblemReporter problemReporter = new ProblemReporter(log);
 
                 CompilationUnitTree compilationUnit = e.getCompilationUnit();
                 if (compilationUnit == null) {
-                    report(log, getProblemMessage("get a prepared compilation unit object but got <null>"));
+                    problemReporter.reportDetails("get a prepared compilation unit object but got <null>");
                     return;
                 }
                 TreeMaker treeMaker = TreeMaker.instance(context);
                 if (treeMaker == null) {
-                    report(log, getProblemMessage(
-                            "get an AST factory from the current javac context but got <null>"
-                    ));
+                    problemReporter.reportDetails("get an AST factory from the current javac context but got <null>");
                     return;
                 }
                 Names names = Names.instance(context);
                 if (names == null) {
-                    report(log, getProblemMessage(
-                            "get a name table from the current javac context but got <null>"
-                    ));
+                    problemReporter.reportDetails("get a name table from the current javac context but got <null>");
                     return;
                 }
                 Set<String> notNullAnnotationsToUse = DEFAULT_ANNOTATIONS;
                 JavacProcessingEnvironment environment = JavacProcessingEnvironment.instance(context);
                 if (environment == null) {
-                    report(log, String.format(
+                    problemReporter.report(String.format(
                             "Can't check if custom @NotNull annotation are specified (through a -A%s javac option) "
                             + "- can't get a %s instance from the current javac context. %s",
                             OPTION_ANNOTATIONS_NOT_NULL, JavacProcessingEnvironment.class.getName(),
-                            getProblemMessageSuffix()));
+                            ProblemReporter.getProblemMessageSuffix()));
                 } else {
                     Map<String, String> options = environment.getOptions();
                     if (options != null) {
@@ -212,142 +197,105 @@ public class TrauteJavacPlugin implements Plugin {
                         }
                     }
                 }
-                process(new PluginContext(notNullAnnotationsToUse, compilationUnit, treeMaker, names, log));
+                compilationUnit.accept(new AstVisitor(
+                        new CompilationUnitProcessingContext(notNullAnnotationsToUse,
+                                                             treeMaker,
+                                                             names,
+                                                             problemReporter),
+                        TrauteJavacPlugin::instrumentMethodParameter,
+                        TrauteJavacPlugin::instrumentMethodReturn),null);
             }
         });
     }
 
-    private void process(@NotNull PluginContext context) {
-        context.ast.accept(new TreeScanner<Void, Void>() {
-            @Override
-            public Void visitImport(ImportTree node, Void v) {
-                if (!node.isStatic()) {
-                    context.addImport(node.getQualifiedIdentifier().toString());
-                }
-                return v;
-            }
-
-            @Override
-            public Void visitMethod(MethodTree method, Void v) {
-                BlockTree bodyBlock = method.getBody();
-                if (!(bodyBlock instanceof JCTree.JCBlock)) {
-                    report(context.log, getProblemMessage(String.format(
-                            "get a %s instance in the method AST but got %s",
-                            JCTree.JCBlock.class.getName(), bodyBlock.getClass().getName()
-                    )));
-                    return v;
-                }
-                JCTree.JCBlock jcBlock = (JCTree.JCBlock) bodyBlock;
-                SortedSet<ParameterToInstrumentInfo> variablesToCheck = new TreeSet<>();
-                int argumentIndex = 0;
-                for (VariableTree variable : method.getParameters()) {
-                    if (variable == null) {
-                        continue;
-                    }
-                    Tree type = variable.getType();
-                    if (type != null && PRIMITIVE_TYPES.contains(type.toString())) {
-                        continue;
-                    }
-                    Optional<String> annotation = findNotNullAnnotation(variable, context.imports, context.annotations);
-                    if (annotation.isPresent()) {
-                        variablesToCheck.add(new ParameterToInstrumentInfo(annotation.get(),
-                                                                           variable,
-                                                                           argumentIndex));
-                    }
-                    argumentIndex++;
-                }
-                int argumentsNumber = method.getParameters().size();
-                for (ParameterToInstrumentInfo info : variablesToCheck) {
-                    TreeMaker astFactoryToUse = context.astFactory;
-                    if (info.variable instanceof JCTree) {
-                        // Mark our AST factory with the variable's offset in order to see corresponding
-                        // line in the stack trace when an NPE is thrown.
-                        astFactoryToUse = astFactoryToUse.at(((JCTree) info.variable).pos);
-                    }
-                    addCheck(info, jcBlock, astFactoryToUse, context.symbolsTable, argumentsNumber);
-                }
-                return v;
-            }
-        }, null);
-    }
-
     /**
-     * Checks if given method parameter {@code AST} element is marked by any configured {@code @NotNull} annotation.
+     * Enhances target method in a way to include a {@code null}-check for the target method parameter.
      *
-     * @param variable  method parameter {@code AST} element to check
-     * @param imports   current source's imports
-     * @return          target annotation's name in case the one is found
+     * @param info an object which contains information necessary for instrumenting target method parameter
      */
-    @NotNull
-    private static Optional<String> findNotNullAnnotation(@NotNull VariableTree variable,
-                                                          @NotNull Set<String> imports,
-                                                          @NotNull Set<String> supportedAnnotations)
-    {
-        ModifiersTree modifiers = variable.getModifiers();
-        if (modifiers == null) {
-            return Optional.empty();
-        }
-        java.util.List<? extends AnnotationTree> annotations = modifiers.getAnnotations();
-        if (annotations == null) {
-            return Optional.empty();
-        }
-        for (AnnotationTree annotation : annotations) {
-            Tree type = annotation.getAnnotationType();
-            if (type == null) {
-                continue;
-            }
-            String parameterAnnotation = annotation.getAnnotationType().toString();
-            if (supportedAnnotations.contains(parameterAnnotation)) {
-                // Qualified annotation, like 'void test(@javax.annotation.Nonnul String s) {}'
-                return Optional.of(parameterAnnotation);
-            }
-            for (String anImport : imports) {
-                // Support an import like 'import org.jetbrains.annotations.*;'
-                if (anImport.endsWith(".*")) {
-                    String candidate = anImport.substring(0, anImport.length() - 1) + parameterAnnotation;
-                    if (supportedAnnotations.contains(candidate)) {
-                        return Optional.of(candidate);
-                    }
-                    continue;
-                }
-                if (!supportedAnnotations.contains(anImport)) {
-                    continue;
-                }
-                if (anImport.endsWith(parameterAnnotation)) {
-                    return Optional.of(anImport);
-                }
-            }
-        }
-        return Optional.empty();
-    }
-
-    /**
-     * Enhances given method {@code AST} element in a way to include a {@code null}-check for the target
-     * method parameter.
-     *
-     * @param parameterInfo         an object which identifies a method parameter marked by a {@code @NotNull} annotation
-     * @param body                  {@code AST} element for the method's body
-     * @param factory               {@code AST} factory to use
-     * @param names                 {@code name table} to use
-     * @param argumentsNumber       total number of target method's parameters
-     */
-    private static void addCheck(@NotNull TrauteJavacPlugin.ParameterToInstrumentInfo parameterInfo,
-                                 @NotNull JCTree.JCBlock body,
-                                 @NotNull JCTree.Factory factory,
-                                 @NotNull Names names,
-                                 int argumentsNumber)
-    {
+    private static void instrumentMethodParameter(@NotNull ParameterToInstrumentInfo info) {
+        String parameterName = info.getMethodParameter().getName().toString();
         String errorMessage = String.format(
                 "Argument '%s' of type %s (#%d out of %d, zero-based) is marked by @%s but got null for it",
-                parameterInfo.variable.getName(), parameterInfo.variable.getType(), parameterInfo.methodArgumentIndex,
-                argumentsNumber, parameterInfo.annotationName
+                parameterName, info.getMethodParameter().getType(),
+                info.getMethodParameterIndex(), info.getMethodParametersNumber(), info.getNotNullAnnotation()
         );
-        JCTree.JCIf statementToAdd = factory.If(
+        TreeMaker factory = info.getCompilationUnitProcessingContext().getAstFactory();
+        Names symbolsTable = info.getCompilationUnitProcessingContext().getSymbolsTable();
+        JCTree.JCBlock body = info.getBody();
+        body.stats = body.stats.prepend(buildVarCheck(factory, symbolsTable, parameterName, errorMessage));
+    }
+
+    private static void instrumentMethodReturn(@NotNull ReturnToInstrumentInfo info) {
+        Optional<List<JCTree.JCStatement>> o = buildReturnCheck(info);
+        if (!o.isPresent()) {
+            return;
+        }
+        List<JCTree.JCStatement> statements = info.getParent().getStatements();
+        for (int i = 0; i < statements.size(); i++) {
+            JCTree.JCStatement statement = statements.get(i);
+            if (statement == info.getReturnExpression()) {
+                List<JCTree.JCStatement> newStatements = o.get();
+                for (int j = i + 1; j < statements.size(); j++) {
+                    newStatements = newStatements.append(statements.get(j));
+                }
+                for (int j = i - 1; j >= 0; j--) {
+                    newStatements = newStatements.prepend(statements.get(j));
+                }
+                info.getParent().stats = newStatements;
+            }
+        }
+    }
+
+    @NotNull
+    private static Optional<List<JCTree.JCStatement>> buildReturnCheck(@NotNull ReturnToInstrumentInfo info) {
+        CompilationUnitProcessingContext context = info.getCompilationUnitProcessingContext();
+        ExpressionTree returnExpression = info.getReturnExpression().getExpression();
+        if (!(returnExpression instanceof JCTree.JCExpression)) {
+            context.getProblemReporter().reportDetails(String.format(
+                    "find a 'return' expression of type %s but got %s",
+                    JCTree.JCExpression.class.getName(), returnExpression.getClass().getName()
+            ));
+            return Optional.empty();
+        }
+        JCTree.JCExpression returnJcExpression = (JCTree.JCExpression) returnExpression;
+
+        TreeMaker factory = context.getAstFactory();
+        Names symbolsTable = context.getSymbolsTable();
+        String errorMessage = String.format("Detected an attempt to return null from a method marked by %s",
+                                            info.getNotNullAnnotation()
+        );
+
+        List<JCTree.JCStatement> result = List.of(
+                factory.VarDef(
+                        factory.Modifiers(0),
+                        symbolsTable.fromString(info.getTmpVariableName()),
+                        info.getReturnType(),
+                        returnJcExpression
+                )
+        );
+        result = result.append(buildVarCheck(factory,
+                                             symbolsTable,
+                                             info.getTmpVariableName(),
+                                             errorMessage));
+        result = result.append(
+                factory.Return(
+                        factory.Ident(symbolsTable.fromString(info.getTmpVariableName()))));
+        return Optional.of(result);
+    }
+
+    @NotNull
+    private static JCTree.JCIf buildVarCheck(@NotNull TreeMaker factory,
+                                             @NotNull Names symbolsTable,
+                                             @NotNull String parameterName,
+                                             @NotNull String errorMessage)
+    {
+        return factory.If(
                 factory.Parens(
                         factory.Binary(
                                 JCTree.Tag.EQ,
                                 factory.Ident(
-                                        names.fromString(parameterInfo.variable.getName().toString())
+                                        symbolsTable.fromString(parameterName)
                                 ),
                                 factory.Literal(TypeTag.BOT, null))
                 ),
@@ -357,7 +305,7 @@ public class TrauteJavacPlugin implements Plugin {
                                         null,
                                         nil(),
                                         factory.Ident(
-                                                names.fromString("NullPointerException")
+                                                symbolsTable.fromString("NullPointerException")
                                         ),
                                         List.of(factory.Literal(TypeTag.CLASS, errorMessage)),
                                         null
@@ -366,94 +314,5 @@ public class TrauteJavacPlugin implements Plugin {
                 )),
                 null
         );
-        body.stats = body.stats.prepend(statementToAdd);
-    }
-
-    /**
-     * Prepares a problem message to show end-user in case the plugin can't do the job during compilation.
-     *
-     * @param details   exact problem details, will be appended to the general problem description suffix
-     * @return          a problem message to use
-     */
-    @NotNull
-    private String getProblemMessage(@NotNull String details) {
-        return String.format(
-                "NotNull-instrumentation failed, it might be that javac implementation has significantly changed "
-                + "- '%s' javac plugin expected to %s. %s", getName(), details, getProblemMessageSuffix()
-        );
-    }
-
-    @NotNull
-    private static String getProblemMessageSuffix() {
-        return "Please contact the Traute plugin's author via traute.java@gmail.com";
-    }
-
-    /**
-     * Shows given problem message to the end-user if necessary.
-     *
-     * @param log       {@code javac} logger
-     * @param message   a problem message to show
-     */
-    private void report(@NotNull Log log, @NotNull String message) {
-        // Do not report a problem more than once
-        if (!problemReported) {
-            log.rawWarning(-1, message);
-            problemReported = true;
-        }
-    }
-
-    private static class PluginContext {
-
-        public final Set<String> annotations = new HashSet<>();
-        public final Set<String> imports     = new HashSet<>();
-
-        @NotNull public final CompilationUnitTree ast;
-        @NotNull public final TreeMaker           astFactory;
-        @NotNull public final Names               symbolsTable;
-        @NotNull public final Log                 log;
-
-        public PluginContext(@NotNull Collection<String> annotations,
-                             @NotNull CompilationUnitTree ast,
-                             @NotNull TreeMaker astFactory,
-                             @NotNull Names symbolsTable,
-                             @NotNull Log log)
-        {
-            this.log = log;
-            this.annotations.addAll(annotations);
-            this.ast = ast;
-            this.astFactory = astFactory;
-            this.symbolsTable = symbolsTable;
-        }
-
-        public void addImport(@NotNull String importText) {
-            imports.add(importText);
-        }
-    }
-
-    /**
-     * A utility data class for describing a variable marked by a {@code @NotNull} annotation.
-     */
-    private static class ParameterToInstrumentInfo implements Comparable<ParameterToInstrumentInfo> {
-
-        /** Target annotation name, e.g. {@code NotNull} or {@code Nonnull}. */
-        @NotNull public final String annotationName;
-        /** An {@code AST} element for the target variable. */
-        @NotNull public final VariableTree variable;
-        /** Target method parameter's index in the whole method parameters list (zero-based). */
-        public final int methodArgumentIndex;
-
-        public ParameterToInstrumentInfo(@NotNull String annotationName,
-                                         @NotNull VariableTree variable,
-                                         int methodArgumentIndex)
-        {
-            this.annotationName = annotationName;
-            this.variable = variable;
-            this.methodArgumentIndex = methodArgumentIndex;
-        }
-
-        @Override
-        public int compareTo(@NotNull TrauteJavacPlugin.ParameterToInstrumentInfo that) {
-            return that.methodArgumentIndex - methodArgumentIndex;
-        }
     }
 }
