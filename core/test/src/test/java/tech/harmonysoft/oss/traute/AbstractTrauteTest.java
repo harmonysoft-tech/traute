@@ -5,6 +5,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.junit.Before;
 import org.junit.Test;
+import tech.harmonysoft.oss.traute.common.instrumentation.InstrumentationType;
 import tech.harmonysoft.oss.traute.fixture.NN;
 import tech.harmonysoft.oss.traute.util.SimpleClassFile;
 import tech.harmonysoft.oss.traute.util.SimpleFileManager;
@@ -23,6 +24,8 @@ import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static org.junit.Assert.*;
+import static tech.harmonysoft.oss.traute.common.instrumentation.InstrumentationType.METHOD_PARAMETER;
+import static tech.harmonysoft.oss.traute.common.instrumentation.InstrumentationType.METHOD_RETURN;
 import static tech.harmonysoft.oss.traute.util.TestConstants.CLASS_NAME;
 import static tech.harmonysoft.oss.traute.util.TestConstants.PACKAGE;
 
@@ -95,7 +98,7 @@ public abstract class AbstractTrauteTest {
     private final Set<String> notNullAnnotations = new HashSet<>();
 
     /** Emulates user's setup for the instrumentation types to use. */
-    private final Set<String> instrumentationTypes = new HashSet<>();
+    private final Set<InstrumentationType> instrumentationTypes = new HashSet<>();
 
     private boolean verboseOutput;
 
@@ -123,7 +126,7 @@ public abstract class AbstractTrauteTest {
     }
 
     @NotNull
-    protected Set<String> getInstrumentationTypes() {
+    protected Set<InstrumentationType> getInstrumentationTypes() {
         return instrumentationTypes;
     }
 
@@ -972,7 +975,7 @@ public abstract class AbstractTrauteTest {
 
     @Test
     public void restrictedInstrumentation_parameterOnly_noCheckForReturn() {
-        instrumentationTypes.add("parameter");
+        instrumentationTypes.add(METHOD_PARAMETER);
         String testMethodBody = "  return count();";
         String testSource = String.format(METHOD_TEST_CLASS_TEMPLATE, testMethodBody);
         byte[] binaries = compile(testSource);
@@ -982,13 +985,13 @@ public abstract class AbstractTrauteTest {
 
     @Test
     public void restrictedInstrumentation_parameterOnly_active() {
-        instrumentationTypes.add("parameter");
+        instrumentationTypes.add(METHOD_PARAMETER);
         doTestArgument(Nonnull.class.getName());
     }
 
     @Test
     public void restrictedInstrumentation_returnOnly_noCheckForParameter() {
-        instrumentationTypes.add("return");
+        instrumentationTypes.add(METHOD_RETURN);
         String testSource = prepareSourceTextForParameterTest(NotNull.class.getName(),
                                                               "void test(@NotNull String s) {}",
                                                               "null");
@@ -999,7 +1002,7 @@ public abstract class AbstractTrauteTest {
 
     @Test
     public void restrictedInstrumentation_returnOnly_active() {
-        instrumentationTypes.add("return");
+        instrumentationTypes.add(METHOD_RETURN);
         doMethodTest("return count();");
     }
 

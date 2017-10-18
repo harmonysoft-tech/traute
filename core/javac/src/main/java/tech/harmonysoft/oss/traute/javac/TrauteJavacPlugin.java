@@ -12,14 +12,16 @@ import com.sun.tools.javac.util.Context;
 import com.sun.tools.javac.util.Log;
 import com.sun.tools.javac.util.Names;
 import org.jetbrains.annotations.NotNull;
+import tech.harmonysoft.oss.traute.common.instrumentation.InstrumentationType;
+import tech.harmonysoft.oss.traute.common.stats.StatsCollector;
 import tech.harmonysoft.oss.traute.javac.common.*;
 import tech.harmonysoft.oss.traute.javac.instrumentation.Instrumentator;
 import tech.harmonysoft.oss.traute.javac.instrumentation.method.MethodReturnInstrumentator;
 import tech.harmonysoft.oss.traute.javac.instrumentation.method.ReturnToInstrumentInfo;
 import tech.harmonysoft.oss.traute.javac.instrumentation.parameter.ParameterInstrumentator;
 import tech.harmonysoft.oss.traute.javac.instrumentation.parameter.ParameterToInstrumentInfo;
-import tech.harmonysoft.oss.traute.javac.settings.TrautePluginSettings;
-import tech.harmonysoft.oss.traute.javac.settings.TrautePluginSettingsBuilder;
+import tech.harmonysoft.oss.traute.common.settings.TrautePluginSettings;
+import tech.harmonysoft.oss.traute.common.settings.TrautePluginSettingsBuilder;
 
 import javax.tools.JavaFileObject;
 import java.io.PrintWriter;
@@ -32,7 +34,7 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import static java.util.stream.Collectors.joining;
 import static tech.harmonysoft.oss.traute.javac.common.TrautePluginLogger.getProblemMessageSuffix;
-import static tech.harmonysoft.oss.traute.javac.settings.TrautePluginSettingsBuilder.settingsBuilder;
+import static tech.harmonysoft.oss.traute.common.settings.TrautePluginSettingsBuilder.settingsBuilder;
 
 /**
  * <p>A {@code javac} plugin which inserts {@code null}-checks for target method arguments and returns from method.</p>

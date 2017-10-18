@@ -1,3 +1,5 @@
 rootProject.name = 'traute'
 
-include 'core:javac', 'core:asm', 'core:test', 'facade:gradle', 'facade:maven', 'facade:ant'
+include 'core:common', 'core:javac', 'core:test', 'facade:gradle', 'facade:maven', 'facade:ant'
+
+project(':core:javac').name = 'traute-javac-plugin'

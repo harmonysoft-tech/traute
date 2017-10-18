@@ -1,6 +1,7 @@
-package tech.harmonysoft.oss.traute.javac.common;
+package tech.harmonysoft.oss.traute.common.stats;
 
 import org.jetbrains.annotations.NotNull;
+import tech.harmonysoft.oss.traute.common.instrumentation.InstrumentationType;
 
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;

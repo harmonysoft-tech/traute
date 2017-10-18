@@ -4,7 +4,8 @@ import com.sun.source.tree.CompilationUnitTree;
 import com.sun.tools.javac.tree.TreeMaker;
 import com.sun.tools.javac.util.Names;
 import org.jetbrains.annotations.NotNull;
-import tech.harmonysoft.oss.traute.javac.settings.TrautePluginSettings;
+import tech.harmonysoft.oss.traute.common.stats.StatsCollector;
+import tech.harmonysoft.oss.traute.common.settings.TrautePluginSettings;
 
 import java.util.HashSet;
 import java.util.Set;

@@ -9,14 +9,14 @@ import org.jetbrains.annotations.Nullable;
 import tech.harmonysoft.oss.traute.javac.instrumentation.Instrumentator;
 import tech.harmonysoft.oss.traute.javac.instrumentation.method.ReturnToInstrumentInfo;
 import tech.harmonysoft.oss.traute.javac.instrumentation.parameter.ParameterToInstrumentInfo;
-import tech.harmonysoft.oss.traute.javac.settings.TrautePluginSettings;
+import tech.harmonysoft.oss.traute.common.settings.TrautePluginSettings;
 
 import javax.tools.JavaCompiler;
 import java.util.*;
 
 import static java.util.Arrays.asList;
-import static tech.harmonysoft.oss.traute.javac.common.InstrumentationType.METHOD_PARAMETER;
-import static tech.harmonysoft.oss.traute.javac.common.InstrumentationType.METHOD_RETURN;
+import static tech.harmonysoft.oss.traute.common.instrumentation.InstrumentationType.METHOD_PARAMETER;
+import static tech.harmonysoft.oss.traute.common.instrumentation.InstrumentationType.METHOD_RETURN;
 
 /**
  * Inspects {@code AST} built by {@link JavaCompiler}, finds places where to apply {@code null}-checks

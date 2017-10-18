@@ -1,8 +1,8 @@
-package tech.harmonysoft.oss.traute.javac.settings;
+package tech.harmonysoft.oss.traute.common.settings;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import tech.harmonysoft.oss.traute.javac.common.InstrumentationType;
+import tech.harmonysoft.oss.traute.common.instrumentation.InstrumentationType;
 
 import java.util.Arrays;
 import java.util.EnumSet;

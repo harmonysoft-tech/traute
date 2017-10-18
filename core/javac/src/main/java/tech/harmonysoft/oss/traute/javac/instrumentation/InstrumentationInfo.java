@@ -2,7 +2,7 @@ package tech.harmonysoft.oss.traute.javac.instrumentation;
 
 import org.jetbrains.annotations.NotNull;
 import tech.harmonysoft.oss.traute.javac.common.CompilationUnitProcessingContext;
-import tech.harmonysoft.oss.traute.javac.common.InstrumentationType;
+import tech.harmonysoft.oss.traute.common.instrumentation.InstrumentationType;
 
 /**
  * Holds information necessary to perform instrumentation.

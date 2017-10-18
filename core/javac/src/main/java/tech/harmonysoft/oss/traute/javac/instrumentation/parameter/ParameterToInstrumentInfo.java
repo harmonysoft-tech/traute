@@ -4,7 +4,7 @@ import com.sun.source.tree.VariableTree;
 import com.sun.tools.javac.tree.JCTree;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import tech.harmonysoft.oss.traute.javac.common.InstrumentationType;
+import tech.harmonysoft.oss.traute.common.instrumentation.InstrumentationType;
 import tech.harmonysoft.oss.traute.javac.instrumentation.InstrumentationInfo;
 import tech.harmonysoft.oss.traute.javac.common.CompilationUnitProcessingContext;
 

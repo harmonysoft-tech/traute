@@ -2,6 +2,7 @@ package tech.harmonysoft.oss.traute.javac;
 
 import org.jetbrains.annotations.NotNull;
 import tech.harmonysoft.oss.traute.AbstractTrauteTest;
+import tech.harmonysoft.oss.traute.common.instrumentation.InstrumentationType;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -34,9 +35,11 @@ public class TrauteJavacPluginTest extends AbstractTrauteTest {
             result.add(String.format("-A%s=%s", OPTION_ANNOTATIONS_NOT_NULL, optionValue));
         }
 
-        Set<String> instrumentationTypes = getInstrumentationTypes();
+        Set<InstrumentationType> instrumentationTypes = getInstrumentationTypes();
         if (!instrumentationTypes.isEmpty()) {
-            String optionValue = instrumentationTypes.stream().collect(joining(SEPARATOR));
+            String optionValue = instrumentationTypes.stream()
+                                                     .map(InstrumentationType::getShortName)
+                                                     .collect(joining(SEPARATOR));
             result.add(String.format("-A%s=%s", OPTION_INSTRUMENTATIONS_TO_USE, optionValue));
         }
 

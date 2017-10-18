@@ -3,6 +3,8 @@ import org.gradle.internal.jvm.Jvm
 dependencies {
     compileOnly files(Jvm.current().toolsJar)
 
+    compile project(':core:common')
+
     testCompile project(':core:test').sourceSets.test.output
     testCompile project(path: ':core:test', configuration: 'testCompile')
 }

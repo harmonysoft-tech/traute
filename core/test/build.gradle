@@ -3,6 +3,8 @@ import org.gradle.internal.jvm.Jvm
 dependencies {
     testCompile files(Jvm.current().toolsJar)
 
+    testCompile project(':core:common')
+
     // Jars with default NotNull annotations
     testCompile 'com.google.code.findbugs:jsr305:3.0.2'
     testCompile 'javax:javaee-api:8.0'
