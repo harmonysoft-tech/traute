@@ -19,6 +19,8 @@ import tech.harmonysoft.oss.traute.javac.method.ReturnToInstrumentInfo;
 import tech.harmonysoft.oss.traute.javac.parameter.ParameterInstrumentator;
 import tech.harmonysoft.oss.traute.javac.parameter.ParameterToInstrumentInfo;
 
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -149,8 +151,8 @@ public class TrauteJavacPlugin implements Plugin {
             }
 
             @Override
-            public void finished(TaskEvent e) {
-                if (e.getKind() != TaskEvent.Kind.PARSE) {
+            public void finished(TaskEvent event) {
+                if (event.getKind() != TaskEvent.Kind.PARSE) {
                     // The idea is to add our checks just after the parser builds an AST. Further on checks code
                     // will also be analyzed for errors and included into resulting binary.
                     return;
@@ -164,7 +166,7 @@ public class TrauteJavacPlugin implements Plugin {
                 }
                 ProblemReporter problemReporter = new ProblemReporter(log);
 
-                CompilationUnitTree compilationUnit = e.getCompilationUnit();
+                CompilationUnitTree compilationUnit = event.getCompilationUnit();
                 if (compilationUnit == null) {
                     problemReporter.reportDetails("get a prepared compilation unit object but got <null>");
                     return;
@@ -200,14 +202,25 @@ public class TrauteJavacPlugin implements Plugin {
                         }
                     }
                 }
-                compilationUnit.accept(new InstrumentationApplianceFinder(
-                        new CompilationUnitProcessingContext(notNullAnnotationsToUse,
-                                                             treeMaker,
-                                                             names,
-                                                             problemReporter),
-                        parameterInstrumentator,
-                        methodInstrumentator),null);
+                try {
+                    compilationUnit.accept(new InstrumentationApplianceFinder(
+                            new CompilationUnitProcessingContext(notNullAnnotationsToUse,
+                                                                 treeMaker,
+                                                                 names,
+                                                                 problemReporter),
+                            parameterInstrumentator,
+                            methodInstrumentator),null);
+                } catch (Throwable e) {
+                    StringWriter writer = new StringWriter();
+                    e.printStackTrace(new PrintWriter(writer));
+                    log.rawError(-1, String.format(
+                            "Unexpected exception occurred on attempt to perform NotNull instrumentation for %s:%n%s",
+                            event.getSourceFile(), writer
+                    ));
+                }
             }
         });
     }
+
+
 }
