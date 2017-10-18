@@ -11,6 +11,7 @@ import com.sun.tools.javac.tree.TreeMaker;
 import com.sun.tools.javac.util.Context;
 import com.sun.tools.javac.util.Log;
 import com.sun.tools.javac.util.Names;
+import org.jetbrains.annotations.NotNull;
 import tech.harmonysoft.oss.traute.javac.common.CompilationUnitProcessingContext;
 import tech.harmonysoft.oss.traute.javac.common.InstrumentationApplianceFinder;
 import tech.harmonysoft.oss.traute.javac.common.ProblemReporter;
@@ -24,6 +25,7 @@ import java.io.StringWriter;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicReference;
 
 import static java.util.Arrays.asList;
 
@@ -128,8 +130,9 @@ public class TrauteJavacPlugin implements Plugin {
             "org.eclipse.jdt.annotation.NonNull"
     ));
 
+    private final AtomicReference<ProblemReporter>          problemReporterRef      = new AtomicReference<>();
     private final Instrumentator<ParameterToInstrumentInfo> parameterInstrumentator = new ParameterInstrumentator();
-    private final Instrumentator<ReturnToInstrumentInfo> methodInstrumentator = new MethodReturnInstrumentator();
+    private final Instrumentator<ReturnToInstrumentInfo>    methodInstrumentator    = new MethodReturnInstrumentator();
 
     @Override
     public String getName() {
@@ -164,7 +167,7 @@ public class TrauteJavacPlugin implements Plugin {
                             "get a javac logger from the current javac context but got <null>"
                     ));
                 }
-                ProblemReporter problemReporter = new ProblemReporter(log);
+                ProblemReporter problemReporter = getProblemReporter(log);
 
                 CompilationUnitTree compilationUnit = event.getCompilationUnit();
                 if (compilationUnit == null) {
@@ -222,5 +225,14 @@ public class TrauteJavacPlugin implements Plugin {
         });
     }
 
-
+    @NotNull
+    private ProblemReporter getProblemReporter(@NotNull Log log) {
+        ProblemReporter reporter = problemReporterRef.get();
+        if (reporter != null && reporter.getLog() == log) {
+            return reporter;
+        }
+        ProblemReporter result = new ProblemReporter(log);
+        problemReporterRef.set(result);
+        return result;
+    }
 }

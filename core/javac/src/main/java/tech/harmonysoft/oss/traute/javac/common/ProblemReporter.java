@@ -27,6 +27,11 @@ public class ProblemReporter {
         this.log = log;
     }
 
+    @NotNull
+    public Log getLog() {
+        return log;
+    }
+
     /**
      * Delegates to the {@link #report(String)} but adds more generic info to the given problem details
      *
