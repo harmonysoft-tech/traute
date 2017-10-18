@@ -1,4 +1,4 @@
-package tech.harmonysoft.oss.traute.javac.method;
+package tech.harmonysoft.oss.traute.javac.instrumentation.method;
 
 import com.sun.source.tree.ExpressionTree;
 import com.sun.tools.javac.tree.JCTree;
@@ -6,8 +6,8 @@ import com.sun.tools.javac.tree.TreeMaker;
 import com.sun.tools.javac.util.List;
 import com.sun.tools.javac.util.Names;
 import org.jetbrains.annotations.NotNull;
-import tech.harmonysoft.oss.traute.javac.Instrumentator;
 import tech.harmonysoft.oss.traute.javac.common.CompilationUnitProcessingContext;
+import tech.harmonysoft.oss.traute.javac.instrumentation.AbstractInstrumentator;
 import tech.harmonysoft.oss.traute.javac.util.InstrumentationUtil;
 
 import java.util.Optional;
@@ -40,18 +40,18 @@ import java.util.Optional;
  * </p>
  * <p>Thread-safe.</p>
  */
-public class MethodReturnInstrumentator implements Instrumentator<ReturnToInstrumentInfo> {
+public class MethodReturnInstrumentator extends AbstractInstrumentator<ReturnToInstrumentInfo> {
 
     @Override
-    public void instrument(@NotNull ReturnToInstrumentInfo info) {
+    protected boolean mayBeInstrument(@NotNull ReturnToInstrumentInfo info) {
         ReturnInstrumentationAstParent parent
                 = info.getParent().accept(new MethodInstrumentationParentFinder(info), null);
         if (parent == null) {
-            return;
+            return false;
         }
         Optional<List<JCTree.JCStatement>> returnCheckOptional = buildReturnCheck(info);
         if (!returnCheckOptional.isPresent()) {
-            return;
+            return false;
         }
         List<JCTree.JCStatement> statements = parent.getStatements();
         for (int i = 0; i < statements.size(); i++) {
@@ -65,12 +65,15 @@ public class MethodReturnInstrumentator implements Instrumentator<ReturnToInstru
                     newStatements = newStatements.prepend(statements.get(j));
                 }
                 parent.setStatements(newStatements);
-                return;
+                mayBeLogInstrumentation(info);
+                return true;
             }
         }
         // When control flow reaches this place, that means that the AST parent doesn't contain any statments, so,
         // we just populate it with new instructions.
         parent.setStatements(returnCheckOptional.get());
+        mayBeLogInstrumentation(info);
+        return true;
     }
 
     @NotNull
@@ -78,7 +81,7 @@ public class MethodReturnInstrumentator implements Instrumentator<ReturnToInstru
         CompilationUnitProcessingContext context = info.getContext();
         ExpressionTree returnExpression = info.getReturnExpression().getExpression();
         if (!(returnExpression instanceof JCTree.JCExpression)) {
-            context.getProblemReporter().reportDetails(String.format(
+            context.getLogger().reportDetails(String.format(
                     "find a 'return' expression of type %s but got %s",
                     JCTree.JCExpression.class.getName(), returnExpression.getClass().getName()
             ));
@@ -110,4 +113,13 @@ public class MethodReturnInstrumentator implements Instrumentator<ReturnToInstru
         return Optional.of(result);
     }
 
+    private void mayBeLogInstrumentation(@NotNull ReturnToInstrumentInfo info) {
+        CompilationUnitProcessingContext context = info.getContext();
+        if (context.isVerbose()) {
+            String methodName = info.getQualifiedMethodName();
+            if (methodName != null) {
+                context.getLogger().info("added a null-check for 'return' expression in method " + methodName + "()");
+            }
+        }
+    }
 }

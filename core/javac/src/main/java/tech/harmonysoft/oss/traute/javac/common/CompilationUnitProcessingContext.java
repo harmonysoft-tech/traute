@@ -17,19 +17,26 @@ public class CompilationUnitProcessingContext {
     private final Set<String> notNullAnnotations = new HashSet<>();
     private final Set<String> imports            = new HashSet<>();
 
-    @NotNull private final TreeMaker           astFactory;
-    @NotNull private final Names               symbolsTable;
-    @NotNull private final ProblemReporter     problemReporter;
+    @NotNull private final TreeMaker          astFactory;
+    @NotNull private final Names              symbolsTable;
+    @NotNull private final TrautePluginLogger logger;
+    @NotNull private final StatsCollector     statsCollector;
+
+    private final boolean verbose;
 
     public CompilationUnitProcessingContext(@NotNull Collection<String> notNullAnnotations,
                                             @NotNull TreeMaker astFactory,
                                             @NotNull Names symbolsTable,
-                                            @NotNull ProblemReporter problemReporter)
+                                            @NotNull TrautePluginLogger logger,
+                                            @NotNull StatsCollector statsCollector,
+                                            boolean verbose)
     {
+        this.statsCollector = statsCollector;
+        this.verbose = verbose;
         this.notNullAnnotations.addAll(notNullAnnotations);
         this.astFactory = astFactory;
         this.symbolsTable = symbolsTable;
-        this.problemReporter = problemReporter;
+        this.logger = logger;
     }
 
     public void addImport(@NotNull String importText) {
@@ -57,7 +64,16 @@ public class CompilationUnitProcessingContext {
     }
 
     @NotNull
-    public ProblemReporter getProblemReporter() {
-        return problemReporter;
+    public TrautePluginLogger getLogger() {
+        return logger;
+    }
+
+    @NotNull
+    public StatsCollector getStatsCollector() {
+        return statsCollector;
+    }
+
+    public boolean isVerbose() {
+        return verbose;
     }
 }

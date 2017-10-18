@@ -1,4 +1,4 @@
-package tech.harmonysoft.oss.traute.javac.method;
+package tech.harmonysoft.oss.traute.javac.instrumentation.method;
 
 import com.sun.source.tree.*;
 import com.sun.source.util.SimpleTreeVisitor;
@@ -131,7 +131,7 @@ public class MethodInstrumentationParentFinder extends SimpleTreeVisitor<ReturnI
     }
 
     private void report(@NotNull Class<?> expectedClass, @NotNull Object actual) {
-        info.getContext().getProblemReporter().reportDetails(
+        info.getContext().getLogger().reportDetails(
                 String.format("find an AST element of type %s but got %s",
                               expectedClass.getName(), actual.getClass().getName())
         );

@@ -10,6 +10,7 @@ import java.util.Set;
 import static java.util.stream.Collectors.joining;
 import static tech.harmonysoft.oss.traute.javac.TrauteJavacPlugin.NAME;
 import static tech.harmonysoft.oss.traute.javac.TrauteJavacPlugin.OPTION_ANNOTATIONS_NOT_NULL;
+import static tech.harmonysoft.oss.traute.javac.TrauteJavacPlugin.OPTION_LOG_VERBOSE;
 
 /**
  * <p>
@@ -29,10 +30,13 @@ public class TrauteJavacPluginTest extends AbstractTrauteTest {
     protected List<String> getAdditionalCompilerArgs() {
         List<String> result = new ArrayList<>();
         result.add("-Xplugin:" + NAME);
-        Set<String> targetAnnotationsToUse = getTargetAnnotationsToUse();
+        Set<String> targetAnnotationsToUse = getNotNullAnnotations();
         if (!targetAnnotationsToUse.isEmpty()) {
             String optionValue = targetAnnotationsToUse.stream().collect(joining(":"));
             result.add(String.format("-A%s=%s", OPTION_ANNOTATIONS_NOT_NULL, optionValue));
+        }
+        if (isVerboseOutput()) {
+            result.add(String.format("-A%s=true", OPTION_LOG_VERBOSE));
         }
         return result;
     }

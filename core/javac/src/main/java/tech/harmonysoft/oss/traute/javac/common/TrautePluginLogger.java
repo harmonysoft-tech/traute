@@ -4,7 +4,14 @@ import com.sun.tools.javac.util.Log;
 import org.jetbrains.annotations.NotNull;
 import tech.harmonysoft.oss.traute.javac.TrauteJavacPlugin;
 
-public class ProblemReporter {
+import javax.tools.JavaCompiler;
+
+/**
+ * Custom wrapper around standard {@link JavaCompiler javac} {@link Log logger}.
+ */
+public class TrautePluginLogger {
+
+    private static final String NOTICE_PREFIX = String.format("[%s plugin]: ", TrauteJavacPlugin.NAME);
 
     @NotNull private final Log log;
 
@@ -23,13 +30,17 @@ public class ProblemReporter {
      */
     private boolean problemReported;
 
-    public ProblemReporter(@NotNull Log log) {
+    public TrautePluginLogger(@NotNull Log log) {
         this.log = log;
     }
 
     @NotNull
     public Log getLog() {
         return log;
+    }
+
+    public void info(@NotNull String message) {
+        log.printRawLines(Log.WriterKind.NOTICE, NOTICE_PREFIX + message);
     }
 
     /**

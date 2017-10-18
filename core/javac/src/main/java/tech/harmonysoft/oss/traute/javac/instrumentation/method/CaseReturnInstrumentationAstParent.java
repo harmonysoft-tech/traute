@@ -1,4 +1,4 @@
-package tech.harmonysoft.oss.traute.javac.method;
+package tech.harmonysoft.oss.traute.javac.instrumentation.method;
 
 import com.sun.tools.javac.tree.JCTree;
 import com.sun.tools.javac.util.List;

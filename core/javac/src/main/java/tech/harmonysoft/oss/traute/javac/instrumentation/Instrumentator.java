@@ -1,4 +1,4 @@
-package tech.harmonysoft.oss.traute.javac;
+package tech.harmonysoft.oss.traute.javac.instrumentation;
 
 import org.jetbrains.annotations.NotNull;
 

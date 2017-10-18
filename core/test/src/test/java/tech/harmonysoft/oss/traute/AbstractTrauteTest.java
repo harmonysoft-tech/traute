@@ -9,10 +9,10 @@ import tech.harmonysoft.oss.traute.fixture.NN;
 import tech.harmonysoft.oss.traute.util.SimpleClassFile;
 import tech.harmonysoft.oss.traute.util.SimpleFileManager;
 import tech.harmonysoft.oss.traute.util.SimpleSourceFile;
-import tech.harmonysoft.oss.traute.util.TestConstants;
 
 import javax.annotation.Nonnull;
 import javax.tools.JavaCompiler;
+import javax.tools.JavaFileObject;
 import javax.tools.ToolProvider;
 import java.io.StringWriter;
 import java.lang.reflect.InvocationTargetException;
@@ -23,6 +23,8 @@ import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static org.junit.Assert.*;
+import static tech.harmonysoft.oss.traute.util.TestConstants.CLASS_NAME;
+import static tech.harmonysoft.oss.traute.util.TestConstants.PACKAGE;
 
 /**
  * <p>Defines common scenarios and checks for all {@code @NotNull}-instrumentation approaches (javac, asm).</p>
@@ -40,7 +42,7 @@ import static org.junit.Assert.*;
  *           delegate to concrete implementation test setup details, e.g. allow to
  *           {@link #getAdditionalCompilerArgs() modify javac arguments}
  *           (necessary for the implementation based on {@code javac} plugins api) and
- *           {@link #getTargetAnnotationsToUse() emulate user's setup for @NotNull annotations}
+ *           {@link #getNotNullAnnotations() emulate user's setup for @NotNull annotations}
  *       </li>
  *     </ul>
  * </p>
@@ -55,14 +57,14 @@ public abstract class AbstractTrauteTest {
 
     /** Test sources template. All concrete tests fulfill it. */
     private static final String PARAMETER_TEST_CLASS_TEMPLATE =
-            "package " + TestConstants.PACKAGE + ";\n" +
+            "package " + PACKAGE + ";\n" +
             "%s\n" +
-            "public class " + TestConstants.CLASS_NAME + " {\n" +
+            "public class " + CLASS_NAME + " {\n" +
             "\n" +
             "%s\n" +
             "\n" +
             "  public static void main(String[] args) {\n" +
-            "    new " + TestConstants.CLASS_NAME + "()." + METHOD_NAME + "(%s);\n" +
+            "    new " + CLASS_NAME + "()." + METHOD_NAME + "(%s);\n" +
             "  }\n" +
             "}";
 
@@ -83,18 +85,21 @@ public abstract class AbstractTrauteTest {
             "  public static void main(String[] args) {\n" +
             "    new Test().test();\n" +
             "  }\n" +
-            "}", TestConstants.PACKAGE, TestConstants.CLASS_NAME, NotNull.class.getName());
+            "}", PACKAGE, CLASS_NAME, NotNull.class.getName());
 
     private static final String[] PRIMITIVE_TYPES = {
             "byte", "short", "char", "int", "long", "float", "double"
     };
 
     /** Emulates user's setup for the {@code @NotNull} annotations to use. */
-    private final Set<String> targetAnnotationsToUse = new HashSet<>();
+    private final Set<String> notNullAnnotations = new HashSet<>();
+
+    private boolean verboseOutput;
 
     @Before
     public void setUp() {
-        targetAnnotationsToUse.clear();
+        notNullAnnotations.clear();
+        verboseOutput = false;
     }
 
     /**
@@ -109,8 +114,12 @@ public abstract class AbstractTrauteTest {
      * @return  {@code @NotNull} annotations defined by the end-user
      */
     @NotNull
-    protected Set<String> getTargetAnnotationsToUse() {
-        return targetAnnotationsToUse;
+    protected Set<String> getNotNullAnnotations() {
+        return notNullAnnotations;
+    }
+
+    protected boolean isVerboseOutput() {
+        return verboseOutput;
     }
 
     @Test
@@ -290,7 +299,7 @@ public abstract class AbstractTrauteTest {
 
     @Test
     public void customAnnotations_reducedNumber() {
-        targetAnnotationsToUse.add(Nonnull.class.getName());
+        notNullAnnotations.add(Nonnull.class.getName());
         String testSource = prepareSourceTextForParameterTest(
                 null,
                 String.format("public void %s(@%s Integer i1, @%s Integer i2) {}",
@@ -314,7 +323,7 @@ public abstract class AbstractTrauteTest {
 
     @Test
     public void customAnnotations_moreThanOne() {
-        targetAnnotationsToUse.addAll(asList(Nonnull.class.getName(), NotNull.class.getName()));
+        notNullAnnotations.addAll(asList(Nonnull.class.getName(), NotNull.class.getName()));
         String testSource = prepareSourceTextForParameterTest(
                 null,
                 String.format("public void %s(@%s Integer i1, @%s Integer i2) {}",
@@ -338,7 +347,7 @@ public abstract class AbstractTrauteTest {
 
     @Test
     public void customAnnotations_trulyCustom() {
-        targetAnnotationsToUse.add(NN.class.getName());
+        notNullAnnotations.add(NN.class.getName());
         String testSource = prepareSourceTextForParameterTest(
                 NN.class.getName(),
                 String.format("public void %s(@%s Integer i1) {}", METHOD_NAME, NN.class.getSimpleName()),
@@ -383,7 +392,7 @@ public abstract class AbstractTrauteTest {
                 "      throw new IllegalStateException(String.valueOf(counter));\n" +
                 "    }\n" +
                 "  }\n" +
-                "}", TestConstants.PACKAGE, TestConstants.CLASS_NAME, NotNull.class.getName());
+                "}", PACKAGE, CLASS_NAME, NotNull.class.getName());
         byte[] compiledTestSource = compile(testSource);
         boolean passed = false;
         try {
@@ -637,7 +646,7 @@ public abstract class AbstractTrauteTest {
                 "      throw new IllegalStateException(String.valueOf(counter));\n" +
                 "    }\n" +
                 "  }\n" +
-                "}", TestConstants.PACKAGE, TestConstants.CLASS_NAME, NotNull.class.getName());
+                "}", PACKAGE, CLASS_NAME, NotNull.class.getName());
         byte[] compiledTestSource = compile(testSource);
         boolean passed = false;
         try {
@@ -753,7 +762,7 @@ public abstract class AbstractTrauteTest {
                 "      throw new IllegalStateException(String.valueOf(counter));\n" +
                 "    }\n" +
                 "  }\n" +
-                "}", TestConstants.PACKAGE, TestConstants.CLASS_NAME, NotNull.class.getName());
+                "}", PACKAGE, CLASS_NAME, NotNull.class.getName());
         byte[] compiledTestSource = compile(testSource);
         boolean passed = false;
         try {
@@ -817,10 +826,139 @@ public abstract class AbstractTrauteTest {
                     "  public static void main(String[] args) {\n" +
                     "    new Test().test();\n" +
                     "  }\n" +
-                    "}", TestConstants.PACKAGE, TestConstants.CLASS_NAME, NotNull.class.getName(), type, type);
+                    "}", PACKAGE, CLASS_NAME, NotNull.class.getName(), type, type);
             byte[] compiledTestSource = compile(testSource);
             run(compiledTestSource);
         }
+    }
+
+    @Test
+    public void logging_instrumentations_verboseOn() {
+        doTestVerboseInstrumentationsLogging(true);
+    }
+
+    @Test
+    public void logging_instrumentations_verboseOff() {
+        doTestVerboseInstrumentationsLogging(false);
+    }
+
+    private void doTestVerboseInstrumentationsLogging(boolean verbose) {
+        verboseOutput = verbose;
+        String testSource = String.format(
+                "package %s;\n" +
+                "\n" +
+                "import %s;\n" +
+                "\n" +
+                "public class %s {\n" +
+                "\n" +
+                "  @NotNull\n" +
+                "  public Integer test(@NotNull Integer i1, @NotNull Integer i2) {\n" +
+                "    return i1 + i2;\n" +
+                "  }\n" +
+                "\n" +
+                "  @NotNull\n" +
+                "  private Integer negative(@NotNull Integer i) {\n" +
+                "      return -1 * i;\n" +
+                "  }\n" +
+                "\n" +
+                "  public static void main(String[] args) {\n" +
+                "    new Test().test(1, 2);\n" +
+                "  }\n" +
+                "}", PACKAGE, NotNull.class.getName(), CLASS_NAME);
+
+        String compilerOutput = compileForFullResult(testSource).compilerOutput;
+
+        String[] targetParameterNames = {"i1", "i2", "i"};
+        for (String targetParameterName : targetParameterNames) {
+            String filterMessage = String.format("added a null-check for argument '%s'", targetParameterName);
+            String description = String.format(
+                    "Expected that 'parameter instrumentation' for parameter '%s' from the source below is "
+                    + "%smentioned in compiler output when 'verbose mode' is %s%nOutput: %s%nSource:%n%s",
+                    targetParameterName, verbose ? "" : "not ", verbose ? "on" : "off", compilerOutput, testSource);
+            assertEquals(description, verbose, compilerOutput.contains(filterMessage));
+        }
+
+        String methodPrefix = PACKAGE + "." + CLASS_NAME + ".";
+        String[] targetMethods = {methodPrefix + "test()", methodPrefix + "negative()"};
+        for (String targetMethod : targetMethods) {
+            String filterMessage = "added a null-check for 'return' expression in method " + targetMethod;
+            String description = String.format(
+                    "Expected that 'return instrumentation' for method '%s' from the source below is "
+                    + "%smentioned in compiler output when 'verbose mode' is %s%nOutput: %s%nSource:%n%s",
+                    targetMethod, verbose ? "" : "not ", verbose ? "on" : "off", compilerOutput, testSource);
+            assertEquals(description, verbose, compilerOutput.contains(filterMessage));
+        }
+    }
+
+    @Test
+    public void logging_verbose_classStats() {
+        verboseOutput = true;
+        String testSource = String.format(
+                "package %s;\n" +
+                "\n" +
+                "import %s;\n" +
+                "\n" +
+                "public class %s {\n" +
+                "\n" +
+                "  @NotNull\n" +
+                "  public Integer test(@NotNull Integer i1, @NotNull Integer i2) {\n" +
+                "    return i1 + i2;\n" +
+                "  }\n" +
+                "\n" +
+                "  class Inner {\n" +
+                "    @NotNull\n" +
+                "    String inner(@NotNull String s) { return s + 1;}\n" +
+                "  }\n" +
+                "\n" +
+                "  static class StaticInner {\n" +
+                "    @NotNull\n" +
+                "    String staticInner(@NotNull String s) { return s + 2;}\n" +
+                "  }\n" +
+                "\n" +
+                "  public static void main(String[] args) {\n" +
+                "    new Test().test(1, 2);\n" +
+                "  }\n" +
+                "}", PACKAGE, NotNull.class.getName(), CLASS_NAME);
+
+        String compilerOutput = compileForFullResult(testSource).compilerOutput;
+        String filter = String.format(
+                "added 7 instrumentations to the /%s/%s%s - METHOD_PARAMETER: 4, METHOD_RETURN: 3",
+                PACKAGE, CLASS_NAME, JavaFileObject.Kind.SOURCE.extension
+        );
+        assertTrue(
+                String.format("Expected that class-level instrumentations statistics is mentioned in the compiler "
+                              + "output.%nFilter text: '%s'%nCompiler output:%n%s%n%nSource:%n%s",
+                              filter, compilerOutput, testSource),
+                compilerOutput.contains(filter)
+        );
+    }
+
+    @Test
+    public void logging_customSetting_annotations() {
+        notNullAnnotations.add(NN.class.getName());
+        String testMethodBody = "  return 1;";
+        String testSource = String.format(METHOD_TEST_CLASS_TEMPLATE, testMethodBody);
+        String compilerOutput = compileForFullResult(testSource).compilerOutput;
+        String filterText = "using the following NotNull annotations: " + notNullAnnotations;
+        assertTrue(
+                String.format("Expected the custom NotNull annotations are mentioned in the compiler "
+                              + "output.%nFilter text: '%s'%nCompiler output: '%s'", filterText, compilerOutput),
+                compilerOutput.contains(filterText)
+        );
+    }
+
+    @Test
+    public void logging_customSetting_verbose() {
+        verboseOutput = true;
+        String testMethodBody = "  return 1;";
+        String testSource = String.format(METHOD_TEST_CLASS_TEMPLATE, testMethodBody);
+        String compilerOutput = compileForFullResult(testSource).compilerOutput;
+        String filterText = "'verbose mode' is set on";
+        assertTrue(
+                String.format("Expected the active 'verbose mode' is mentioned in the compiler "
+                              + "output.%nFilter text: '%s'%nCompiler output: '%s'", filterText, compilerOutput),
+                compilerOutput.contains(filterText)
+        );
     }
 
     /**
@@ -864,8 +1002,27 @@ public abstract class AbstractTrauteTest {
      * @param text      test source to compile
      * @return          compiled binaries for the given source
      */
-    @NotNull
     private byte[] compile(@NotNull String text) {
+        CompilationResult result = compileForFullResult(text);
+        if (result.binaries == null) {
+            fail(String.format("Failed to fetch compiled test class, javac api must have changed, "
+                               + "please contact the plugin's author via traute.java@gmail.com.%n"
+                               + "Compiler output: %s%n"
+                               + "Test source:%n%n%s",
+                               result.compilerOutput, text));
+        }
+        return result.binaries;
+    }
+
+    /**
+     * Compiles given test source using in-memory {@link JavaCompiler} and returns
+     * {@link CompilationResult full result} (e.g. including compiler's output).
+     *
+     * @param text  test source to compile
+     * @return      compilation result
+     */
+    @NotNull
+    private CompilationResult compileForFullResult(@NotNull String text) {
         StringWriter output = new StringWriter();
 
         JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
@@ -891,23 +1048,20 @@ public abstract class AbstractTrauteTest {
         }
 
         List<SimpleClassFile> compiled = fileManager.getCompiled();
-        if (compiled.size() != 1) {
-            fail(String.format("Failed to fetch compiled test class, javac api must have changed, "
-                               + "please contact the plugin's author via traute.java@gmail.com.%n"
-                               + "Compiler output: %s%n"
-                               + "Test source:%n%n%s",
-                               output, text));
+        SimpleClassFile classFile = null;
+        if (compiled.size() == 1) {
+            classFile = compiled.get(0);
         }
 
-        Optional<byte[]> o = compiled.get(0).getCompiledBinaries();
-        if (!o.isPresent()) {
-            fail(String.format("Failed to fetch compiled test class content, javac api must have changed, "
-                               + "please contact the plugin's author via traute.java@gmail.com.%n"
-                               + "Compiler output: %s%n"
-                               + "Test source:%n%n%s",
-                               output, text));
+        byte[] binaries = null;
+        if (classFile != null) {
+            Optional<byte[]> o = classFile.getCompiledBinaries();
+            if (o.isPresent()) {
+                binaries = o.get();
+            }
         }
-        return o.get();
+        output.flush();
+        return new CompilationResult(binaries, output.toString());
     }
 
     /**
@@ -924,7 +1078,7 @@ public abstract class AbstractTrauteTest {
         };
         Class<?> clazz;
         try {
-            clazz = classLoader.loadClass(String.format("%s.%s", TestConstants.PACKAGE, TestConstants.CLASS_NAME));
+            clazz = classLoader.loadClass(String.format("%s.%s", PACKAGE, CLASS_NAME));
         } catch (ClassNotFoundException e) {
             throw new RuntimeException("Can't load compiled test class", e);
         }
@@ -947,6 +1101,18 @@ public abstract class AbstractTrauteTest {
             } else {
                 throw new RuntimeException("Unexpected exception on calling 'main()' in the test class", e);
             }
+        }
+    }
+
+    private static class CompilationResult {
+
+        @NotNull public final String compilerOutput;
+
+        @Nullable public final byte[] binaries;
+
+        public CompilationResult(@Nullable byte[] binaries, @NotNull String compilerOutput) {
+            this.binaries = binaries;
+            this.compilerOutput = compilerOutput;
         }
     }
 }

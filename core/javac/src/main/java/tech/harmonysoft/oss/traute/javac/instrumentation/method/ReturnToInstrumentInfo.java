@@ -1,10 +1,12 @@
-package tech.harmonysoft.oss.traute.javac.method;
+package tech.harmonysoft.oss.traute.javac.instrumentation.method;
 
 import com.sun.source.tree.ReturnTree;
 import com.sun.source.tree.Tree;
 import com.sun.tools.javac.tree.JCTree;
 import org.jetbrains.annotations.NotNull;
-import tech.harmonysoft.oss.traute.javac.InstrumentationInfo;
+import org.jetbrains.annotations.Nullable;
+import tech.harmonysoft.oss.traute.javac.common.InstrumentationType;
+import tech.harmonysoft.oss.traute.javac.instrumentation.InstrumentationInfo;
 import tech.harmonysoft.oss.traute.javac.common.CompilationUnitProcessingContext;
 
 /**
@@ -19,12 +21,15 @@ public class ReturnToInstrumentInfo implements InstrumentationInfo {
     @NotNull private final String                           tmpVariableName;
     @NotNull private final Tree                             parent;
 
+    @Nullable private final String qualifiedMethodName;
+
     public ReturnToInstrumentInfo(@NotNull CompilationUnitProcessingContext context,
                                   @NotNull String notNullAnnotation,
                                   @NotNull ReturnTree returnExpression,
                                   @NotNull JCTree.JCExpression returnType,
                                   @NotNull String tmpVariableName,
-                                  @NotNull Tree parent)
+                                  @NotNull Tree parent,
+                                  @Nullable String qualifiedMethodName)
     {
         this.context = context;
         this.notNullAnnotation = notNullAnnotation;
@@ -32,6 +37,12 @@ public class ReturnToInstrumentInfo implements InstrumentationInfo {
         this.returnType = returnType;
         this.tmpVariableName = tmpVariableName;
         this.parent = parent;
+        this.qualifiedMethodName = qualifiedMethodName;
+    }
+
+    @Override
+    public @NotNull InstrumentationType getType() {
+        return InstrumentationType.METHOD_RETURN;
     }
 
     @Override
@@ -107,5 +118,14 @@ public class ReturnToInstrumentInfo implements InstrumentationInfo {
     @NotNull
     public Tree getParent() {
         return parent;
+    }
+
+    /**
+     * @return  qualified method name which {@code NotNull} parameter should be instrumented
+     *          (if that information is available)
+     */
+    @Nullable
+    public String getQualifiedMethodName() {
+        return qualifiedMethodName;
     }
 }

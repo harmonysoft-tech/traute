@@ -6,9 +6,9 @@ import com.sun.tools.javac.tree.JCTree;
 import com.sun.tools.javac.tree.TreeMaker;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import tech.harmonysoft.oss.traute.javac.Instrumentator;
-import tech.harmonysoft.oss.traute.javac.method.ReturnToInstrumentInfo;
-import tech.harmonysoft.oss.traute.javac.parameter.ParameterToInstrumentInfo;
+import tech.harmonysoft.oss.traute.javac.instrumentation.Instrumentator;
+import tech.harmonysoft.oss.traute.javac.instrumentation.method.ReturnToInstrumentInfo;
+import tech.harmonysoft.oss.traute.javac.instrumentation.parameter.ParameterToInstrumentInfo;
 
 import javax.tools.JavaCompiler;
 import java.util.*;
@@ -21,8 +21,8 @@ import static java.util.Arrays.asList;
  */
 public class InstrumentationApplianceFinder extends TreeScanner<Void, Void> {
 
-    private static final Set<String> PRIMITIVE_TYPES = new HashSet<>(asList(
-            "byte", "short", "char", "int", "long", "float", "double"
+    private static final Set<String> TYPES_TO_SKIP = new HashSet<>(asList(
+            "byte", "short", "char", "int", "long", "float", "double", "void", "Void"
     ));
 
     private Stack<Tree> parents = new Stack<>();
@@ -31,6 +31,9 @@ public class InstrumentationApplianceFinder extends TreeScanner<Void, Void> {
     @NotNull private final Instrumentator<ParameterToInstrumentInfo> parameterInstrumenter;
     @NotNull private final Instrumentator<ReturnToInstrumentInfo>          returnInstrumenter;
 
+    private String              packageName;
+    private String              className;
+    private String              methodName;
     private JCTree.JCExpression methodReturnType;
     private String              methodNotNullAnnotation;
     private int                 tmpVariableCounter;
@@ -45,6 +48,18 @@ public class InstrumentationApplianceFinder extends TreeScanner<Void, Void> {
     }
 
     @Override
+    public Void visitCompilationUnit(CompilationUnitTree node, Void aVoid) {
+        packageName = node.getPackageName().toString();
+        return super.visitCompilationUnit(node, aVoid);
+    }
+
+    @Override
+    public Void visitClass(ClassTree node, Void aVoid) {
+        className = node.getSimpleName().toString();
+        return super.visitClass(node, aVoid);
+    }
+
+    @Override
     public Void visitImport(ImportTree node, Void v) {
         if (!node.isStatic()) {
             context.addImport(node.getQualifiedIdentifier().toString());
@@ -54,10 +69,11 @@ public class InstrumentationApplianceFinder extends TreeScanner<Void, Void> {
 
     @Override
     public Void visitMethod(MethodTree method, Void v) {
+        methodName = method.getName().toString();
         boolean instrumentReturnType = mayBeInstrumentReturnType(method);
         BlockTree bodyBlock = method.getBody();
         if (!(bodyBlock instanceof JCTree.JCBlock)) {
-            context.getProblemReporter().reportDetails(String.format(
+            context.getLogger().reportDetails(String.format(
                     "get a %s instance in the method AST but got %s",
                     JCTree.JCBlock.class.getName(), bodyBlock.getClass().getName()
             ));
@@ -77,7 +93,7 @@ public class InstrumentationApplianceFinder extends TreeScanner<Void, Void> {
                 continue;
             }
             Tree type = variable.getType();
-            if (type != null && PRIMITIVE_TYPES.contains(type.toString())) {
+            if (type != null && TYPES_TO_SKIP.contains(type.toString())) {
                 continue;
             }
             Optional<String> annotation = findNotNullAnnotation(variable.getModifiers());
@@ -86,6 +102,7 @@ public class InstrumentationApplianceFinder extends TreeScanner<Void, Void> {
                                                                    annotation.get(),
                                                                    variable,
                                                                    jcBlock,
+                                                                   getQualifiedMethodName(),
                                                                    parameterIndex,
                                                                    parametersNumber));
             }
@@ -102,6 +119,7 @@ public class InstrumentationApplianceFinder extends TreeScanner<Void, Void> {
             } finally {
                 methodReturnType = null;
                 methodNotNullAnnotation = null;
+                methodName = null;
                 tmpVariableCounter = 1;
                 parents.clear();
             }
@@ -112,7 +130,7 @@ public class InstrumentationApplianceFinder extends TreeScanner<Void, Void> {
 
     private boolean mayBeInstrumentReturnType(@NotNull MethodTree method) {
         Tree returnType = method.getReturnType();
-        if (PRIMITIVE_TYPES.contains(returnType.toString()) || (!(returnType instanceof JCTree.JCExpression))) {
+        if (TYPES_TO_SKIP.contains(returnType.toString()) || (!(returnType instanceof JCTree.JCExpression))) {
             return false;
         }
 
@@ -211,6 +229,26 @@ public class InstrumentationApplianceFinder extends TreeScanner<Void, Void> {
         return Optional.empty();
     }
 
+    @Nullable
+    private String getQualifiedMethodName() {
+        StringBuilder buffer = new StringBuilder();
+        if (packageName != null) {
+            buffer.append(packageName).append(".");
+        }
+        if (className == null) {
+            if (packageName != null) {
+                return null;
+            }
+        } else {
+            buffer.append(className).append(".");
+        }
+        if (methodName == null || buffer.length() == 0) {
+            return null;
+        }
+        buffer.append(methodName);
+        return buffer.toString();
+    }
+
     @Override
     public Void visitBlock(BlockTree node, Void aVoid) {
         parents.push(node);
@@ -290,7 +328,8 @@ public class InstrumentationApplianceFinder extends TreeScanner<Void, Void> {
                                                                      node,
                                                                      methodReturnType,
                                                                      getTmpVariableName(),
-                                                                     parents.peek()));
+                                                                     parents.peek(),
+                                                                     getQualifiedMethodName()));
         }
         return super.visitReturn(node, aVoid);
     }

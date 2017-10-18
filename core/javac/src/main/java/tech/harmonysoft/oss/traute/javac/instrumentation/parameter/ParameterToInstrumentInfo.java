@@ -1,9 +1,11 @@
-package tech.harmonysoft.oss.traute.javac.parameter;
+package tech.harmonysoft.oss.traute.javac.instrumentation.parameter;
 
 import com.sun.source.tree.VariableTree;
 import com.sun.tools.javac.tree.JCTree;
 import org.jetbrains.annotations.NotNull;
-import tech.harmonysoft.oss.traute.javac.InstrumentationInfo;
+import org.jetbrains.annotations.Nullable;
+import tech.harmonysoft.oss.traute.javac.common.InstrumentationType;
+import tech.harmonysoft.oss.traute.javac.instrumentation.InstrumentationInfo;
 import tech.harmonysoft.oss.traute.javac.common.CompilationUnitProcessingContext;
 
 /**
@@ -16,6 +18,8 @@ public class ParameterToInstrumentInfo implements InstrumentationInfo {
     @NotNull private final VariableTree                     methodParameter;
     @NotNull private final JCTree.JCBlock                   body;
 
+    @Nullable private final String qualifiedMethodName;
+
     private final int methodParameterIndex;
     private final int methodParametersNumber;
 
@@ -23,6 +27,7 @@ public class ParameterToInstrumentInfo implements InstrumentationInfo {
                                      @NotNull String notNullAnnotation,
                                      @NotNull VariableTree methodParameter,
                                      @NotNull JCTree.JCBlock body,
+                                     @Nullable String qualifiedMethodName,
                                      int methodParameterIndex,
                                      int methodParametersNumber)
     {
@@ -30,8 +35,14 @@ public class ParameterToInstrumentInfo implements InstrumentationInfo {
         this.notNullAnnotation = notNullAnnotation;
         this.methodParameter = methodParameter;
         this.body = body;
+        this.qualifiedMethodName = qualifiedMethodName;
         this.methodParameterIndex = methodParameterIndex;
         this.methodParametersNumber = methodParametersNumber;
+    }
+
+    @Override
+    public @NotNull InstrumentationType getType() {
+        return InstrumentationType.METHOD_PARAMETER;
     }
 
     @Override
@@ -60,6 +71,15 @@ public class ParameterToInstrumentInfo implements InstrumentationInfo {
     @NotNull
     public JCTree.JCBlock getBody() {
         return body;
+    }
+
+    /**
+     * @return  qualified method name which {@code NotNull} parameter should be instrumented
+     *          (if that information is available)
+     */
+    @Nullable
+    public String getQualifiedMethodName() {
+        return qualifiedMethodName;
     }
 
     /**
