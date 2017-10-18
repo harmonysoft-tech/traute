@@ -1,7 +1,8 @@
-package tech.harmonysoft.oss.traute.javac;
+package tech.harmonysoft.oss.traute.javac.common;
 
 import com.sun.tools.javac.util.Log;
 import org.jetbrains.annotations.NotNull;
+import tech.harmonysoft.oss.traute.javac.TrauteJavacPlugin;
 
 public class ProblemReporter {
 

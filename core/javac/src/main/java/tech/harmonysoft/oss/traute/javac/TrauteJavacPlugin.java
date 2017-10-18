@@ -1,24 +1,28 @@
 package tech.harmonysoft.oss.traute.javac;
 
-import com.sun.source.tree.*;
-import com.sun.source.util.*;
+import com.sun.source.tree.CompilationUnitTree;
+import com.sun.source.util.JavacTask;
+import com.sun.source.util.Plugin;
+import com.sun.source.util.TaskEvent;
+import com.sun.source.util.TaskListener;
 import com.sun.tools.javac.api.BasicJavacTask;
-import com.sun.tools.javac.code.TypeTag;
 import com.sun.tools.javac.processing.JavacProcessingEnvironment;
-import com.sun.tools.javac.tree.JCTree;
 import com.sun.tools.javac.tree.TreeMaker;
 import com.sun.tools.javac.util.Context;
-import com.sun.tools.javac.util.List;
 import com.sun.tools.javac.util.Log;
 import com.sun.tools.javac.util.Names;
-import org.jetbrains.annotations.NotNull;
+import tech.harmonysoft.oss.traute.javac.common.CompilationUnitProcessingContext;
+import tech.harmonysoft.oss.traute.javac.common.InstrumentationApplianceFinder;
+import tech.harmonysoft.oss.traute.javac.common.ProblemReporter;
+import tech.harmonysoft.oss.traute.javac.method.MethodReturnInstrumentator;
+import tech.harmonysoft.oss.traute.javac.method.ReturnToInstrumentInfo;
+import tech.harmonysoft.oss.traute.javac.parameter.ParameterInstrumentator;
+import tech.harmonysoft.oss.traute.javac.parameter.ParameterToInstrumentInfo;
 
 import java.util.HashSet;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 
-import static com.sun.tools.javac.util.List.nil;
 import static java.util.Arrays.asList;
 
 /**
@@ -122,6 +126,9 @@ public class TrauteJavacPlugin implements Plugin {
             "org.eclipse.jdt.annotation.NonNull"
     ));
 
+    private final Instrumentator<ParameterToInstrumentInfo> parameterInstrumentator = new ParameterInstrumentator();
+    private final Instrumentator<ReturnToInstrumentInfo> methodInstrumentator = new MethodReturnInstrumentator();
+
     @Override
     public String getName() {
         return NAME;
@@ -193,191 +200,14 @@ public class TrauteJavacPlugin implements Plugin {
                         }
                     }
                 }
-                compilationUnit.accept(new AstVisitor(
+                compilationUnit.accept(new InstrumentationApplianceFinder(
                         new CompilationUnitProcessingContext(notNullAnnotationsToUse,
                                                              treeMaker,
                                                              names,
                                                              problemReporter),
-                        TrauteJavacPlugin::instrumentMethodParameter,
-                        TrauteJavacPlugin::instrumentMethodReturn),null);
+                        parameterInstrumentator,
+                        methodInstrumentator),null);
             }
         });
-    }
-
-    /**
-     * Enhances target method in a way to include a {@code null}-check for the target method parameter.
-     *
-     * @param info an object which contains information necessary for instrumenting target method parameter
-     */
-    private static void instrumentMethodParameter(@NotNull ParameterToInstrumentInfo info) {
-        String parameterName = info.getMethodParameter().getName().toString();
-        String errorMessage = String.format(
-                "Argument '%s' of type %s (#%d out of %d, zero-based) is marked by @%s but got null for it",
-                parameterName, info.getMethodParameter().getType(),
-                info.getMethodParameterIndex(), info.getMethodParametersNumber(), info.getNotNullAnnotation()
-        );
-        TreeMaker factory = info.getCompilationUnitProcessingContext().getAstFactory();
-        Names symbolsTable = info.getCompilationUnitProcessingContext().getSymbolsTable();
-        JCTree.JCBlock body = info.getBody();
-        body.stats = body.stats.prepend(buildVarCheck(factory, symbolsTable, parameterName, errorMessage));
-    }
-
-    private static void instrumentMethodReturn(@NotNull ReturnToInstrumentInfo info) {
-        Optional<JCTree.JCBlock> blockOptional = getBlockForMethodReturnInstrumentation(info);
-        if (!blockOptional.isPresent()) {
-            return;
-        }
-        Optional<List<JCTree.JCStatement>> returnCheckOptional = buildReturnCheck(info);
-        if (!returnCheckOptional.isPresent()) {
-            return;
-        }
-        JCTree.JCBlock block = blockOptional.get();
-        List<JCTree.JCStatement> statements = block.getStatements();
-        for (int i = 0; i < statements.size(); i++) {
-            JCTree.JCStatement statement = statements.get(i);
-            if (statement == info.getReturnExpression()) {
-                List<JCTree.JCStatement> newStatements = returnCheckOptional.get();
-                for (int j = i + 1; j < statements.size(); j++) {
-                    newStatements = newStatements.append(statements.get(j));
-                }
-                for (int j = i - 1; j >= 0; j--) {
-                    newStatements = newStatements.prepend(statements.get(j));
-                }
-                block.stats = newStatements;
-                return;
-            }
-        }
-        // When control flow reaches this place, that means that the block is empty, so, we just populate it
-        // with new instructions.
-        block.stats = returnCheckOptional.get();
-    }
-
-    /**
-     * <p>
-     *     Tries to find a code block ({@code {}}) AST element which should be used as a generated
-     *     {@code null}-check holder.
-     * </p>
-     * <p>
-     *     The trick here is that there is a possible case that we need to instrument a return which is not
-     *     contained in a code block, like below:
-     *     <pre>
-     *         if (something) {
-     *             return result;
-     *         }
-     *     </pre>
-     *     Here we need to insert a code block instead of the return expression and return it.
-     * </p>
-     *
-     * @param info data holder for the target {@code 'return'} expression to instrument
-     * @return     a code block to use as a parent for the plugin-introduced {@code null}-check (if any)
-     */
-    @NotNull
-    private static Optional<JCTree.JCBlock> getBlockForMethodReturnInstrumentation(
-            @NotNull ReturnToInstrumentInfo info)
-    {
-        JCTree.JCBlock result = info.getParent().accept(new SimpleTreeVisitor<JCTree.JCBlock, Void>() {
-
-            @Override
-            public JCTree.JCBlock visitBlock(BlockTree node, Void aVoid) {
-                if (node instanceof JCTree.JCBlock) {
-                    return (JCTree.JCBlock) node;
-                } else {
-                    report(JCTree.JCBlock.class, node.getClass());
-                    return null;
-                }
-            }
-
-            @Override
-            public JCTree.JCBlock visitIf(IfTree node, Void aVoid) {
-                if (!(node instanceof JCTree.JCIf)) {
-                    report(JCTree.JCIf.class, node.getClass());
-                    return null;
-                }
-                JCTree.JCIf jcIf = (JCTree.JCIf) node;
-                JCTree.JCBlock block = info.getCompilationUnitProcessingContext().getAstFactory().Block(0, List.nil());
-                if (jcIf.thenpart == info.getReturnExpression()) {
-                    jcIf.thenpart = block;
-                } else if (jcIf.elsepart == info.getReturnExpression()) {
-                    jcIf.elsepart = block;
-                }
-                return block;
-            }
-
-            private void report(@NotNull Class<?> expected, @NotNull Class<?> actual) {
-                info.getCompilationUnitProcessingContext().getProblemReporter().reportDetails(
-                        String.format("find an AST element of type %s but got %s", expected.getName(), actual.getName())
-                );
-            }
-        }, null);
-        return Optional.ofNullable(result);
-    }
-
-    @NotNull
-    private static Optional<List<JCTree.JCStatement>> buildReturnCheck(@NotNull ReturnToInstrumentInfo info) {
-        CompilationUnitProcessingContext context = info.getCompilationUnitProcessingContext();
-        ExpressionTree returnExpression = info.getReturnExpression().getExpression();
-        if (!(returnExpression instanceof JCTree.JCExpression)) {
-            context.getProblemReporter().reportDetails(String.format(
-                    "find a 'return' expression of type %s but got %s",
-                    JCTree.JCExpression.class.getName(), returnExpression.getClass().getName()
-            ));
-            return Optional.empty();
-        }
-        JCTree.JCExpression returnJcExpression = (JCTree.JCExpression) returnExpression;
-
-        TreeMaker factory = context.getAstFactory();
-        Names symbolsTable = context.getSymbolsTable();
-        String errorMessage = String.format("Detected an attempt to return null from a method marked by %s",
-                                            info.getNotNullAnnotation()
-        );
-
-        List<JCTree.JCStatement> result = List.of(
-                factory.VarDef(
-                        factory.Modifiers(0),
-                        symbolsTable.fromString(info.getTmpVariableName()),
-                        info.getReturnType(),
-                        returnJcExpression
-                )
-        );
-        result = result.append(buildVarCheck(factory,
-                                             symbolsTable,
-                                             info.getTmpVariableName(),
-                                             errorMessage));
-        result = result.append(
-                factory.Return(
-                        factory.Ident(symbolsTable.fromString(info.getTmpVariableName()))));
-        return Optional.of(result);
-    }
-
-    @NotNull
-    private static JCTree.JCIf buildVarCheck(@NotNull TreeMaker factory,
-                                             @NotNull Names symbolsTable,
-                                             @NotNull String parameterName,
-                                             @NotNull String errorMessage)
-    {
-        return factory.If(
-                factory.Parens(
-                        factory.Binary(
-                                JCTree.Tag.EQ,
-                                factory.Ident(
-                                        symbolsTable.fromString(parameterName)
-                                ),
-                                factory.Literal(TypeTag.BOT, null))
-                ),
-                factory.Block(0, List.of(
-                        factory.Throw(
-                                factory.NewClass(
-                                        null,
-                                        nil(),
-                                        factory.Ident(
-                                                symbolsTable.fromString("NullPointerException")
-                                        ),
-                                        List.of(factory.Literal(TypeTag.CLASS, errorMessage)),
-                                        null
-                                )
-                        )
-                )),
-                null
-        );
     }
 }

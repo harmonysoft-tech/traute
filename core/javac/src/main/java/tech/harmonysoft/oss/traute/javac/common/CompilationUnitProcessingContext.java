@@ -1,4 +1,4 @@
-package tech.harmonysoft.oss.traute.javac;
+package tech.harmonysoft.oss.traute.javac.common;
 
 import com.sun.source.tree.CompilationUnitTree;
 import com.sun.tools.javac.tree.TreeMaker;

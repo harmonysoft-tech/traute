@@ -1,13 +1,15 @@
-package tech.harmonysoft.oss.traute.javac;
+package tech.harmonysoft.oss.traute.javac.parameter;
 
 import com.sun.source.tree.VariableTree;
 import com.sun.tools.javac.tree.JCTree;
 import org.jetbrains.annotations.NotNull;
+import tech.harmonysoft.oss.traute.javac.InstrumentationInfo;
+import tech.harmonysoft.oss.traute.javac.common.CompilationUnitProcessingContext;
 
 /**
  * A utility data class for describing a method parameter marked by a {@code NotNull} annotation.
  */
-public class ParameterToInstrumentInfo {
+public class ParameterToInstrumentInfo implements InstrumentationInfo {
 
     @NotNull private final CompilationUnitProcessingContext compilationUnitProcessingContext;
     @NotNull private final String                           notNullAnnotation;
@@ -32,17 +34,13 @@ public class ParameterToInstrumentInfo {
         this.methodParametersNumber = methodParametersNumber;
     }
 
-    /**
-     * @return current compilation unit processing context
-     */
+    @Override
     @NotNull
-    public CompilationUnitProcessingContext getCompilationUnitProcessingContext() {
+    public CompilationUnitProcessingContext getContext() {
         return compilationUnitProcessingContext;
     }
 
-    /**
-     * @return {@code NotNull} annotation used for marking target method parameter
-     */
+    @Override
     @NotNull
     public String getNotNullAnnotation() {
         return notNullAnnotation;

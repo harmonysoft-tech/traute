@@ -1,4 +1,4 @@
-package tech.harmonysoft.oss.traute.javac;
+package tech.harmonysoft.oss.traute.javac.common;
 
 import com.sun.source.tree.*;
 import com.sun.source.util.TreeScanner;
@@ -6,10 +6,12 @@ import com.sun.tools.javac.tree.JCTree;
 import com.sun.tools.javac.tree.TreeMaker;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import tech.harmonysoft.oss.traute.javac.Instrumentator;
+import tech.harmonysoft.oss.traute.javac.method.ReturnToInstrumentInfo;
+import tech.harmonysoft.oss.traute.javac.parameter.ParameterToInstrumentInfo;
 
 import javax.tools.JavaCompiler;
 import java.util.*;
-import java.util.function.Consumer;
 
 import static java.util.Arrays.asList;
 
@@ -17,29 +19,29 @@ import static java.util.Arrays.asList;
  * Inspects {@code AST} built by {@link JavaCompiler}, finds places where to apply {@code null}-checks
  * and notifies given instrumentators about them.
  */
-public class AstVisitor extends TreeScanner<Void, Void> {
+public class InstrumentationApplianceFinder extends TreeScanner<Void, Void> {
 
     private static final Set<String> PRIMITIVE_TYPES = new HashSet<>(asList(
             "byte", "short", "char", "int", "long", "float", "double"
     ));
 
-    private Stack<StatementTree> parents = new Stack<>();
+    private Stack<Tree> parents = new Stack<>();
 
-    @NotNull private final CompilationUnitProcessingContext    context;
-    @NotNull private final Consumer<ParameterToInstrumentInfo> parameterInstrumenter;
-    @NotNull private final Consumer<ReturnToInstrumentInfo>    returnInstrumenter;
+    @NotNull private final CompilationUnitProcessingContext          context;
+    @NotNull private final Instrumentator<ParameterToInstrumentInfo> parameterInstrumenter;
+    @NotNull private final Instrumentator<ReturnToInstrumentInfo>          returnInstrumenter;
 
     private JCTree.JCExpression methodReturnType;
     private String              methodNotNullAnnotation;
     private int                 tmpVariableCounter;
 
-    public AstVisitor(@NotNull CompilationUnitProcessingContext context,
-                      @NotNull Consumer<ParameterToInstrumentInfo> parameterInstrumenter,
-                      @NotNull Consumer<ReturnToInstrumentInfo> returnInstrumenter)
+    public InstrumentationApplianceFinder(@NotNull CompilationUnitProcessingContext context,
+                                          @NotNull Instrumentator<ParameterToInstrumentInfo> parameterInstrumentator,
+                                          @NotNull Instrumentator<ReturnToInstrumentInfo> returnInstrumentator)
     {
         this.context = context;
-        this.parameterInstrumenter = parameterInstrumenter;
-        this.returnInstrumenter = returnInstrumenter;
+        this.parameterInstrumenter = parameterInstrumentator;
+        this.returnInstrumenter = returnInstrumentator;
     }
 
     @Override
@@ -92,7 +94,7 @@ public class AstVisitor extends TreeScanner<Void, Void> {
 
         for (ParameterToInstrumentInfo info : variablesToCheck) {
             mayBeSetPosition(info.getMethodParameter(), context.getAstFactory());
-            parameterInstrumenter.accept(info);
+            parameterInstrumenter.instrument(info);
         }
         if (instrumentReturnType) {
             try {
@@ -230,15 +232,65 @@ public class AstVisitor extends TreeScanner<Void, Void> {
     }
 
     @Override
+    public Void visitForLoop(ForLoopTree node, Void aVoid) {
+        parents.push(node);
+        try {
+            return super.visitForLoop(node, aVoid);
+        } finally {
+            parents.pop();
+        }
+    }
+
+    @Override
+    public Void visitEnhancedForLoop(EnhancedForLoopTree node, Void aVoid) {
+        parents.push(node);
+        try {
+            return super.visitEnhancedForLoop(node, aVoid);
+        } finally {
+            parents.pop();
+        }
+    }
+
+    @Override
+    public Void visitWhileLoop(WhileLoopTree node, Void aVoid) {
+        parents.push(node);
+        try {
+            return super.visitWhileLoop(node, aVoid);
+        } finally {
+            parents.pop();
+        }
+    }
+
+    @Override
+    public Void visitDoWhileLoop(DoWhileLoopTree node, Void aVoid) {
+        parents.push(node);
+        try {
+            return super.visitDoWhileLoop(node, aVoid);
+        } finally {
+            parents.pop();
+        }
+    }
+
+    @Override
+    public Void visitCase(CaseTree node, Void aVoid) {
+        parents.push(node);
+        try {
+            return super.visitCase(node, aVoid);
+        } finally {
+            parents.pop();
+        }
+    }
+
+    @Override
     public Void visitReturn(ReturnTree node, Void aVoid) {
         if (methodNotNullAnnotation != null && methodReturnType != null && !parents.isEmpty()) {
             mayBeSetPosition(node, context.getAstFactory());
-            returnInstrumenter.accept(new ReturnToInstrumentInfo(context,
-                                                                 methodNotNullAnnotation,
-                                                                 node,
-                                                                 methodReturnType,
-                                                                 getTmpVariableName(),
-                                                                 parents.peek()));
+            returnInstrumenter.instrument(new ReturnToInstrumentInfo(context,
+                                                                     methodNotNullAnnotation,
+                                                                     node,
+                                                                     methodReturnType,
+                                                                     getTmpVariableName(),
+                                                                     parents.peek()));
         }
         return super.visitReturn(node, aVoid);
     }

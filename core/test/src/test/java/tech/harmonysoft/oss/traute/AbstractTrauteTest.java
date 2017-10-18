@@ -397,18 +397,6 @@ public abstract class AbstractTrauteTest {
         }
     }
 
-    /**
-     * Applies given data to the {@link #METHOD_TEST_CLASS_TEMPLATE test source template}.
-     *
-     * @param testMethodBody test method body
-     * @return               test class text
-     */
-    @NotNull
-    private static String prepareSourceTextForMethodTest(@NotNull String testMethodBody) {
-        return String.format(METHOD_TEST_CLASS_TEMPLATE,
-                             "    " + testMethodBody.replaceAll("\n", "\n    "));
-    }
-
     private void doMethodTest(@NotNull String testMethodBody) {
         String testSource = String.format(METHOD_TEST_CLASS_TEMPLATE,
                                           testMethodBody.replaceAll("\n", "\n    "));
@@ -486,6 +474,326 @@ public abstract class AbstractTrauteTest {
                 "  return 1;\n" +
                 "} else return count();"
         );
+    }
+
+    @Test
+    public void methodReturn_fromForWithBraces() {
+        doMethodTest(
+                "" +
+                "for (int i = 0; i < 2; i++) {\n" +
+                "  return count();\n" +
+                "}\n" +
+                "return 10;"
+        );
+    }
+
+    @Test
+    public void methodReturn_fromForWithoutBraces() {
+        doMethodTest(
+                "" +
+                "for (int i = 0; i < 2; i++)\n" +
+                "  return count();\n" +
+                "return 10;"
+        );
+    }
+
+    @Test
+    public void methodReturn_fromForEachWithBraces() {
+        doMethodTest(
+                "" +
+                "int[] data = {1, 2};\n" +
+                "for (int i : data) {\n" +
+                "  return count();\n" +
+                "}\n" +
+                "return 10;"
+        );
+    }
+
+    @Test
+    public void methodReturn_fromForEachWithoutBraces() {
+        doMethodTest(
+                "" +
+                "int[] data = {1, 2};\n" +
+                "for (int i : data)\n" +
+                "  return count();\n" +
+                "return 10;"
+        );
+    }
+
+    @Test
+    public void methodReturn_fromWhileWithBraces() {
+        doMethodTest(
+                "" +
+                "while (System.currentTimeMillis() > 1) {\n" +
+                "  return count();\n" +
+                "}\n" +
+                "return 10;"
+        );
+    }
+
+    @Test
+    public void methodReturn_fromWhileWithoutBraces() {
+        doMethodTest(
+                "" +
+                "while (System.currentTimeMillis() > 1) return count();\n" +
+                "return 10;"
+        );
+    }
+
+    @Test
+    public void methodReturn_fromDoWhileWithBraces() {
+        doMethodTest(
+                "" +
+                "do {\n" +
+                "  return count();\n" +
+                "} while (true);"
+        );
+    }
+
+    @Test
+    public void methodReturn_fromDoWhileWithoutBraces() {
+        doMethodTest(
+                "" +
+                "do\n" +
+                "  return count();\n" +
+                "while (true);"
+        );
+    }
+
+    @Test
+    public void methodReturn_fromTry() {
+        doMethodTest(
+                "" +
+                "try {\n" +
+                "  return count();\n" +
+                "} finally {}"
+        );
+    }
+
+    @Test
+    public void methodReturn_fromCatch() {
+        doMethodTest(
+                "" +
+                "try {\n" +
+                "  return 10 / 0;\n" +
+                "} catch (Exception e) {\n" +
+                "  return count();\n" +
+                "}"
+        );
+    }
+
+    @Test
+    public void methodReturn_fromFinally() {
+        doMethodTest(
+                "" +
+                "try {\n" +
+                "  return 1;\n" +
+                "} finally {\n" +
+                "  return count();\n" +
+                "}"
+        );
+    }
+
+    @Test
+    public void methodReturn_fromCase_singleInstruction() {
+        doMethodTest(
+                "" +
+                "switch (System.currentTimeMillis() > 1 ? 1 : 0) {\n" +
+                "  case 1:\n" +
+                "    return count();\n" +
+                "}\n" +
+                "return 2;"
+        );
+    }
+
+    @Test
+    public void methodReturn_fromCase_multipleInstruction() {
+        String testSource = String.format(
+                "package %s;\n" +
+                "\n" +
+                "public class %s {\n" +
+                "\n" +
+                "  static int counter;\n" +
+                "\n" +
+                "  @%s\n" +
+                "  public Integer test() {\n" +
+                "    switch (System.currentTimeMillis() > 0 ? 1 : 0) {\n" +
+                "      case 1:\n" +
+                "        counter++;\n" +
+                "        return count();\n" +
+                "    }\n" +
+                "    return 2;\n" +
+                "  }\n" +
+                "\n" +
+                "  private Integer count() {\n" +
+                "      return null;\n" +
+                "  }\n" +
+                "\n" +
+                "  public static void main(String[] args) {\n" +
+                "    try {\n" +
+                "      new Test().test();\n" +
+                "    } catch (NullPointerException e) {\n" +
+                "      throw new IllegalStateException(String.valueOf(counter));\n" +
+                "    }\n" +
+                "  }\n" +
+                "}", TestConstants.PACKAGE, TestConstants.CLASS_NAME, NotNull.class.getName());
+        byte[] compiledTestSource = compile(testSource);
+        boolean passed = false;
+        try {
+            run(compiledTestSource);
+        } catch (IllegalStateException e) {
+            assertEquals("'case' expressions over than 'return' shouldn't be swallowed",
+                         "1",
+                         e.getMessage());
+            passed = true;
+        }
+        if (!passed) {
+            fail(String.format("Expected to get an IllegalStateException on attempt to execute the source "
+                               + "below but that didn't happen:%n%n%s", testSource));
+        }
+    }
+
+    @Test
+    public void methodReturn_fromCase_doesNotBreakLogicInAnotherCase() {
+        String testMethodBody =
+                "switch (System.currentTimeMillis() > 1 ? 1 : 0) {\n" +
+                "  case 0:\n" +
+                "    return count();\n" +
+                "  case 1:\n" +
+                "    throw new IllegalStateException();\n" +
+                "}\n" +
+                "return 2;";
+        String testSource = String.format(METHOD_TEST_CLASS_TEMPLATE,
+                                          testMethodBody.replaceAll("\n", "\n    "));
+        byte[] compiledTestSource = compile(testSource);
+        boolean passed = false;
+        try {
+            run(compiledTestSource);
+        } catch (IllegalStateException e) {
+            passed = true;
+        } catch (Exception e) {
+            fail(String.format("Expected to get an IllegalStateException on attempt to execute the source "
+                               + "below but got a %s instead:%n%n%s", e.getClass().getName(), testSource));
+        }
+        if (!passed) {
+            fail(String.format("Expected to get an IllegalStateException on attempt to execute the source "
+                               + "below but that didn't happen:%n%n%s", testSource));
+        }
+    }
+
+    @Test
+    public void methodReturn_fromCase_doesNotBreakLogicInDefault() {
+        String testMethodBody =
+                "switch (System.currentTimeMillis() > 1 ? 1 : 0) {\n" +
+                "  case 0:\n" +
+                "    return count();\n" +
+                "  default:\n" +
+                "    throw new IllegalStateException();\n" +
+                "}";
+        String testSource = String.format(METHOD_TEST_CLASS_TEMPLATE,
+                                          testMethodBody.replaceAll("\n", "\n    "));
+        byte[] compiledTestSource = compile(testSource);
+        boolean passed = false;
+        try {
+            run(compiledTestSource);
+        } catch (IllegalStateException e) {
+            passed = true;
+        } catch (Exception e) {
+            fail(String.format("Expected to get an IllegalStateException on attempt to execute the source "
+                               + "below but got a %s instead:%n%n%s", e.getClass().getName(), testSource));
+        }
+        if (!passed) {
+            fail(String.format("Expected to get an IllegalStateException on attempt to execute the source "
+                               + "below but that didn't happen:%n%n%s", testSource));
+        }
+    }
+
+    @Test
+    public void methodReturn_fromDefault_singleInstruction() {
+        doMethodTest(
+                "" +
+                "switch (System.currentTimeMillis() > 1 ? 1 : 0) {\n" +
+                "  case 0:\n" +
+                "    return 1;\n" +
+                "  default:\n" +
+                "    return count();\n" +
+                "}"
+        );
+    }
+
+    @Test
+    public void methodReturn_fromDefault_multipleInstruction() {
+        String testSource = String.format(
+                "package %s;\n" +
+                "\n" +
+                "public class %s {\n" +
+                "\n" +
+                "  static int counter;\n" +
+                "\n" +
+                "  @%s\n" +
+                "  public Integer test() {\n" +
+                "    switch (System.currentTimeMillis() > 0 ? 1 : 0) {\n" +
+                "      case 0:\n" +
+                "        return 0;\n" +
+                "      default:\n" +
+                "        counter++;\n" +
+                "        return count();\n" +
+                "    }\n" +
+                "  }\n" +
+                "\n" +
+                "  private Integer count() {\n" +
+                "      return null;\n" +
+                "  }\n" +
+                "\n" +
+                "  public static void main(String[] args) {\n" +
+                "    try {\n" +
+                "      new Test().test();\n" +
+                "    } catch (NullPointerException e) {\n" +
+                "      throw new IllegalStateException(String.valueOf(counter));\n" +
+                "    }\n" +
+                "  }\n" +
+                "}", TestConstants.PACKAGE, TestConstants.CLASS_NAME, NotNull.class.getName());
+        byte[] compiledTestSource = compile(testSource);
+        boolean passed = false;
+        try {
+            run(compiledTestSource);
+        } catch (IllegalStateException e) {
+            assertEquals("'default' expressions over than 'return' shouldn't be swallowed",
+                         "1",
+                         e.getMessage());
+            passed = true;
+        }
+        if (!passed) {
+            fail(String.format("Expected to get an IllegalStateException on attempt to execute the source "
+                               + "below but that didn't happen:%n%n%s", testSource));
+        }
+    }
+
+    @Test
+    public void methodReturn_fromDefault_doesNotBreakLogicInAnotherCase() {
+        String testMethodBody =
+                "switch (System.currentTimeMillis() > 1 ? 1 : 0) {\n" +
+                "  case 1:\n" +
+                "    throw new IllegalStateException();\n" +
+                "  default:\n" +
+                "    return count();\n" +
+                "}\n";
+        String testSource = String.format(METHOD_TEST_CLASS_TEMPLATE,
+                                          testMethodBody.replaceAll("\n", "\n    "));
+        byte[] compiledTestSource = compile(testSource);
+        boolean passed = false;
+        try {
+            run(compiledTestSource);
+        } catch (IllegalStateException e) {
+            passed = true;
+        } catch (Exception e) {
+            fail(String.format("Expected to get an IllegalStateException on attempt to execute the source "
+                               + "below but got a %s instead:%n%n%s", e.getClass().getName(), testSource));
+        }
+        if (!passed) {
+            fail(String.format("Expected to get an IllegalStateException on attempt to execute the source "
+                               + "below but that didn't happen:%n%n%s", testSource));
+        }
     }
 
     /**

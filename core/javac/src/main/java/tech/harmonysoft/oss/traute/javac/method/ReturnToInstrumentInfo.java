@@ -1,28 +1,30 @@
-package tech.harmonysoft.oss.traute.javac;
+package tech.harmonysoft.oss.traute.javac.method;
 
 import com.sun.source.tree.ReturnTree;
-import com.sun.source.tree.StatementTree;
+import com.sun.source.tree.Tree;
 import com.sun.tools.javac.tree.JCTree;
 import org.jetbrains.annotations.NotNull;
+import tech.harmonysoft.oss.traute.javac.InstrumentationInfo;
+import tech.harmonysoft.oss.traute.javac.common.CompilationUnitProcessingContext;
 
 /**
  * A utility data class for describing a 'return' method expression to be instrumented.
  */
-public class ReturnToInstrumentInfo {
+public class ReturnToInstrumentInfo implements InstrumentationInfo {
 
     @NotNull private final CompilationUnitProcessingContext context;
     @NotNull private final String                           notNullAnnotation;
     @NotNull private final ReturnTree                       returnExpression;
     @NotNull private final JCTree.JCExpression              returnType;
     @NotNull private final String                           tmpVariableName;
-    @NotNull private final StatementTree                    parent;
+    @NotNull private final Tree                             parent;
 
     public ReturnToInstrumentInfo(@NotNull CompilationUnitProcessingContext context,
                                   @NotNull String notNullAnnotation,
                                   @NotNull ReturnTree returnExpression,
                                   @NotNull JCTree.JCExpression returnType,
                                   @NotNull String tmpVariableName,
-                                  @NotNull StatementTree parent)
+                                  @NotNull Tree parent)
     {
         this.context = context;
         this.notNullAnnotation = notNullAnnotation;
@@ -32,17 +34,13 @@ public class ReturnToInstrumentInfo {
         this.parent = parent;
     }
 
-    /**
-     * @return current compilation unit processing context
-     */
+    @Override
     @NotNull
-    public CompilationUnitProcessingContext getCompilationUnitProcessingContext() {
+    public CompilationUnitProcessingContext getContext() {
         return context;
     }
 
-    /**
-     * @return  {@code NotNull} annotation used for marking method's return type
-     */
+    @Override
     @NotNull
     public String getNotNullAnnotation() {
         return notNullAnnotation;
@@ -107,7 +105,7 @@ public class ReturnToInstrumentInfo {
      * @return  parent {@code AST} element for the target {@code return} expression to check
      */
     @NotNull
-    public StatementTree getParent() {
+    public Tree getParent() {
         return parent;
     }
 }
