@@ -94,11 +94,15 @@ public abstract class AbstractTrauteTest {
     /** Emulates user's setup for the {@code @NotNull} annotations to use. */
     private final Set<String> notNullAnnotations = new HashSet<>();
 
+    /** Emulates user's setup for the instrumentation types to use. */
+    private final Set<String> instrumentationTypes = new HashSet<>();
+
     private boolean verboseOutput;
 
     @Before
     public void setUp() {
         notNullAnnotations.clear();
+        instrumentationTypes.clear();
         verboseOutput = false;
     }
 
@@ -116,6 +120,11 @@ public abstract class AbstractTrauteTest {
     @NotNull
     protected Set<String> getNotNullAnnotations() {
         return notNullAnnotations;
+    }
+
+    @NotNull
+    protected Set<String> getInstrumentationTypes() {
+        return instrumentationTypes;
     }
 
     protected boolean isVerboseOutput() {
@@ -959,6 +968,39 @@ public abstract class AbstractTrauteTest {
                               + "output.%nFilter text: '%s'%nCompiler output: '%s'", filterText, compilerOutput),
                 compilerOutput.contains(filterText)
         );
+    }
+
+    @Test
+    public void restrictedInstrumentation_parameterOnly_noCheckForReturn() {
+        instrumentationTypes.add("parameter");
+        String testMethodBody = "  return count();";
+        String testSource = String.format(METHOD_TEST_CLASS_TEMPLATE, testMethodBody);
+        byte[] binaries = compile(testSource);
+        // Expecting null-check for return type not to be generated, hence, no exception will be thrown
+        run(binaries);
+    }
+
+    @Test
+    public void restrictedInstrumentation_parameterOnly_active() {
+        instrumentationTypes.add("parameter");
+        doTestArgument(Nonnull.class.getName());
+    }
+
+    @Test
+    public void restrictedInstrumentation_returnOnly_noCheckForParameter() {
+        instrumentationTypes.add("return");
+        String testSource = prepareSourceTextForParameterTest(NotNull.class.getName(),
+                                                              "void test(@NotNull String s) {}",
+                                                              "null");
+        byte[] binaries = compile(testSource);
+        // Expecting null-check for parameter not to be generated, hence, no exception will be thrown
+        run(binaries);
+    }
+
+    @Test
+    public void restrictedInstrumentation_returnOnly_active() {
+        instrumentationTypes.add("return");
+        doMethodTest("return count();");
     }
 
     /**

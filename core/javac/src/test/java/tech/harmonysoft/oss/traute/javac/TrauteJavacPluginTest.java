@@ -8,9 +8,7 @@ import java.util.List;
 import java.util.Set;
 
 import static java.util.stream.Collectors.joining;
-import static tech.harmonysoft.oss.traute.javac.TrauteJavacPlugin.NAME;
-import static tech.harmonysoft.oss.traute.javac.TrauteJavacPlugin.OPTION_ANNOTATIONS_NOT_NULL;
-import static tech.harmonysoft.oss.traute.javac.TrauteJavacPlugin.OPTION_LOG_VERBOSE;
+import static tech.harmonysoft.oss.traute.javac.TrauteJavacPlugin.*;
 
 /**
  * <p>
@@ -32,9 +30,16 @@ public class TrauteJavacPluginTest extends AbstractTrauteTest {
         result.add("-Xplugin:" + NAME);
         Set<String> targetAnnotationsToUse = getNotNullAnnotations();
         if (!targetAnnotationsToUse.isEmpty()) {
-            String optionValue = targetAnnotationsToUse.stream().collect(joining(":"));
+            String optionValue = targetAnnotationsToUse.stream().collect(joining(SEPARATOR));
             result.add(String.format("-A%s=%s", OPTION_ANNOTATIONS_NOT_NULL, optionValue));
         }
+
+        Set<String> instrumentationTypes = getInstrumentationTypes();
+        if (!instrumentationTypes.isEmpty()) {
+            String optionValue = instrumentationTypes.stream().collect(joining(SEPARATOR));
+            result.add(String.format("-A%s=%s", OPTION_INSTRUMENTATIONS_TO_USE, optionValue));
+        }
+
         if (isVerboseOutput()) {
             result.add(String.format("-A%s=true", OPTION_LOG_VERBOSE));
         }

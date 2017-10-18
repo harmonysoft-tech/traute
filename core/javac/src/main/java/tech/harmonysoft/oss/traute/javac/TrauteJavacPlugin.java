@@ -18,19 +18,21 @@ import tech.harmonysoft.oss.traute.javac.instrumentation.method.MethodReturnInst
 import tech.harmonysoft.oss.traute.javac.instrumentation.method.ReturnToInstrumentInfo;
 import tech.harmonysoft.oss.traute.javac.instrumentation.parameter.ParameterInstrumentator;
 import tech.harmonysoft.oss.traute.javac.instrumentation.parameter.ParameterToInstrumentInfo;
+import tech.harmonysoft.oss.traute.javac.settings.TrautePluginSettings;
+import tech.harmonysoft.oss.traute.javac.settings.TrautePluginSettingsBuilder;
 
 import javax.tools.JavaFileObject;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.lang.ref.WeakReference;
-import java.util.HashSet;
+import java.util.Arrays;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicReference;
 
-import static java.util.Arrays.asList;
+import static java.util.stream.Collectors.joining;
 import static tech.harmonysoft.oss.traute.javac.common.TrautePluginLogger.getProblemMessageSuffix;
+import static tech.harmonysoft.oss.traute.javac.settings.TrautePluginSettingsBuilder.settingsBuilder;
 
 /**
  * <p>A {@code javac} plugin which inserts {@code null}-checks for target method arguments and returns from method.</p>
@@ -96,7 +98,7 @@ public class TrauteJavacPlugin implements Plugin {
     /**
      * <p>
      *     Compiler's option name to use for specifying custom {@code @NotNull} annotations to use
-     *     ({@value #ANNOTATIONS_SEPARATOR}-separated).
+     *     ({@value #SEPARATOR}-separated).
      * </p>
      * <p>
      *     This is not mandatory setting as default annotations are used otherwise. Only given annotations are
@@ -126,12 +128,25 @@ public class TrauteJavacPlugin implements Plugin {
      */
     public static final String OPTION_LOG_VERBOSE = "traute.log.verbose";
 
-    private static final String ANNOTATIONS_SEPARATOR = ":";
+    /**
+     * Compiler's option name to use for specifying instrumentation types to use
+     *
+     * @see InstrumentationType
+     * @see InstrumentationType#getShortName()
+     */
+    public static final String OPTION_INSTRUMENTATIONS_TO_USE = "traute.instrumentations";
 
-    private final AtomicReference<WeakReference<TrautePluginLogger>> loggerRef               = new AtomicReference<>();
-    private final AtomicReference<TrautePluginSettings>              pluginSettingsRef       = new AtomicReference<>();
-    private final Instrumentator<ParameterToInstrumentInfo>          parameterInstrumentator = new ParameterInstrumentator();
-    private final Instrumentator<ReturnToInstrumentInfo>             methodInstrumentator    = new MethodReturnInstrumentator();
+    /**
+     * Separator to use for composite properties, e.g. when a user want to specify more than one
+     * {@code NonNull} annotation.
+     */
+    public static final String SEPARATOR = ":";
+
+    private final AtomicReference<WeakReference<TrautePluginLogger>> loggerRef         = new AtomicReference<>();
+    private final AtomicReference<TrautePluginSettings>              pluginSettingsRef = new AtomicReference<>();
+
+    private final Instrumentator<ParameterToInstrumentInfo> parameterInstrumentator = new ParameterInstrumentator();
+    private final Instrumentator<ReturnToInstrumentInfo>    methodInstrumentator    = new MethodReturnInstrumentator();
 
     @Override
     public String getName() {
@@ -188,12 +203,11 @@ public class TrauteJavacPlugin implements Plugin {
                 StatsCollector statsCollector = new StatsCollector();
                 try {
                     compilationUnit.accept(new InstrumentationApplianceFinder(
-                            new CompilationUnitProcessingContext(pluginSettings.getNotNullAnnotations(),
+                            new CompilationUnitProcessingContext(pluginSettings,
                                                                  treeMaker,
                                                                  names,
                                                                  logger,
-                                                                 statsCollector,
-                                                                 pluginSettings.isVerboseLog()),
+                                                                 statsCollector),
                             parameterInstrumentator,
                             methodInstrumentator),null);
                     if (pluginSettings.isVerboseLog()) {
@@ -233,6 +247,8 @@ public class TrauteJavacPlugin implements Plugin {
             logger = getPluginLogger(log);
         }
 
+        TrautePluginSettingsBuilder builder = settingsBuilder();
+
         JavacProcessingEnvironment environment = JavacProcessingEnvironment.instance(context);
         if (environment == null) {
             if (logger != null) {
@@ -243,7 +259,7 @@ public class TrauteJavacPlugin implements Plugin {
                 ));
             }
             // Use default settings
-            return new TrautePluginSettings();
+            return builder.build();
         }
 
         Map<String, String> options = environment.getOptions();
@@ -252,27 +268,51 @@ public class TrauteJavacPlugin implements Plugin {
                 logger.info("No plugin settings are detected at the javac command line. Using default values");
             }
             // Use default settings
-            return new TrautePluginSettings();
+            return builder.build();
         }
 
         boolean verbose = "true".equalsIgnoreCase(options.get(OPTION_LOG_VERBOSE));
         if (verbose && logger != null) {
             logger.info("'verbose mode' is set on");
         }
+        builder.withVerbose(verbose);
 
-        Set<String> notNullAnnotations = null;
         String notNullAnnotationsString = options.get(OPTION_ANNOTATIONS_NOT_NULL);
         if (notNullAnnotationsString != null) {
             notNullAnnotationsString = notNullAnnotationsString.trim();
-            String[] customAnnotations = notNullAnnotationsString.split(ANNOTATIONS_SEPARATOR);
-            notNullAnnotations = new HashSet<>(asList(customAnnotations));
-        }
-        if (notNullAnnotations != null && logger != null) {
-            logger.info("using the following NotNull annotations: " + notNullAnnotations);
+            String[] notNullAnnotations = notNullAnnotationsString.split(SEPARATOR);
+            if (notNullAnnotations.length > 0) {
+                builder.withNotNullAnnotations(notNullAnnotations);
+                if (logger != null) {
+                    logger.info("using the following NotNull annotations: " + Arrays.toString(notNullAnnotations));
+                }
+            }
         }
 
-        return notNullAnnotations == null ? new TrautePluginSettings(verbose)
-                                          : new TrautePluginSettings(notNullAnnotations, verbose);
+        String instrumentationsString = options.get(OPTION_INSTRUMENTATIONS_TO_USE);
+        if (instrumentationsString != null) {
+            instrumentationsString = instrumentationsString.trim();
+            String[] instrumentationNamesArray = instrumentationsString.split(SEPARATOR);
+            for (String instrumentationShortName : instrumentationNamesArray) {
+                InstrumentationType type = InstrumentationType.byShortName(instrumentationShortName.trim());
+                if (type == null) {
+                    if (logger != null) {
+                        String knownTypes = Arrays.stream(InstrumentationType.values())
+                                                  .map(InstrumentationType::getShortName)
+                                                  .collect(joining(", "));
+                        logger.report(String.format(
+                                "Unknown instrumentation type is defined through the '%s' option - '%s'. "
+                                + "Known types: %s",
+                                OPTION_INSTRUMENTATIONS_TO_USE, instrumentationShortName, knownTypes
+                        ));
+                    }
+                } else {
+                    builder.withInstrumentationToApply(type);
+                }
+            }
+        }
+
+        return builder.build();
     }
 
     private void printInstrumentationResults(@NotNull JavaFileObject file,

@@ -4,8 +4,8 @@ import com.sun.source.tree.CompilationUnitTree;
 import com.sun.tools.javac.tree.TreeMaker;
 import com.sun.tools.javac.util.Names;
 import org.jetbrains.annotations.NotNull;
+import tech.harmonysoft.oss.traute.javac.settings.TrautePluginSettings;
 
-import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -14,26 +14,22 @@ import java.util.Set;
  */
 public class CompilationUnitProcessingContext {
 
-    private final Set<String> notNullAnnotations = new HashSet<>();
-    private final Set<String> imports            = new HashSet<>();
+    private final Set<String> imports = new HashSet<>();
 
-    @NotNull private final TreeMaker          astFactory;
-    @NotNull private final Names              symbolsTable;
-    @NotNull private final TrautePluginLogger logger;
-    @NotNull private final StatsCollector     statsCollector;
+    @NotNull private final TrautePluginSettings pluginSettings;
+    @NotNull private final TreeMaker            astFactory;
+    @NotNull private final Names                symbolsTable;
+    @NotNull private final TrautePluginLogger   logger;
+    @NotNull private final StatsCollector       statsCollector;
 
-    private final boolean verbose;
-
-    public CompilationUnitProcessingContext(@NotNull Collection<String> notNullAnnotations,
+    public CompilationUnitProcessingContext(@NotNull TrautePluginSettings pluginSettings,
                                             @NotNull TreeMaker astFactory,
                                             @NotNull Names symbolsTable,
                                             @NotNull TrautePluginLogger logger,
-                                            @NotNull StatsCollector statsCollector,
-                                            boolean verbose)
+                                            @NotNull StatsCollector statsCollector)
     {
+        this.pluginSettings = pluginSettings;
         this.statsCollector = statsCollector;
-        this.verbose = verbose;
-        this.notNullAnnotations.addAll(notNullAnnotations);
         this.astFactory = astFactory;
         this.symbolsTable = symbolsTable;
         this.logger = logger;
@@ -44,8 +40,8 @@ public class CompilationUnitProcessingContext {
     }
 
     @NotNull
-    public Set<String> getNotNullAnnotations() {
-        return notNullAnnotations;
+    public TrautePluginSettings getPluginSettings() {
+        return pluginSettings;
     }
 
     @NotNull
@@ -71,9 +67,5 @@ public class CompilationUnitProcessingContext {
     @NotNull
     public StatsCollector getStatsCollector() {
         return statsCollector;
-    }
-
-    public boolean isVerbose() {
-        return verbose;
     }
 }

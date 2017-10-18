@@ -9,11 +9,14 @@ import org.jetbrains.annotations.Nullable;
 import tech.harmonysoft.oss.traute.javac.instrumentation.Instrumentator;
 import tech.harmonysoft.oss.traute.javac.instrumentation.method.ReturnToInstrumentInfo;
 import tech.harmonysoft.oss.traute.javac.instrumentation.parameter.ParameterToInstrumentInfo;
+import tech.harmonysoft.oss.traute.javac.settings.TrautePluginSettings;
 
 import javax.tools.JavaCompiler;
 import java.util.*;
 
 import static java.util.Arrays.asList;
+import static tech.harmonysoft.oss.traute.javac.common.InstrumentationType.METHOD_PARAMETER;
+import static tech.harmonysoft.oss.traute.javac.common.InstrumentationType.METHOD_RETURN;
 
 /**
  * Inspects {@code AST} built by {@link JavaCompiler}, finds places where to apply {@code null}-checks
@@ -70,16 +73,35 @@ public class InstrumentationApplianceFinder extends TreeScanner<Void, Void> {
     @Override
     public Void visitMethod(MethodTree method, Void v) {
         methodName = method.getName().toString();
-        boolean instrumentReturnType = mayBeInstrumentReturnType(method);
-        BlockTree bodyBlock = method.getBody();
-        if (!(bodyBlock instanceof JCTree.JCBlock)) {
-            context.getLogger().reportDetails(String.format(
-                    "get a %s instance in the method AST but got %s",
-                    JCTree.JCBlock.class.getName(), bodyBlock.getClass().getName()
-            ));
-            return v;
+        TrautePluginSettings settings = context.getPluginSettings();
+        boolean instrumentReturnType = settings.isEnabled(METHOD_RETURN) && mayBeInstrumentReturnType(method);
+        if (settings.isEnabled(METHOD_PARAMETER)) {
+            BlockTree bodyBlock = method.getBody();
+            if (!(bodyBlock instanceof JCTree.JCBlock)) {
+                context.getLogger().reportDetails(String.format(
+                        "get a %s instance in the method AST but got %s",
+                        JCTree.JCBlock.class.getName(), bodyBlock.getClass().getName()
+                ));
+                return v;
+            }
+            instrumentMethodParameters(method, (JCTree.JCBlock) bodyBlock);
         }
-        JCTree.JCBlock jcBlock = (JCTree.JCBlock) bodyBlock;
+        try {
+            if (instrumentReturnType) {
+                return super.visitMethod(method, v);
+            } else {
+                return v;
+            }
+        } finally {
+            methodReturnType = null;
+            methodNotNullAnnotation = null;
+            methodName = null;
+            tmpVariableCounter = 1;
+            parents.clear();
+        }
+    }
+
+    private void instrumentMethodParameters(@NotNull MethodTree method, @NotNull JCTree.JCBlock bodyBlock) {
         SortedSet<ParameterToInstrumentInfo> variablesToCheck = new TreeSet<>(
                 // There is a possible case that more than one method parameter is marked by a NotNull annotation.
                 // We want to add null-checks in reverse order then, i.e. for the last parameter marked
@@ -101,7 +123,7 @@ public class InstrumentationApplianceFinder extends TreeScanner<Void, Void> {
                 variablesToCheck.add(new ParameterToInstrumentInfo(context,
                                                                    annotation.get(),
                                                                    variable,
-                                                                   jcBlock,
+                                                                   bodyBlock,
                                                                    getQualifiedMethodName(),
                                                                    parameterIndex,
                                                                    parametersNumber));
@@ -112,19 +134,6 @@ public class InstrumentationApplianceFinder extends TreeScanner<Void, Void> {
         for (ParameterToInstrumentInfo info : variablesToCheck) {
             mayBeSetPosition(info.getMethodParameter(), context.getAstFactory());
             parameterInstrumenter.instrument(info);
-        }
-        if (instrumentReturnType) {
-            try {
-                return super.visitMethod(method, v);
-            } finally {
-                methodReturnType = null;
-                methodNotNullAnnotation = null;
-                methodName = null;
-                tmpVariableCounter = 1;
-                parents.clear();
-            }
-        } else {
-            return v;
         }
     }
 
@@ -158,7 +167,7 @@ public class InstrumentationApplianceFinder extends TreeScanner<Void, Void> {
 
     /**
      * Checks if given {@code AST} element's modifiers contain any of the
-     * {@link CompilationUnitProcessingContext#getNotNullAnnotations() target} {@code @NotNull} annotation.
+     * {@link TrautePluginSettings#getNotNullAnnotations() target} {@code @NotNull} annotation.
      *
      * @param modifiers {@code AST} element's modifiers to check
      * @return          target annotation's name in case the one is found
@@ -185,7 +194,7 @@ public class InstrumentationApplianceFinder extends TreeScanner<Void, Void> {
     /**
      * <p>
      *     Checks if any of the given 'annotations to check' matches any of the
-     *     {@link CompilationUnitProcessingContext#getNotNullAnnotations() target annotations}
+     *     {@link TrautePluginSettings#getNotNullAnnotations() target annotations}
      *     considering {@link CompilationUnitProcessingContext#getImports() available imports}.
      * </p>
      * <p>
@@ -204,7 +213,7 @@ public class InstrumentationApplianceFinder extends TreeScanner<Void, Void> {
     @NotNull
     private Optional<String> findMatch(@NotNull Collection<String> annotationsToCheck) {
         for (String annotationInSource : annotationsToCheck) {
-            Set<String> notNullAnnotations = context.getNotNullAnnotations();
+            Set<String> notNullAnnotations = context.getPluginSettings().getNotNullAnnotations();
             if (notNullAnnotations.contains(annotationInSource)) {
                 // Qualified annotation, like 'void test(@javax.annotation.Nonnul String s) {}'
                 return Optional.of(annotationInSource);

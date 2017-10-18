@@ -1,5 +1,11 @@
 package tech.harmonysoft.oss.traute.javac.common;
 
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
+import java.util.HashMap;
+import java.util.Map;
+
 /**
  * Enumerates instrumentation types supported by the current plugin.
  */
@@ -22,7 +28,7 @@ public enum InstrumentationType {
      *     }
      * </pre>
      */
-    METHOD_PARAMETER,
+    METHOD_PARAMETER("parameter"),
 
     /**
      * Before:
@@ -44,5 +50,28 @@ public enum InstrumentationType {
      *     }
      * </pre>
      */
-    METHOD_RETURN
+    METHOD_RETURN("return");
+
+    private static Map<String, InstrumentationType> BY_SHORT_NAME = new HashMap<>();
+    static {
+        for (InstrumentationType type : values()) {
+            BY_SHORT_NAME.put(type.getShortName(), type);
+        }
+    }
+
+    @NotNull private final String shortName;
+
+    InstrumentationType(@NotNull String shortName) {
+        this.shortName = shortName;
+    }
+
+    @Nullable
+    public static InstrumentationType byShortName(@NotNull String shortName) {
+        return BY_SHORT_NAME.get(shortName);
+    }
+
+    @NotNull
+    public String getShortName() {
+        return shortName;
+    }
 }
