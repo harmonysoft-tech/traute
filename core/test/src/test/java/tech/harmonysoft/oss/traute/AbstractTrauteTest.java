@@ -85,6 +85,10 @@ public abstract class AbstractTrauteTest {
             "  }\n" +
             "}", TestConstants.PACKAGE, TestConstants.CLASS_NAME, NotNull.class.getName());
 
+    private static final String[] PRIMITIVE_TYPES = {
+            "byte", "short", "char", "int", "long", "float", "double"
+    };
+
     /** Emulates user's setup for the {@code @NotNull} annotations to use. */
     private final Set<String> targetAnnotationsToUse = new HashSet<>();
 
@@ -241,10 +245,7 @@ public abstract class AbstractTrauteTest {
 
     @Test
     public void primitiveMethodArguments() {
-        String[] primitiveTypes = {
-                "byte", "short", "char", "int", "long", "float", "double"
-        };
-        for (String primitiveType : primitiveTypes) {
+        for (String primitiveType : PRIMITIVE_TYPES) {
             String testSource = prepareSourceTextForParameterTest(
                     NotNull.class.getName(),
                     String.format("public void %s(@NotNull %s arg) {}", METHOD_NAME, primitiveType),
@@ -793,6 +794,32 @@ public abstract class AbstractTrauteTest {
         if (!passed) {
             fail(String.format("Expected to get an IllegalStateException on attempt to execute the source "
                                + "below but that didn't happen:%n%n%s", testSource));
+        }
+    }
+
+    @Test
+    public void methodReturn_noAttemptToInstrumentPrimitiveReturnType() {
+        for (String type : PRIMITIVE_TYPES) {
+
+            // Ensure that compilation is fine as we don't instrument primitive types and class binaries
+            // are correctly loaded and executed.
+
+            String testSource = String.format(
+                    "package %s;\n" +
+                    "\n" +
+                    "public class %s {\n" +
+                    "\n" +
+                    "  @%s\n" +
+                    "  public %s test() {\n" +
+                    "    return (%s)1;\n" +
+                    "  }\n" +
+                    "\n" +
+                    "  public static void main(String[] args) {\n" +
+                    "    new Test().test();\n" +
+                    "  }\n" +
+                    "}", TestConstants.PACKAGE, TestConstants.CLASS_NAME, NotNull.class.getName(), type, type);
+            byte[] compiledTestSource = compile(testSource);
+            run(compiledTestSource);
         }
     }
 
