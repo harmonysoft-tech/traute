@@ -2,6 +2,7 @@ package tech.harmonysoft.oss.traute.test.suite;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
 import org.jetbrains.annotations.NotNull;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
@@ -10,7 +11,9 @@ import tech.harmonysoft.oss.traute.common.instrumentation.InstrumentationType;
 import javax.annotation.Nonnull;
 
 import static tech.harmonysoft.oss.traute.common.util.TrauteConstants.PRIMITIVE_TYPES;
+import static tech.harmonysoft.oss.traute.test.util.TestConstants.CLASS_NAME;
 import static tech.harmonysoft.oss.traute.test.util.TestConstants.METHOD_NAME;
+import static tech.harmonysoft.oss.traute.test.util.TestConstants.PACKAGE;
 import static tech.harmonysoft.oss.traute.test.util.TestUtil.*;
 
 /**
@@ -134,5 +137,20 @@ public abstract class MethodParameterTest extends AbstractTrauteTest {
         expectRunResult.withExceptionClass(exceptionClass)
                        .atLine(findLineNumber(testSource, exceptionClass.getName()));
         doTest(testSource);
+    }
+
+    @DisplayName("interface")
+    @Test
+    public void interfaceParameters() {
+        String testSource = String.format(
+                "package %s;\n" +
+                "\n" +
+                "public interface %s {\n" +
+                "  @%s\n" +
+                "  String test(@%s String s);\n" +
+                "}", PACKAGE, CLASS_NAME, NotNull.class.getName(), NotNull.class.getName());
+
+        // We expect that no instrumentation occurs for interface parameters, hence, compilation is fine.
+        doCompile(testSource);
     }
 }

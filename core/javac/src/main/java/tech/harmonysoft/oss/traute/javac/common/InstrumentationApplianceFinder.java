@@ -2,6 +2,7 @@ package tech.harmonysoft.oss.traute.javac.common;
 
 import com.sun.source.tree.*;
 import com.sun.source.util.TreeScanner;
+import com.sun.tools.javac.code.Flags;
 import com.sun.tools.javac.tree.JCTree;
 import com.sun.tools.javac.tree.TreeMaker;
 import org.jetbrains.annotations.NotNull;
@@ -37,6 +38,7 @@ public class InstrumentationApplianceFinder extends TreeScanner<Void, Void> {
     private JCTree.JCExpression methodReturnType;
     private String              methodNotNullAnnotation;
     private int                 tmpVariableCounter;
+    private boolean             processingInterface;
 
     public InstrumentationApplianceFinder(@NotNull CompilationUnitProcessingContext context,
                                           @NotNull Instrumentator<ParameterToInstrumentInfo> parameterInstrumentator,
@@ -56,7 +58,19 @@ public class InstrumentationApplianceFinder extends TreeScanner<Void, Void> {
     @Override
     public Void visitClass(ClassTree node, Void aVoid) {
         className = node.getSimpleName().toString();
-        return super.visitClass(node, aVoid);
+
+        ModifiersTree modifiers = node.getModifiers();
+        if (modifiers instanceof JCTree.JCModifiers) {
+            processingInterface = (((JCTree.JCModifiers) modifiers).flags & Flags.INTERFACE) != 0;
+        } else {
+            processingInterface = modifiers.toString().contains("interface");
+        }
+
+        try {
+            return super.visitClass(node, aVoid);
+        } finally {
+            processingInterface = false;
+        }
     }
 
     @Override
@@ -71,8 +85,10 @@ public class InstrumentationApplianceFinder extends TreeScanner<Void, Void> {
     public Void visitMethod(MethodTree method, Void v) {
         methodName = method.getName().toString();
         TrautePluginSettings settings = context.getPluginSettings();
-        boolean instrumentReturnType = settings.isEnabled(METHOD_RETURN) && mayBeInstrumentReturnType(method);
-        if (settings.isEnabled(METHOD_PARAMETER)) {
+        boolean instrumentReturnType = !processingInterface
+                                       && settings.isEnabled(METHOD_RETURN)
+                                       && mayBeInstrumentReturnType(method);
+        if (!processingInterface && settings.isEnabled(METHOD_PARAMETER)) {
             BlockTree bodyBlock = method.getBody();
             if (!(bodyBlock instanceof JCTree.JCBlock)) {
                 context.getLogger().reportDetails(String.format(
