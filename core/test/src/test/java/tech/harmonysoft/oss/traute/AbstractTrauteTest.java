@@ -3,13 +3,13 @@ package tech.harmonysoft.oss.traute;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import tech.harmonysoft.oss.traute.common.instrumentation.InstrumentationType;
-import tech.harmonysoft.oss.traute.fixture.NN;
-import tech.harmonysoft.oss.traute.util.SimpleClassFile;
-import tech.harmonysoft.oss.traute.util.SimpleFileManager;
-import tech.harmonysoft.oss.traute.util.SimpleSourceFile;
+import tech.harmonysoft.oss.traute.test.fixture.NN;
+import tech.harmonysoft.oss.traute.test.util.SimpleClassFile;
+import tech.harmonysoft.oss.traute.test.util.SimpleFileManager;
+import tech.harmonysoft.oss.traute.test.util.SimpleSourceFile;
 
 import javax.annotation.Nonnull;
 import javax.tools.JavaCompiler;
@@ -23,11 +23,13 @@ import java.util.*;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.fail;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static tech.harmonysoft.oss.traute.common.instrumentation.InstrumentationType.METHOD_PARAMETER;
 import static tech.harmonysoft.oss.traute.common.instrumentation.InstrumentationType.METHOD_RETURN;
-import static tech.harmonysoft.oss.traute.util.TestConstants.CLASS_NAME;
-import static tech.harmonysoft.oss.traute.util.TestConstants.PACKAGE;
+import static tech.harmonysoft.oss.traute.test.util.TestConstants.CLASS_NAME;
+import static tech.harmonysoft.oss.traute.test.util.TestConstants.PACKAGE;
 
 /**
  * <p>Defines common scenarios and checks for all {@code @NotNull}-instrumentation approaches (javac, asm).</p>
@@ -102,7 +104,7 @@ public abstract class AbstractTrauteTest {
 
     private boolean verboseOutput;
 
-    @Before
+    @BeforeEach
     public void setUp() {
         notNullAnnotations.clear();
         instrumentationTypes.clear();
@@ -254,8 +256,9 @@ public abstract class AbstractTrauteTest {
         } catch (NullPointerException e) {
             StackTraceElement[] stackTrace = e.getStackTrace();
             assert stackTrace.length > 0;
-            assertEquals("Expected that a NPE thrown from the plugin-introduced check points to the valid line",
-                         expectedLine, stackTrace[0].getLineNumber());
+            assertEquals(expectedLine, stackTrace[0].getLineNumber(),
+                         "Expected that a NPE thrown from the plugin-introduced check points to "
+                         + "the valid line");
             passed = true;
         }
         if (!passed) {
@@ -299,8 +302,9 @@ public abstract class AbstractTrauteTest {
         } catch (IllegalArgumentException e) {
             StackTraceElement[] stackTrace = e.getStackTrace();
             assert stackTrace.length > 0;
-            assertEquals("Expected that an exception thrown after a plugin-introduced check points to "
-                         + "the valid line", expectedLine, stackTrace[0].getLineNumber());
+            assertEquals(expectedLine, stackTrace[0].getLineNumber(),
+                         "Expected that an exception thrown after a plugin-introduced check points "
+                         + "to the valid line");
             passed = true;
         }
         if (!passed) {
@@ -323,8 +327,9 @@ public abstract class AbstractTrauteTest {
         try {
             run(compiledTestSource);
         } catch (NullPointerException e) {
-            assertTrue("Expected that no null-check is generated for a default annotation which is "
-                       + "not mentioned in the custom @NotNull annotations setting", e.getMessage().contains("i2"));
+            assertTrue(e.getMessage().contains("i2"),
+                       "Expected that no null-check is generated for a default annotation which is "
+                       + "not mentioned in the custom @NotNull annotations setting");
             passed = true;
         }
         if (!passed) {
@@ -347,8 +352,9 @@ public abstract class AbstractTrauteTest {
         try {
             run(compiledTestSource);
         } catch (NullPointerException e) {
-            assertTrue("Expected that no null-check is generated for a default annotation which is "
-                       + "not mentioned in the custom @NotNull annotations setting", e.getMessage().contains("i2"));
+            assertTrue(e.getMessage().contains("i2"),
+                       "Expected that no null-check is generated for a default annotation which is "
+                       + "not mentioned in the custom @NotNull annotations setting");
             passed = true;
         }
         if (!passed) {
@@ -410,7 +416,7 @@ public abstract class AbstractTrauteTest {
         try {
             run(compiledTestSource);
         } catch (IllegalStateException e) {
-            assertEquals("'return' expression should be evaluated only once", "1", e.getMessage());
+            assertEquals("1", e.getMessage(), "'return' expression should be evaluated only once");
             passed = true;
         }
         if (!passed) {
@@ -664,9 +670,8 @@ public abstract class AbstractTrauteTest {
         try {
             run(compiledTestSource);
         } catch (IllegalStateException e) {
-            assertEquals("'case' expressions over than 'return' shouldn't be swallowed",
-                         "1",
-                         e.getMessage());
+            assertEquals("1", e.getMessage(),
+                         "'case' expressions over than 'return' shouldn't be swallowed");
             passed = true;
         }
         if (!passed) {
@@ -780,9 +785,8 @@ public abstract class AbstractTrauteTest {
         try {
             run(compiledTestSource);
         } catch (IllegalStateException e) {
-            assertEquals("'default' expressions over than 'return' shouldn't be swallowed",
-                         "1",
-                         e.getMessage());
+            assertEquals("1", e.getMessage(),
+                         "'default' expressions over than 'return' shouldn't be swallowed");
             passed = true;
         }
         if (!passed) {
@@ -887,7 +891,7 @@ public abstract class AbstractTrauteTest {
                     "Expected that 'parameter instrumentation' for parameter '%s' from the source below is "
                     + "%smentioned in compiler output when 'verbose mode' is %s%nOutput: %s%nSource:%n%s",
                     targetParameterName, verbose ? "" : "not ", verbose ? "on" : "off", compilerOutput, testSource);
-            assertEquals(description, verbose, compilerOutput.contains(filterMessage));
+            assertEquals(verbose, compilerOutput.contains(filterMessage), description);
         }
 
         String methodPrefix = PACKAGE + "." + CLASS_NAME + ".";
@@ -898,7 +902,7 @@ public abstract class AbstractTrauteTest {
                     "Expected that 'return instrumentation' for method '%s' from the source below is "
                     + "%smentioned in compiler output when 'verbose mode' is %s%nOutput: %s%nSource:%n%s",
                     targetMethod, verbose ? "" : "not ", verbose ? "on" : "off", compilerOutput, testSource);
-            assertEquals(description, verbose, compilerOutput.contains(filterMessage));
+            assertEquals(verbose, compilerOutput.contains(filterMessage), description);
         }
     }
 
@@ -937,12 +941,10 @@ public abstract class AbstractTrauteTest {
                 "added 7 instrumentations to the /%s/%s%s - METHOD_PARAMETER: 4, METHOD_RETURN: 3",
                 PACKAGE, CLASS_NAME, JavaFileObject.Kind.SOURCE.extension
         );
-        assertTrue(
-                String.format("Expected that class-level instrumentations statistics is mentioned in the compiler "
-                              + "output.%nFilter text: '%s'%nCompiler output:%n%s%n%nSource:%n%s",
-                              filter, compilerOutput, testSource),
-                compilerOutput.contains(filter)
-        );
+        assertTrue(compilerOutput.contains(filter),
+                   String.format("Expected that class-level instrumentations statistics is mentioned in the compiler "
+                                 + "output.%nFilter text: '%s'%nCompiler output:%n%s%n%nSource:%n%s",
+                                 filter, compilerOutput, testSource));
     }
 
     @Test
@@ -952,10 +954,9 @@ public abstract class AbstractTrauteTest {
         String testSource = String.format(METHOD_TEST_CLASS_TEMPLATE, testMethodBody);
         String compilerOutput = compileForFullResult(testSource).compilerOutput;
         String filterText = "using the following NotNull annotations: " + notNullAnnotations;
-        assertTrue(
-                String.format("Expected the custom NotNull annotations are mentioned in the compiler "
-                              + "output.%nFilter text: '%s'%nCompiler output: '%s'", filterText, compilerOutput),
-                compilerOutput.contains(filterText)
+        assertTrue(compilerOutput.contains(filterText),
+                   String.format("Expected the custom NotNull annotations are mentioned in the compiler "
+                                 + "output.%nFilter text: '%s'%nCompiler output: '%s'", filterText, compilerOutput)
         );
     }
 
@@ -966,10 +967,9 @@ public abstract class AbstractTrauteTest {
         String testSource = String.format(METHOD_TEST_CLASS_TEMPLATE, testMethodBody);
         String compilerOutput = compileForFullResult(testSource).compilerOutput;
         String filterText = "'verbose mode' is set on";
-        assertTrue(
-                String.format("Expected the active 'verbose mode' is mentioned in the compiler "
-                              + "output.%nFilter text: '%s'%nCompiler output: '%s'", filterText, compilerOutput),
-                compilerOutput.contains(filterText)
+        assertTrue(compilerOutput.contains(filterText),
+                   String.format("Expected the active 'verbose mode' is mentioned in the compiler "
+                                 + "output.%nFilter text: '%s'%nCompiler output: '%s'", filterText, compilerOutput)
         );
     }
 

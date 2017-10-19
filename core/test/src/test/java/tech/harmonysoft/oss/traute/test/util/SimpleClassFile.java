@@ -1,4 +1,4 @@
-package tech.harmonysoft.oss.traute.util;
+package tech.harmonysoft.oss.traute.test.util;
 
 import org.jetbrains.annotations.NotNull;
 

@@ -1,4 +1,4 @@
-package tech.harmonysoft.oss.traute.fixture;
+package tech.harmonysoft.oss.traute.test.fixture;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;

@@ -1,4 +1,4 @@
-package tech.harmonysoft.oss.traute.util;
+package tech.harmonysoft.oss.traute.test.util;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -6,7 +6,7 @@ import javax.tools.JavaCompiler;
 import javax.tools.SimpleJavaFileObject;
 import java.net.URI;
 
-import static tech.harmonysoft.oss.traute.util.TestConstants.*;
+import static tech.harmonysoft.oss.traute.test.util.TestConstants.*;
 
 /**
  * <p>Stands for a source file with the predefined content.</p>
