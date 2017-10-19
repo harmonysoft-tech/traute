@@ -60,25 +60,28 @@ public class TrauteJavacTestCompiler implements TestCompiler {
         }
 
         List<SimpleClassFile> compiled = fileManager.getCompiled();
-        SimpleClassFile classFile = null;
-        if (compiled.size() == 1) {
-            classFile = compiled.get(0);
-        }
+        Supplier<byte[]> binaries = () -> {
+            SimpleClassFile classFile = null;
+            if (compiled.size() == 1) {
+                classFile = compiled.get(0);
+            }
 
-        Supplier<String> error = () -> String.format(
-                "Failed to fetch compiled binaries for the source below.%nCompilation output: '%s'"
-                + "%nTest source:%n%n%s", output, testSource.getSourceText()
-        );
-        if (classFile == null) {
-            throw new RuntimeException(error.get());
-        }
+            Supplier<String> error = () -> String.format(
+                    "Failed to fetch compiled binaries for the source below.%nCompilation output: '%s'"
+                    + "%nTest source:%n%n%s", output, testSource.getSourceText()
+            );
+            if (classFile == null) {
+                throw new RuntimeException(error.get());
+            }
 
-        Optional<byte[]> compiledBinaries = classFile.getCompiledBinaries();
-        if (!compiledBinaries.isPresent()) {
-            throw new RuntimeException(error.get());
-        }
+            Optional<byte[]> compiledBinaries = classFile.getCompiledBinaries();
+            if (!compiledBinaries.isPresent()) {
+                throw new RuntimeException(error.get());
+            }
+            return compiledBinaries.get();
+        };
 
-        return new CompilationResultImpl(compiledBinaries::get, output.toString(), testSource);
+        return new CompilationResultImpl(binaries, output.toString(), testSource);
     }
 
     @NotNull

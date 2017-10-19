@@ -1,13 +1,23 @@
+buildscript {
+    repositories {
+        mavenCentral()
+    }
+    dependencies {
+        classpath 'org.junit.platform:junit-platform-gradle-plugin:1.0.1'
+    }
+}
+
 allprojects {
     group 'org.denis'
     version '1.0.0'
 
     ext {
-        junitVersion = '5.0.1'
-
+        junitJupiterVersion = '5.0.1'
+        junitPlatformVersion = '1.0.1'
     }
 
     apply plugin: 'java'
+    apply plugin: 'org.junit.platform.gradle.plugin'
 
     sourceCompatibility = 1.8
 
@@ -24,13 +34,11 @@ allprojects {
     dependencies {
         compile 'org.jetbrains:annotations:15.0'
 
-        testRuntime "org.junit.jupiter:junit-jupiter-engine:$junitVersion"
+        testRuntime "org.junit.jupiter:junit-jupiter-engine:$junitJupiterVersion"
 
-//        testCompile "org.junit.jupiter:junit-platform-commons:$junitVersion"
-//        testCompile "org.junit.jupiter:junit-platform-engine:$junitVersion"
-        testCompile "org.junit.platform:junit-platform-runner:1.0.1"
-//        testCompile "org.junit.jupiter:junit-jupiter-api:1.0.1"
-        testCompile "org.junit.jupiter:junit-jupiter-params:$junitVersion"
-//        testCompile "org.junit.jupiter:junit-jupiter-params:$junitVersion"
+        testCompile "org.junit.platform:junit-platform-runner:$junitPlatformVersion"
+        testCompile "org.junit.jupiter:junit-jupiter-params:$junitJupiterVersion"
+
+        testCompileOnly 'org.apiguardian:apiguardian-api:1.0.0'
     }
 }

@@ -1,0 +1,403 @@
+package tech.harmonysoft.oss.traute.test.suite;
+
+import org.jetbrains.annotations.NotNull;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import tech.harmonysoft.oss.traute.common.util.TrauteConstants;
+import tech.harmonysoft.oss.traute.test.util.TestUtil;
+
+import static tech.harmonysoft.oss.traute.test.util.TestConstants.CLASS_NAME;
+import static tech.harmonysoft.oss.traute.test.util.TestConstants.PACKAGE;
+import static tech.harmonysoft.oss.traute.test.util.TestUtil.expectNpeFromReturnCheck;
+import static tech.harmonysoft.oss.traute.test.util.TestUtil.prepareReturnTestSource;
+
+public abstract class MethodReturnTest extends AbstractTrauteTest {
+
+    @Test
+    public void noDoubleEvaluation() {
+        String testSource = String.format(
+                "package %s;\n" +
+                "\n" +
+                "public class %s {\n" +
+                "\n" +
+                "  static int counter;\n" +
+                "\n" +
+                "  @%s\n" +
+                "  public Integer test() {\n" +
+                "    return count();\n" +
+                "  }\n" +
+                "\n" +
+                "  private Integer count() {\n" +
+                "      counter++;\n" +
+                "      return null;\n" +
+                "  }\n" +
+                "\n" +
+                "  public static void main(String[] args) {\n" +
+                "    try {\n" +
+                "      new Test().test();\n" +
+                "    } catch (NullPointerException e) {\n" +
+                "      throw new IllegalStateException(String.valueOf(counter));\n" +
+                "    }\n" +
+                "  }\n" +
+                "}", PACKAGE, CLASS_NAME, NotNull.class.getName());
+        expectRunResult.withExceptionClass(IllegalStateException.class)
+                       .withExceptionMessage("1");
+        doTest(testSource);
+    }
+
+    @Test
+    public void if_withBraces() {
+        doMethodReturnTest(
+                "" +
+                "if (true) {\n" +
+                "  return count();\n" +
+                "}\n" +
+                "return 10;"
+        );
+    }
+
+    @Test
+    public void if_withoutBraces() {
+        doMethodReturnTest(
+                "" +
+                "if (true) \n" +
+                "  return count();\n" +
+                "return 10;"
+        );
+    }
+
+    @Test
+    public void if_withoutBracesSameLine() {
+        doMethodReturnTest(
+                "" +
+                "if (true) return count();\n" +
+                "return 10;"
+        );
+    }
+
+    @Test
+    public void else_withBraces() {
+        doMethodReturnTest(
+                "" +
+                "if (false) {\n" +
+                "  return 1;\n" +
+                "} else {\n" +
+                "  return count();\n" +
+                "}"
+        );
+    }
+
+    @Test
+    public void else_withoutBraces() {
+        doMethodReturnTest(
+                "" +
+                "if (false) {\n" +
+                "  return 1;\n" +
+                "} else\n" +
+                "  return count();"
+        );
+    }
+
+    @Test
+    public void else_withoutBracesSameLine() {
+        doMethodReturnTest(
+                "" +
+                "if (false) {\n" +
+                "  return 1;\n" +
+                "} else return count();"
+        );
+    }
+
+    @Test
+    public void for_withBraces() {
+        doMethodReturnTest(
+                "" +
+                "for (int i = 0; i < 2; i++) {\n" +
+                "  return count();\n" +
+                "}\n" +
+                "return 10;"
+        );
+    }
+
+    @Test
+    public void for_withoutBraces() {
+        doMethodReturnTest(
+                "" +
+                "for (int i = 0; i < 2; i++)\n" +
+                "  return count();\n" +
+                "return 10;"
+        );
+    }
+
+    @Test
+    public void forEach_withBraces() {
+        doMethodReturnTest(
+                "" +
+                "int[] data = {1, 2};\n" +
+                "for (int i : data) {\n" +
+                "  return count();\n" +
+                "}\n" +
+                "return 10;"
+        );
+    }
+
+    @Test
+    public void forEach_withoutBraces() {
+        doMethodReturnTest(
+                "" +
+                "int[] data = {1, 2};\n" +
+                "for (int i : data)\n" +
+                "  return count();\n" +
+                "return 10;"
+        );
+    }
+
+    @Test
+    public void while_withBraces() {
+        doMethodReturnTest(
+                "" +
+                "while (System.currentTimeMillis() > 1) {\n" +
+                "  return count();\n" +
+                "}\n" +
+                "return 10;"
+        );
+    }
+
+    @Test
+    public void while_withoutBraces() {
+        doMethodReturnTest(
+                "" +
+                "while (System.currentTimeMillis() > 1) return count();\n" +
+                "return 10;"
+        );
+    }
+
+    @Test
+    public void doWhile_withBraces() {
+        doMethodReturnTest(
+                "" +
+                "do {\n" +
+                "  return count();\n" +
+                "} while (true);"
+        );
+    }
+
+    @Test
+    public void doWhile_withoutBraces() {
+        doMethodReturnTest(
+                "" +
+                "do\n" +
+                "  return count();\n" +
+                "while (true);"
+        );
+    }
+
+    @DisplayName("try")
+    @Test
+    public void fromTry() {
+        doMethodReturnTest(
+                "" +
+                "try {\n" +
+                "  return count();\n" +
+                "} finally {}"
+        );
+    }
+
+    @DisplayName("catch")
+    @Test
+    public void fromCatch() {
+        doMethodReturnTest(
+                "" +
+                "try {\n" +
+                "  return 10 / 0;\n" +
+                "} catch (Exception e) {\n" +
+                "  return count();\n" +
+                "}"
+        );
+    }
+
+    @DisplayName("finally")
+    @Test
+    public void fromFinally() {
+        doMethodReturnTest(
+                "" +
+                "try {\n" +
+                "  return 1;\n" +
+                "} finally {\n" +
+                "  return count();\n" +
+                "}"
+        );
+    }
+
+    @Test
+    public void case_singleInstruction() {
+        doMethodReturnTest(
+                "" +
+                "switch (System.currentTimeMillis() > 1 ? 1 : 0) {\n" +
+                "  case 1:\n" +
+                "    return count();\n" +
+                "}\n" +
+                "return 2;"
+        );
+    }
+
+    private void doMethodReturnTest(@NotNull String testMethodBody) {
+        String testSource = TestUtil.prepareReturnTestSource(testMethodBody);
+        expectNpeFromReturnCheck(testSource, "return count()", expectRunResult);
+        doTest(testSource);
+    }
+
+    @Test
+    public void case_multipleInstruction() {
+        String testSource = String.format(
+                "package %s;\n" +
+                "\n" +
+                "public class %s {\n" +
+                "\n" +
+                "  static int counter;\n" +
+                "\n" +
+                "  @%s\n" +
+                "  public Integer test() {\n" +
+                "    switch (System.currentTimeMillis() > 0 ? 1 : 0) {\n" +
+                "      case 1:\n" +
+                "        counter++;\n" +
+                "        return count();\n" +
+                "    }\n" +
+                "    return 2;\n" +
+                "  }\n" +
+                "\n" +
+                "  private Integer count() {\n" +
+                "      return null;\n" +
+                "  }\n" +
+                "\n" +
+                "  public static void main(String[] args) {\n" +
+                "    try {\n" +
+                "      new Test().test();\n" +
+                "    } catch (NullPointerException e) {\n" +
+                "      throw new IllegalStateException(String.valueOf(counter));\n" +
+                "    }\n" +
+                "  }\n" +
+                "}", PACKAGE, CLASS_NAME, NotNull.class.getName());
+        expectRunResult.withExceptionClass(IllegalStateException.class)
+                       .withExceptionMessage("1");
+        doTest(testSource);
+    }
+
+    @Test
+    public void case_doesNotBreakLogicInAnotherCase() {
+        String testMethodBody =
+                "switch (System.currentTimeMillis() > 1 ? 1 : 0) {\n" +
+                "  case 0:\n" +
+                "    return count();\n" +
+                "  case 1:\n" +
+                "    throw new IllegalStateException();\n" +
+                "}\n" +
+                "return 2;";
+        String testSource = prepareReturnTestSource(testMethodBody);
+        expectRunResult.withExceptionClass(IllegalStateException.class);
+        doTest(testSource);
+    }
+
+    @Test
+    public void case_doesNotBreakLogicInDefault() {
+        String testMethodBody =
+                "switch (System.currentTimeMillis() > 1 ? 1 : 0) {\n" +
+                "  case 0:\n" +
+                "    return count();\n" +
+                "  default:\n" +
+                "    throw new IllegalStateException();\n" +
+                "}";
+        String testSource = prepareReturnTestSource(testMethodBody);
+        expectRunResult.withExceptionClass(IllegalStateException.class);
+        doTest(testSource);
+    }
+
+    @Test
+    public void default_singleInstruction() {
+        doMethodReturnTest(
+                "" +
+                "switch (System.currentTimeMillis() > 1 ? 1 : 0) {\n" +
+                "  case 0:\n" +
+                "    return 1;\n" +
+                "  default:\n" +
+                "    return count();\n" +
+                "}"
+        );
+    }
+
+    @Test
+    public void default_multipleInstructions() {
+        String testSource = String.format(
+                "package %s;\n" +
+                "\n" +
+                "public class %s {\n" +
+                "\n" +
+                "  static int counter;\n" +
+                "\n" +
+                "  @%s\n" +
+                "  public Integer test() {\n" +
+                "    switch (System.currentTimeMillis() > 0 ? 1 : 0) {\n" +
+                "      case 0:\n" +
+                "        return 0;\n" +
+                "      default:\n" +
+                "        counter++;\n" +
+                "        return count();\n" +
+                "    }\n" +
+                "  }\n" +
+                "\n" +
+                "  private Integer count() {\n" +
+                "      return null;\n" +
+                "  }\n" +
+                "\n" +
+                "  public static void main(String[] args) {\n" +
+                "    try {\n" +
+                "      new Test().test();\n" +
+                "    } catch (NullPointerException e) {\n" +
+                "      throw new IllegalStateException(String.valueOf(counter));\n" +
+                "    }\n" +
+                "  }\n" +
+                "}", PACKAGE, CLASS_NAME, NotNull.class.getName());
+        expectRunResult.withExceptionClass(IllegalStateException.class)
+                       .withExceptionMessage("1");
+        doTest(testSource);
+    }
+
+    @Test
+    public void default_doesNotBreakLogicInAnotherCase() {
+        String testMethodBody =
+                "switch (System.currentTimeMillis() > 1 ? 1 : 0) {\n" +
+                "  case 1:\n" +
+                "    throw new IllegalStateException();\n" +
+                "  default:\n" +
+                "    return count();\n" +
+                "}\n";
+        String testSource = prepareReturnTestSource(testMethodBody);
+        expectRunResult.withExceptionClass(IllegalStateException.class);
+        doTest(testSource);
+    }
+
+    @Test
+    public void noAttemptToInstrumentInappropriateReturnType() {
+        for (String type : TrauteConstants.PRIMITIVE_TYPES) {
+
+            // Ensure that compilation is fine as we don't instrument primitive types and class binaries
+            // are correctly loaded and executed.
+
+            String testSource = String.format(
+                    "package %s;\n" +
+                    "\n" +
+                    "public class %s {\n" +
+                    "\n" +
+                    "  @%s\n" +
+                    "  public %s test() {\n" +
+                    "    return (%s)1;\n" +
+                    "  }\n" +
+                    "\n" +
+                    "  public static void main(String[] args) {\n" +
+                    "    new Test().test();\n" +
+                    "  }\n" +
+                    "}", PACKAGE, CLASS_NAME, NotNull.class.getName(), type, type);
+            doTest(testSource);
+        }
+    }
+}
