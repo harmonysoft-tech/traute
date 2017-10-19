@@ -29,7 +29,7 @@ public class ParameterInstrumentator extends AbstractInstrumentator<ParameterToI
         JCTree.JCBlock body = info.getBody();
         body.stats = body.stats.prepend(buildVarCheck(factory, symbolsTable, parameterName, errorMessage));
 
-        if (context.getPluginSettings().isVerboseLog()) {
+        if (context.getPluginSettings().isVerboseMode()) {
             String methodName = info.getQualifiedMethodName();
             String methodNotice = methodName == null ? "" : " in the method " + methodName + "()";
             context.getLogger().info(String.format(

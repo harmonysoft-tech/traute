@@ -1,4 +1,4 @@
-package tech.harmonysoft.oss.traute;
+package tech.harmonysoft.oss.traute.test;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
 import org.jetbrains.annotations.NotNull;
@@ -23,9 +23,7 @@ import java.util.*;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
-import static org.junit.jupiter.api.Assertions.fail;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 import static tech.harmonysoft.oss.traute.common.instrumentation.InstrumentationType.METHOD_PARAMETER;
 import static tech.harmonysoft.oss.traute.common.instrumentation.InstrumentationType.METHOD_RETURN;
 import static tech.harmonysoft.oss.traute.test.util.TestConstants.CLASS_NAME;
@@ -134,183 +132,6 @@ public abstract class AbstractTrauteTest {
 
     protected boolean isVerboseOutput() {
         return verboseOutput;
-    }
-
-    @Test
-    public void default_jetBrains() {
-        doTestArgument(NotNull.class.getName());
-    }
-
-    @Test
-    public void default_jsr305() {
-        doTestArgument(Nonnull.class.getName());
-    }
-
-    @Test
-    public void default_javaEE() {
-        doTestArgument(javax.validation.constraints.NotNull.class.getName());
-    }
-
-    @Test
-    public void default_findBugs() {
-        doTestArgument(NonNull.class.getName());
-    }
-
-    @Test
-    public void default_android() {
-        doTestArgument(android.support.annotation.NonNull.class.getName());
-    }
-
-    @Test
-    public void default_eclipse() {
-        doTestArgument(org.eclipse.jdt.annotation.NonNull.class.getName());
-    }
-
-    private void doTestArgument(@NotNull String qualifiedAnnotationClassName) {
-        doTestArgument_singleImport(qualifiedAnnotationClassName);
-        doTestArgument_wildcardImport(qualifiedAnnotationClassName);
-        doTestArgument_qualifiedInPlaceName(qualifiedAnnotationClassName);
-    }
-
-    private void doTestArgument_singleImport(@NotNull String qualifiedAnnotationClassName) {
-        int lastDotIndex = qualifiedAnnotationClassName.lastIndexOf('.');
-        String annotationName = qualifiedAnnotationClassName.substring(lastDotIndex + 1);
-        doTestExpectNpe(qualifiedAnnotationClassName,
-                        String.format("public void %s(@%s String s) {}", METHOD_NAME, annotationName));
-    }
-
-    private void doTestArgument_wildcardImport(@NotNull String qualifiedAnnotationClassName) {
-        int lastDotIndex = qualifiedAnnotationClassName.lastIndexOf('.');
-        String annotationName = qualifiedAnnotationClassName.substring(lastDotIndex + 1);
-        doTestExpectNpe(String.format("%s.*", qualifiedAnnotationClassName.substring(0, lastDotIndex)),
-                        String.format("public void %s(@%s String s) {}", METHOD_NAME, annotationName));
-    }
-
-    private void doTestArgument_qualifiedInPlaceName(@NotNull String qualifiedAnnotationClassName) {
-        doTestExpectNpe(null,
-                        String.format("public void %s(@%s String s) {}", METHOD_NAME, qualifiedAnnotationClassName));
-    }
-
-    private void doTestExpectNpe(@Nullable String importString,
-                                 @NotNull String testMethod)
-    {
-        String testSource = prepareSourceTextForParameterTest(importString, testMethod, "null");
-        byte[] compiledTestSource = compile(testSource);
-        boolean gotNpe = false;
-        try {
-            run(compiledTestSource);
-        } catch (NullPointerException e) {
-            gotNpe = true;
-        }
-        if (!gotNpe) {
-            fail(String.format("Expected to get a NullPointerException on attempt to call 'new Test().test(null)' "
-                               + "for the source below but that didn't happen.%n%nSource:%n%n%s",
-                               testSource
-            ));
-        }
-    }
-
-    @Test
-    public void argumentIndex() {
-        doTestArgumentIndex("null, 1", 0);
-        doTestArgumentIndex("1, null", 1);
-    }
-
-    private void doTestArgumentIndex(@NonNull String callArguments, int expectedIndexToBeReported) {
-        String annotation = NotNull.class.getName();
-        String testSource = prepareSourceTextForParameterTest(
-                annotation,
-                String.format("public void %s(@NotNull Integer i1, @NotNull Integer i2) {}", METHOD_NAME),
-                callArguments
-        );
-        byte[] compiledTestSource = compile(testSource);
-        boolean passed = false;
-        try {
-            run(compiledTestSource);
-        } catch (NullPointerException e) {
-            String message = e.getMessage();
-            assert message != null;
-            assert message.contains("#" + expectedIndexToBeReported);
-            passed = true;
-        }
-        if (!passed) {
-            fail(String.format("Expected to get a NPE on attempt to execute the source below but that "
-                               + "didn't happen:%n%n%s", testSource));
-        }
-    }
-
-    @Test
-    public void lineNumberInNpeTrace() {
-        String testSource = prepareSourceTextForParameterTest(
-                NotNull.class.getName(),
-                String.format("public void %s(@NotNull Integer i,\n                   @NotNull Integer i2) {}",
-                              METHOD_NAME),
-                "1, null"
-        );
-        int i = testSource.indexOf("@NotNull Integer i2");
-        long expectedLine = testSource.substring(0, i).chars().filter(c -> c == '\n').count() + 1;
-        byte[] compiledTestSource = compile(testSource);
-        boolean passed = false;
-        try {
-            run(compiledTestSource);
-        } catch (NullPointerException e) {
-            StackTraceElement[] stackTrace = e.getStackTrace();
-            assert stackTrace.length > 0;
-            assertEquals(expectedLine, stackTrace[0].getLineNumber(),
-                         "Expected that a NPE thrown from the plugin-introduced check points to "
-                         + "the valid line");
-            passed = true;
-        }
-        if (!passed) {
-            fail(String.format("Expected to get a NPE on attempt to execute the source below but that "
-                               + "didn't happen:%n%n%s", testSource));
-        }
-    }
-
-    @Test
-    public void primitiveMethodArguments() {
-        for (String primitiveType : PRIMITIVE_TYPES) {
-            String testSource = prepareSourceTextForParameterTest(
-                    NotNull.class.getName(),
-                    String.format("public void %s(@NotNull %s arg) {}", METHOD_NAME, primitiveType),
-                    "(" + primitiveType + ")1"
-            );
-            byte[] compiledTestSource = compile(testSource);
-            run(compiledTestSource);
-            // We expect that no instrumentation occurs for primitive types, otherwise we get a compilation
-            // error on attempt to compile a check like 'if (arg == null)' where 'arg' is, say, 'int'.
-        }
-    }
-
-    @Test
-    public void lineNumbersAfterNullCheck() {
-        String testSource = prepareSourceTextForParameterTest(
-                NotNull.class.getName(),
-                String.format("public void %s(@NotNull Integer i) {\n" +
-                              "  if (System.currentTimeMillis() > 1) {\n" +
-                              "    throw new IllegalArgumentException();\n" +
-                              "  }\n" +
-                              "}", METHOD_NAME),
-                "1"
-        );
-        byte[] compiledTestSource = compile(testSource);
-        int i = testSource.indexOf("new IllegalArgumentException()");
-        long expectedLine = testSource.substring(0, i).chars().filter(c -> c == '\n').count() + 1;
-        boolean passed = false;
-        try {
-            run(compiledTestSource);
-        } catch (IllegalArgumentException e) {
-            StackTraceElement[] stackTrace = e.getStackTrace();
-            assert stackTrace.length > 0;
-            assertEquals(expectedLine, stackTrace[0].getLineNumber(),
-                         "Expected that an exception thrown after a plugin-introduced check points "
-                         + "to the valid line");
-            passed = true;
-        }
-        if (!passed) {
-            fail(String.format("Expected to get an IllegalArgumentException exception on attempt to execute the "
-                               + "source below but that didn't happen:%n%n%s", testSource));
-        }
     }
 
     @Test
@@ -983,11 +804,11 @@ public abstract class AbstractTrauteTest {
         run(binaries);
     }
 
-    @Test
-    public void restrictedInstrumentation_parameterOnly_active() {
-        instrumentationTypes.add(METHOD_PARAMETER);
-        doTestArgument(Nonnull.class.getName());
-    }
+//    @Test
+//    public void restrictedInstrumentation_parameterOnly_active() {
+//        instrumentationTypes.add(METHOD_PARAMETER);
+//        doTestArgument(Nonnull.class.getName());
+//    }
 
     @Test
     public void restrictedInstrumentation_returnOnly_noCheckForParameter() {

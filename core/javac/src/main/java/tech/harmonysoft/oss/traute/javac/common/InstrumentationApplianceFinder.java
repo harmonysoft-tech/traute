@@ -6,27 +6,24 @@ import com.sun.tools.javac.tree.JCTree;
 import com.sun.tools.javac.tree.TreeMaker;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import tech.harmonysoft.oss.traute.common.settings.TrautePluginSettings;
 import tech.harmonysoft.oss.traute.javac.instrumentation.Instrumentator;
 import tech.harmonysoft.oss.traute.javac.instrumentation.method.ReturnToInstrumentInfo;
 import tech.harmonysoft.oss.traute.javac.instrumentation.parameter.ParameterToInstrumentInfo;
-import tech.harmonysoft.oss.traute.common.settings.TrautePluginSettings;
 
 import javax.tools.JavaCompiler;
 import java.util.*;
 
-import static java.util.Arrays.asList;
 import static tech.harmonysoft.oss.traute.common.instrumentation.InstrumentationType.METHOD_PARAMETER;
 import static tech.harmonysoft.oss.traute.common.instrumentation.InstrumentationType.METHOD_RETURN;
+import static tech.harmonysoft.oss.traute.common.util.TrauteConstants.METHOD_RETURN_TYPES_TO_SKIP;
+import static tech.harmonysoft.oss.traute.common.util.TrauteConstants.PRIMITIVE_TYPES;
 
 /**
  * Inspects {@code AST} built by {@link JavaCompiler}, finds places where to apply {@code null}-checks
  * and notifies given instrumentators about them.
  */
 public class InstrumentationApplianceFinder extends TreeScanner<Void, Void> {
-
-    private static final Set<String> TYPES_TO_SKIP = new HashSet<>(asList(
-            "byte", "short", "char", "int", "long", "float", "double", "void", "Void"
-    ));
 
     private Stack<Tree> parents = new Stack<>();
 
@@ -115,7 +112,7 @@ public class InstrumentationApplianceFinder extends TreeScanner<Void, Void> {
                 continue;
             }
             Tree type = variable.getType();
-            if (type != null && TYPES_TO_SKIP.contains(type.toString())) {
+            if (type != null && PRIMITIVE_TYPES.contains(type.toString())) {
                 continue;
             }
             Optional<String> annotation = findNotNullAnnotation(variable.getModifiers());
@@ -139,7 +136,9 @@ public class InstrumentationApplianceFinder extends TreeScanner<Void, Void> {
 
     private boolean mayBeInstrumentReturnType(@NotNull MethodTree method) {
         Tree returnType = method.getReturnType();
-        if (TYPES_TO_SKIP.contains(returnType.toString()) || (!(returnType instanceof JCTree.JCExpression))) {
+        if (METHOD_RETURN_TYPES_TO_SKIP.contains(returnType.toString())
+            || (!(returnType instanceof JCTree.JCExpression)))
+        {
             return false;
         }
 

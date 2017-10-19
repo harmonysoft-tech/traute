@@ -115,7 +115,7 @@ public class MethodReturnInstrumentator extends AbstractInstrumentator<ReturnToI
 
     private void mayBeLogInstrumentation(@NotNull ReturnToInstrumentInfo info) {
         CompilationUnitProcessingContext context = info.getContext();
-        if (context.getPluginSettings().isVerboseLog()) {
+        if (context.getPluginSettings().isVerboseMode()) {
             String methodName = info.getQualifiedMethodName();
             if (methodName != null) {
                 context.getLogger().info("added a null-check for 'return' expression in method " + methodName + "()");

@@ -11,15 +11,15 @@ public class TrautePluginSettings {
     private final Set<String>              notNullAnnotations      = new HashSet<>();
     private final Set<InstrumentationType> instrumentationsToApply = new HashSet<>();
 
-    private final boolean verboseLog;
+    private final boolean verboseMode;
 
     public TrautePluginSettings(@NotNull Set<String> notNullAnnotations,
                                 @NotNull Set<InstrumentationType> instrumentationsToApply,
-                                boolean verboseLog)
+                                boolean verboseMode)
     {
         this.notNullAnnotations.addAll(notNullAnnotations);
         this.instrumentationsToApply.addAll(instrumentationsToApply);
-        this.verboseLog = verboseLog;
+        this.verboseMode = verboseMode;
     }
 
     @NotNull
@@ -31,7 +31,12 @@ public class TrautePluginSettings {
         return instrumentationsToApply.contains(type);
     }
 
-    public boolean isVerboseLog() {
-        return verboseLog;
+    @NotNull
+    public Set<InstrumentationType> getInstrumentationsToApply() {
+        return instrumentationsToApply;
+    }
+
+    public boolean isVerboseMode() {
+        return verboseMode;
     }
 }

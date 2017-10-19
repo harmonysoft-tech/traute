@@ -212,7 +212,7 @@ public class TrauteJavacPlugin implements Plugin {
                                                                  statsCollector),
                             parameterInstrumentator,
                             methodInstrumentator),null);
-                    if (pluginSettings.isVerboseLog()) {
+                    if (pluginSettings.isVerboseMode()) {
                         printInstrumentationResults(compilationUnit.getSourceFile(), statsCollector, logger);
                     }
                 } catch (Throwable e) {
@@ -277,7 +277,7 @@ public class TrauteJavacPlugin implements Plugin {
         if (verbose && logger != null) {
             logger.info("'verbose mode' is set on");
         }
-        builder.withVerbose(verbose);
+        builder.withVerboseMode(verbose);
 
         String notNullAnnotationsString = options.get(OPTION_ANNOTATIONS_NOT_NULL);
         if (notNullAnnotationsString != null) {

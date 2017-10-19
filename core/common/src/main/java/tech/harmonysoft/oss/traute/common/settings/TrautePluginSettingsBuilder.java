@@ -14,7 +14,7 @@ import static java.util.Arrays.asList;
 @SuppressWarnings("UnusedReturnValue")
 public class TrautePluginSettingsBuilder {
 
-    private static final Set<String> DEFAULT_NOT_NULL_ANNOTATIONS = new HashSet<>(asList(
+    public static final Set<String> DEFAULT_NOT_NULL_ANNOTATIONS = new HashSet<>(asList(
             // Used by IntelliJ by default - https://www.jetbrains.com/help/idea/nullable-and-notnull-annotations.html
             "org.jetbrains.annotations.NotNull",
 
@@ -34,10 +34,10 @@ public class TrautePluginSettingsBuilder {
             "org.eclipse.jdt.annotation.NonNull"
     ));
 
-    private static final Set<InstrumentationType> DEFAULT_INSTRUMENTATIONS_TO_APPLY =
+    public static final Set<InstrumentationType> DEFAULT_INSTRUMENTATIONS_TO_APPLY =
             EnumSet.allOf(InstrumentationType.class);
 
-    private static final boolean DEFAULT_VERBOSE_MODE = false;
+    public static final boolean DEFAULT_VERBOSE_MODE = false;
 
     private final Set<String>              notNullAnnotations      = new HashSet<>();
     private final Set<InstrumentationType> instrumentationsToApply = EnumSet.noneOf(InstrumentationType.class);
@@ -62,7 +62,7 @@ public class TrautePluginSettingsBuilder {
     }
 
     @NotNull
-    public TrautePluginSettingsBuilder withVerbose(boolean verbose) {
+    public TrautePluginSettingsBuilder withVerboseMode(boolean verbose) {
         this.verbose = verbose;
         return this;
     }

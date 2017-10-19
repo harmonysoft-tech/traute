@@ -1,7 +1,7 @@
 package tech.harmonysoft.oss.traute.javac;
 
 import org.jetbrains.annotations.NotNull;
-import tech.harmonysoft.oss.traute.AbstractTrauteTest;
+import tech.harmonysoft.oss.traute.test.AbstractTrauteTest;
 import tech.harmonysoft.oss.traute.common.instrumentation.InstrumentationType;
 
 import java.util.ArrayList;
