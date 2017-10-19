@@ -5,6 +5,6 @@ dependencies {
 
     compile project(':core:common')
 
-    testCompile project(':core:test').sourceSets.test.output
-    testCompile project(path: ':core:test', configuration: 'testCompile')
+    testCompile project(':core:test-common').sourceSets.test.output
+    testCompile project(path: ':core:test-common', configuration: 'testCompile')
 }

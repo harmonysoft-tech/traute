@@ -3,3 +3,4 @@ rootProject.name = 'traute'
 include 'core:common', 'core:javac', 'core:test', 'facade:gradle', 'facade:maven', 'facade:ant'
 
 project(':core:javac').name = 'traute-javac-plugin'
+project(':core:test').name = 'test-common'
