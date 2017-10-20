@@ -1,4 +1,4 @@
-This module serves for the following purposes:
+This module serves the following purposes:
 * define a test framework to be used for all 'production' modules - [tech.harmonysoft.oss.traute.test.api](src/test/java/tech/harmonysoft/oss/traute/test/api).  
   Generally, it establishes two actions:
   * *[compile](src/test/java/tech/harmonysoft/oss/traute/test/api/engine/TestCompiler.java)* - transform a _String_ (test source) into a _Collection<byte[]>_ (compiled binaries). Note that we use a _Collection_ here because a single source file might produce more than one *\*.class* file in case of [nested](https://docs.oracle.com/javase/tutorial/java/javaOO/nested.html) classes
