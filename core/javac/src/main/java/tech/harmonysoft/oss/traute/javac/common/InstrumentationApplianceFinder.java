@@ -12,6 +12,7 @@ import tech.harmonysoft.oss.traute.javac.instrumentation.Instrumentator;
 import tech.harmonysoft.oss.traute.javac.instrumentation.method.ReturnToInstrumentInfo;
 import tech.harmonysoft.oss.traute.javac.instrumentation.parameter.ParameterToInstrumentInfo;
 
+import javax.lang.model.element.Modifier;
 import javax.tools.JavaCompiler;
 import java.util.*;
 
@@ -90,15 +91,10 @@ public class InstrumentationApplianceFinder extends TreeScanner<Void, Void> {
                                      && settings.isEnabled(METHOD_RETURN)
                                      && mayBeInstrumentReturnType(method);
         if (!processingInterface && settings.isEnabled(METHOD_PARAMETER)) {
-            BlockTree bodyBlock = method.getBody();
-            if (!(bodyBlock instanceof JCTree.JCBlock)) {
-                context.getLogger().reportDetails(String.format(
-                        "get a %s instance in the method AST but got %s",
-                        JCTree.JCBlock.class.getName(), bodyBlock.getClass().getName()
-                ));
-                return v;
+            JCTree.JCBlock methodBody = getMethodBody(method);
+            if (methodBody != null) {
+                instrumentMethodParameters(method, methodBody);
             }
-            instrumentMethodParameters(method, (JCTree.JCBlock) bodyBlock);
         }
         try {
             return super.visitMethod(method, v);
@@ -109,6 +105,25 @@ public class InstrumentationApplianceFinder extends TreeScanner<Void, Void> {
             instrumentReturnExpression = false;
             tmpVariableCounter = 1;
         }
+    }
+
+    @Nullable
+    private JCTree.JCBlock getMethodBody(@NotNull MethodTree method) {
+        if (method.getModifiers().getFlags().contains(Modifier.ABSTRACT)) {
+            return null;
+        }
+        BlockTree bodyBlock = method.getBody();
+        if (bodyBlock == null) {
+            return null;
+        }
+        if (bodyBlock instanceof JCTree.JCBlock) {
+            return (JCTree.JCBlock) bodyBlock;
+        }
+        context.getLogger().reportDetails(String.format(
+                "get a %s instance in the method AST but got %s",
+                JCTree.JCBlock.class.getName(), bodyBlock.getClass().getName()
+        ));
+        return null;
     }
 
     private void instrumentMethodParameters(@NotNull MethodTree method, @NotNull JCTree.JCBlock bodyBlock) {

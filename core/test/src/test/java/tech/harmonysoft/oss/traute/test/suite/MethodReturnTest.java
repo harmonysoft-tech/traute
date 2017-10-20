@@ -439,4 +439,59 @@ public abstract class MethodReturnTest extends AbstractTrauteTest {
         expectNpeFromReturnCheck(testSource, "return", expectRunResult);
         doTest(testSource);
     }
+
+    @Test
+    public void abstractClass_abstractMethod() {
+        String testSource = String.format(
+                "package %s;\n" +
+                "\n" +
+                "import %s;\n" +
+                "\n" +
+                "public abstract class %s {\n" +
+                "\n" +
+                "  @NotNull\n" +
+                "  protected abstract Object implementMe();\n" +
+                "\n" +
+                "  public static void main(String[] args) {\n" +
+                "    new %s() {\n" +
+                "      public Object implementMe() {\n" +
+                "        return null;\n" +
+                "      }\n" +
+                "    }.implementMe();\n" +
+                "  }\n" +
+                "}", PACKAGE, NotNull.class.getName(), CLASS_NAME, CLASS_NAME);
+        // Expecting that compilation is fine as there is no attempt to add a null-check into an abstract method
+        doTest(testSource);
+    }
+
+    @Test
+    public void abstractClass_nonAbstractMethod() {
+        String testSource = String.format(
+                "package %s;\n" +
+                "\n" +
+                "import %s;\n" +
+                "\n" +
+                "public abstract class %s {\n" +
+                "\n" +
+                "  @NotNull\n" +
+                "  protected abstract %s implementMe();\n" +
+                "\n" +
+                "  @NotNull\n" +
+                "  public Object test() {\n" +
+                "    return (String)null;\n" +
+                "  }\n" +
+                "\n" +
+                "  public static void main(String[] args) {\n" +
+                "    %s var = new %s() {\n" +
+                "      public %s implementMe() {\n" +
+                "        return null;\n" +
+                "      }\n" +
+                "    };\n" +
+                "    var.implementMe();\n" +
+                "    var.test();\n" +
+                "  }\n" +
+                "}", PACKAGE, NotNull.class.getName(), CLASS_NAME, CLASS_NAME, CLASS_NAME, CLASS_NAME, CLASS_NAME);
+        expectNpeFromReturnCheck(testSource, "return (String)null", expectRunResult);
+        doTest(testSource);
+    }
 }

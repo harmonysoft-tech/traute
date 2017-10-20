@@ -175,4 +175,50 @@ public abstract class MethodParameterTest extends AbstractTrauteTest {
         expectNpeFromParameterCheck(testSource, "param", expectRunResult);
         doTest(testSource);
     }
+
+    @Test
+    public void abstractClass_abstractMethod() {
+        String testSource = String.format(
+                "package %s;\n" +
+                "\n" +
+                "public abstract class %s {\n" +
+                "\n" +
+                "  protected abstract void implementMe(@%s Object param);\n" +
+                "\n" +
+                "  public static void main(String[] args) {\n" +
+                "    new %s() {\n" +
+                "      public void implementMe(Object o) {\n" +
+                "      }\n" +
+                "    }.implementMe(null);\n" +
+                "  }\n" +
+                "}", PACKAGE, CLASS_NAME, NotNull.class.getName(), CLASS_NAME);
+        // Expecting that compilation is fine as there is no attempt to add a null-check into an abstract method
+        doTest(testSource);
+    }
+
+    @Test
+    public void abstractClass_nonAbstractMethod() {
+        String testSource = String.format(
+                "package %s;\n" +
+                "\n" +
+                "import %s;\n" +
+                "\n" +
+                "public abstract class %s {\n" +
+                "\n" +
+                "  protected abstract %s implementMe(@NotNull Object o);\n" +
+                "\n" +
+                "  public void test(@NotNull Object param) {\n" +
+                "  }\n" +
+                "\n" +
+                "  public static void main(String[] args) {\n" +
+                "    new %s() {\n" +
+                "      public %s implementMe(Object param) {\n" +
+                "        return this;\n" +
+                "      }\n" +
+                "    }.implementMe(null).test(null);\n" +
+                "  }\n" +
+                "}", PACKAGE, NotNull.class.getName(), CLASS_NAME, CLASS_NAME, CLASS_NAME, CLASS_NAME);
+        expectNpeFromParameterCheck(testSource, "param", expectRunResult);
+        doTest(testSource);
+    }
 }
