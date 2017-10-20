@@ -41,7 +41,8 @@ public class ParameterToInstrumentInfo implements InstrumentationInfo {
     }
 
     @Override
-    public @NotNull InstrumentationType getType() {
+    @NotNull
+    public InstrumentationType getType() {
         return InstrumentationType.METHOD_PARAMETER;
     }
 

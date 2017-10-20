@@ -23,7 +23,8 @@ public class CaseReturnInstrumentationAstParent implements ReturnInstrumentation
     }
 
     @Override
-    public @NotNull List<JCTree.JCStatement> getStatements() {
+    @NotNull
+    public List<JCTree.JCStatement> getStatements() {
         return jcCase.stats == null ? List.nil() : jcCase.stats;
     }
 

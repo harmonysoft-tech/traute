@@ -18,7 +18,8 @@ public class RunResultImpl implements RunResult {
     }
 
     @Override
-    public @NotNull Optional<Throwable> getException() {
+    @NotNull
+    public Optional<Throwable> getException() {
         return Optional.ofNullable(exception);
     }
 

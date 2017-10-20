@@ -22,7 +22,8 @@ public class BlockReturnInstrumentationAstParent implements ReturnInstrumentatio
     }
 
     @Override
-    public @NotNull List<JCTree.JCStatement> getStatements() {
+    @NotNull
+    public List<JCTree.JCStatement> getStatements() {
         return block.stats == null ? List.nil() : block.stats;
     }
 
