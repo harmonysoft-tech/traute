@@ -39,6 +39,7 @@ public class InstrumentationApplianceFinder extends TreeScanner<Void, Void> {
     private String              methodNotNullAnnotation;
     private int                 tmpVariableCounter;
     private boolean             processingInterface;
+    private boolean             instrumentReturnExpression;
 
     public InstrumentationApplianceFinder(@NotNull CompilationUnitProcessingContext context,
                                           @NotNull Instrumentator<ParameterToInstrumentInfo> parameterInstrumentator,
@@ -85,9 +86,9 @@ public class InstrumentationApplianceFinder extends TreeScanner<Void, Void> {
     public Void visitMethod(MethodTree method, Void v) {
         methodName = method.getName().toString();
         TrautePluginSettings settings = context.getPluginSettings();
-        boolean instrumentReturnType = !processingInterface
-                                       && settings.isEnabled(METHOD_RETURN)
-                                       && mayBeInstrumentReturnType(method);
+        instrumentReturnExpression = !processingInterface
+                                     && settings.isEnabled(METHOD_RETURN)
+                                     && mayBeInstrumentReturnType(method);
         if (!processingInterface && settings.isEnabled(METHOD_PARAMETER)) {
             BlockTree bodyBlock = method.getBody();
             if (!(bodyBlock instanceof JCTree.JCBlock)) {
@@ -100,17 +101,13 @@ public class InstrumentationApplianceFinder extends TreeScanner<Void, Void> {
             instrumentMethodParameters(method, (JCTree.JCBlock) bodyBlock);
         }
         try {
-            if (instrumentReturnType) {
-                return super.visitMethod(method, v);
-            } else {
-                return v;
-            }
+            return super.visitMethod(method, v);
         } finally {
             methodReturnType = null;
             methodNotNullAnnotation = null;
             methodName = null;
+            instrumentReturnExpression = false;
             tmpVariableCounter = 1;
-            parents.clear();
         }
     }
 
@@ -345,7 +342,11 @@ public class InstrumentationApplianceFinder extends TreeScanner<Void, Void> {
 
     @Override
     public Void visitReturn(ReturnTree node, Void aVoid) {
-        if (methodNotNullAnnotation != null && methodReturnType != null && !parents.isEmpty()) {
+        if (instrumentReturnExpression
+            && methodNotNullAnnotation != null
+            && methodReturnType != null
+            && !parents.isEmpty())
+        {
             mayBeSetPosition(node, context.getAstFactory());
             returnInstrumenter.instrument(new ReturnToInstrumentInfo(context,
                                                                      methodNotNullAnnotation,

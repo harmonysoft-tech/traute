@@ -146,11 +146,33 @@ public abstract class MethodParameterTest extends AbstractTrauteTest {
                 "package %s;\n" +
                 "\n" +
                 "public interface %s {\n" +
-                "  @%s\n" +
-                "  String test(@%s String s);\n" +
-                "}", PACKAGE, CLASS_NAME, NotNull.class.getName(), NotNull.class.getName());
+                "  void test(@%s String s);\n" +
+                "}", PACKAGE, CLASS_NAME, NotNull.class.getName());
 
         // We expect that no instrumentation occurs for interface parameters, hence, compilation is fine.
         doCompile(testSource);
+    }
+
+    @Test
+    public void anonymousClass() {
+        String testSource = String.format(
+                "package %s;\n" +
+                "\n" +
+                "import java.util.ArrayList;\n" +
+                "\n" +
+                "public class %s {\n" +
+                "  public void test() {\n" +
+                "    new ArrayList() {\n" +
+                "      public boolean contains(@%s Object param) {\n" +
+                "        return false;\n" +
+                "      }\n" +
+                "    }.contains(null);\n" +
+                "  }\n" +
+                "  public static void main(String[] args) {\n" +
+                "    new %s().test();\n" +
+                "  }\n" +
+                "}", PACKAGE, CLASS_NAME, NotNull.class.getName(), CLASS_NAME);
+        expectNpeFromParameterCheck(testSource, "param", expectRunResult);
+        doTest(testSource);
     }
 }

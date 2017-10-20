@@ -20,6 +20,11 @@ public class SimpleClassFile extends SimpleJavaFileObject {
         super(uri, Kind.CLASS);
     }
 
+    @NotNull
+    public URI getUri() {
+        return uri;
+    }
+
     @Override
     public OutputStream openOutputStream() throws IOException {
         return out = new ByteArrayOutputStream();

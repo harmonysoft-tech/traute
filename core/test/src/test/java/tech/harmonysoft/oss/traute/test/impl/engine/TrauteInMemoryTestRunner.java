@@ -2,12 +2,16 @@ package tech.harmonysoft.oss.traute.test.impl.engine;
 
 import org.jetbrains.annotations.NotNull;
 import tech.harmonysoft.oss.traute.test.api.engine.TestRunner;
+import tech.harmonysoft.oss.traute.test.api.model.ClassFile;
 import tech.harmonysoft.oss.traute.test.api.model.CompilationResult;
 import tech.harmonysoft.oss.traute.test.api.model.RunResult;
 import tech.harmonysoft.oss.traute.test.impl.model.RunResultImpl;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.Map;
+
+import static java.util.stream.Collectors.toMap;
 
 public class TrauteInMemoryTestRunner implements TestRunner {
 
@@ -17,11 +21,16 @@ public class TrauteInMemoryTestRunner implements TestRunner {
     private static final Object[] MAIN_ARGUMENTS = { new String[0]};
 
     @Override
-    public @NotNull RunResult run(@NotNull CompilationResult compilationResult) {
+    @NotNull
+    public RunResult run(@NotNull CompilationResult compilationResult) {
+        Map<String, @NotNull byte[]> compiled = compilationResult.getCompiledClassesSupplier().get()
+                                                                 .stream()
+                                                                 .collect(toMap(ClassFile::getName,
+                                                                                ClassFile::getBinaries));
         ClassLoader classLoader = new ClassLoader() {
             @Override
             protected Class<?> findClass(String name) throws ClassNotFoundException {
-                byte[] compiledBinaries = compilationResult.getCompiledBinariesSupplier().get();
+                byte[] compiledBinaries = compiled.get(name);
                 return defineClass(name, compiledBinaries, 0, compiledBinaries.length);
             }
         };

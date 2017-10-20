@@ -1,18 +1,20 @@
 package tech.harmonysoft.oss.traute.test.impl.model;
 
 import org.jetbrains.annotations.NotNull;
+import tech.harmonysoft.oss.traute.test.api.model.ClassFile;
 import tech.harmonysoft.oss.traute.test.api.model.CompilationResult;
 import tech.harmonysoft.oss.traute.test.api.model.TestSource;
 
+import java.util.Collection;
 import java.util.function.Supplier;
 
 public class CompilationResultImpl implements CompilationResult {
 
-    @NotNull private final Supplier<byte[]> compiledBinariesSupplier;
+    @NotNull private final Supplier<Collection<ClassFile>> compiledBinariesSupplier;
     @NotNull private final String compilationOutput;
     @NotNull private final TestSource input;
 
-    public CompilationResultImpl(@NotNull Supplier<byte[]> compiledBinariesSupplier,
+    public CompilationResultImpl(@NotNull Supplier<Collection<ClassFile>> compiledBinariesSupplier,
                                  @NotNull String compilationOutput,
                                  @NotNull TestSource input)
     {
@@ -23,7 +25,7 @@ public class CompilationResultImpl implements CompilationResult {
 
     @Override
     @NotNull
-    public Supplier<byte[]> getCompiledBinariesSupplier() {
+    public Supplier<Collection<ClassFile>> getCompiledClassesSupplier() {
         return compiledBinariesSupplier;
     }
 

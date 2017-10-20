@@ -4,17 +4,16 @@ import org.jetbrains.annotations.NotNull;
 import tech.harmonysoft.oss.traute.common.instrumentation.InstrumentationType;
 import tech.harmonysoft.oss.traute.common.settings.TrautePluginSettings;
 import tech.harmonysoft.oss.traute.test.api.engine.TestCompiler;
+import tech.harmonysoft.oss.traute.test.api.model.ClassFile;
 import tech.harmonysoft.oss.traute.test.api.model.CompilationResult;
 import tech.harmonysoft.oss.traute.test.api.model.TestSource;
+import tech.harmonysoft.oss.traute.test.impl.model.ClassFileImpl;
 import tech.harmonysoft.oss.traute.test.impl.model.CompilationResultImpl;
 
 import javax.tools.JavaCompiler;
 import javax.tools.ToolProvider;
 import java.io.StringWriter;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.function.Supplier;
 
 import static java.util.Arrays.asList;
@@ -60,25 +59,30 @@ public class TrauteJavacTestCompiler implements TestCompiler {
         }
 
         List<SimpleClassFile> compiled = fileManager.getCompiled();
-        Supplier<byte[]> binaries = () -> {
-            SimpleClassFile classFile = null;
-            if (compiled.size() == 1) {
-                classFile = compiled.get(0);
-            }
-
+        Supplier<Collection<ClassFile>> binaries = () -> {
             Supplier<String> error = () -> String.format(
                     "Failed to fetch compiled binaries for the source below.%nCompilation output: '%s'"
                     + "%nTest source:%n%n%s", output, testSource.getSourceText()
             );
-            if (classFile == null) {
+            if (compiled.isEmpty()) {
                 throw new RuntimeException(error.get());
             }
 
-            Optional<byte[]> compiledBinaries = classFile.getCompiledBinaries();
-            if (!compiledBinaries.isPresent()) {
-                throw new RuntimeException(error.get());
+            Collection<ClassFile> result = new ArrayList<>();
+            for (SimpleClassFile simpleClassFile : compiled) {
+                Optional<byte[]> o = simpleClassFile.getCompiledBinaries();
+                if (!o.isPresent()) {
+                    fail(String.format("No compiled binaries are found for %s. Full test source:%n%n%s",
+                                       simpleClassFile.getUri(), testSource.getSourceText()));
+                } else {
+                    String className = simpleClassFile.getUri()
+                                                      .getSchemeSpecificPart()
+                                                      .replaceAll("\\/", "");
+                    result.add(new ClassFileImpl(className, o.get()));
+                }
             }
-            return compiledBinaries.get();
+
+            return result;
         };
 
         return new CompilationResultImpl(binaries, output.toString(), testSource);
