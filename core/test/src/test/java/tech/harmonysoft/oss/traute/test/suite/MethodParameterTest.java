@@ -291,4 +291,29 @@ public abstract class MethodParameterTest extends AbstractTrauteTest {
         expectNpeFromParameterCheck(testSource, "param", expectRunResult);
         doTest(testSource);
     }
+
+    @Test
+    public void localClass() {
+        String testSource = String.format(
+                "package %s;\n" +
+                "\n" +
+                "import %s;\n" +
+                "\n" +
+                "public class %s {\n" +
+                "\n" +
+                "  public void test(Object o) {\n" +
+                "    class Local {\n" +
+                "      void test(@NotNull Object param) {\n" +
+                "      }\n" +
+                "    }\n" +
+                "    new Local().test(o);\n" +
+                "  }\n" +
+                "\n" +
+                "  public static void main(String[] args) {\n" +
+                "    new %s().test(null);\n" +
+                "  }\n" +
+                "}", PACKAGE, NotNull.class.getName(), CLASS_NAME, CLASS_NAME);
+        expectNpeFromParameterCheck(testSource, "param", expectRunResult);
+        doTest(testSource);
+    }
 }
