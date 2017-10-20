@@ -4,7 +4,8 @@
 * [2. Rationale](#2-rationale)
 * [3. Example](#3-example)
 * [4. Features](#4-features)
-* [5. Settings](#4-settings)
+* [5. Usage](#5-usage)
+* [6. Settings](#6-settings)
 
 ## 1. License
 
@@ -14,6 +15,7 @@ See the [LICENSE](LICENSE.md) file for license rights and limitations (MIT).
 
 This is a [Java Compiler](http://docs.oracle.com/javase/8/docs/technotes/tools/unix/javac.html) plugin which enhances generated *\*.class* files by inserting *null*-checks based on source code annotations.  
 
+**!TODO reference target sub-section!**
 See [the main project page](../../README.md) for the rationale to have such an instrument.
 
 ## 3. Example
@@ -46,4 +48,10 @@ public Integer add(@NotNull Integer a, @NotNull Integer b) {
 
 ## 4. Features
 
-## 5. Settings
+Following instrumentations types are supported now:
+* *method parameter* - a *null*-check is created for a method parameter marked by a configured *NotNull* annotation
+* *method return* - a *return* expression inside a method marked by a configured *NotNull* annotation is re-written in a way to store its result in a local variable, then examine it for *null* and do return only if the check passes
+
+## 5. Usage
+
+## 6. Settings
