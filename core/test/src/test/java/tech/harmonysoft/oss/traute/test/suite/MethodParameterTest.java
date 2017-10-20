@@ -246,4 +246,27 @@ public abstract class MethodParameterTest extends AbstractTrauteTest {
         expectNpeFromParameterCheck(testSource, "param", expectRunResult);
         doTest(testSource);
     }
+
+    @Test
+    public void innerClass() {
+        String testSource = String.format(
+                "package %s;\n" +
+                "\n" +
+                "import %s;\n" +
+                "\n" +
+                "public class %s {\n" +
+                "\n" +
+                "  class Inner {\n" +
+                "    void test(@NotNull String param) {\n" +
+                "    }\n" +
+                "  }\n" +
+                "\n" +
+                "  public static void main(String[] args) {\n" +
+                "    %s var = new %s();\n" +
+                "    var.new Inner().test(null);\n" +
+                "  }\n" +
+                "}", PACKAGE, NotNull.class.getName(), CLASS_NAME, CLASS_NAME, CLASS_NAME);
+        expectNpeFromParameterCheck(testSource, "param", expectRunResult);
+        doTest(testSource);
+    }
 }
