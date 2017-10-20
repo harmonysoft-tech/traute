@@ -86,11 +86,8 @@ public class InstrumentationApplianceFinder extends TreeScanner<Void, Void> {
     @Override
     public Void visitMethod(MethodTree method, Void v) {
         methodName = method.getName().toString();
-        TrautePluginSettings settings = context.getPluginSettings();
-        instrumentReturnExpression = !processingInterface
-                                     && settings.isEnabled(METHOD_RETURN)
-                                     && mayBeInstrumentReturnType(method);
-        if (!processingInterface && settings.isEnabled(METHOD_PARAMETER)) {
+        instrumentReturnExpression = shouldInstrumentReturnExpression(method);
+        if (shouldInstrumentMethodParameters(method)) {
             JCTree.JCBlock methodBody = getMethodBody(method);
             if (methodBody != null) {
                 instrumentMethodParameters(method, methodBody);
@@ -107,9 +104,37 @@ public class InstrumentationApplianceFinder extends TreeScanner<Void, Void> {
         }
     }
 
+    @SuppressWarnings("SimplifiableIfStatement")
+    private boolean shouldInstrumentReturnExpression(@NotNull MethodTree method) {
+        if (processingInterface && !hasFlag(method.getModifiers(), Modifier.DEFAULT)) {
+            return false;
+        }
+        return context.getPluginSettings().isEnabled(METHOD_RETURN) && mayBeInstrumentReturnType(method);
+    }
+
+    @SuppressWarnings("SimplifiableIfStatement")
+    private boolean shouldInstrumentMethodParameters(@NotNull MethodTree method) {
+        if (processingInterface && !hasFlag(method.getModifiers(), Modifier.DEFAULT)) {
+            return false;
+        }
+        return context.getPluginSettings().isEnabled(METHOD_PARAMETER);
+    }
+
+    @SuppressWarnings("SimplifiableIfStatement")
+    private static boolean hasFlag(@Nullable ModifiersTree modifiers, @NotNull Modifier modifier) {
+        if (modifiers == null) {
+            return false;
+        }
+        Set<Modifier> flags = modifiers.getFlags();
+        if (flags == null) {
+            return false;
+        }
+        return flags.contains(modifier);
+    }
+
     @Nullable
     private JCTree.JCBlock getMethodBody(@NotNull MethodTree method) {
-        if (method.getModifiers().getFlags().contains(Modifier.ABSTRACT)) {
+        if (hasFlag(method.getModifiers(), Modifier.ABSTRACT)) {
             return null;
         }
         BlockTree bodyBlock = method.getBody();

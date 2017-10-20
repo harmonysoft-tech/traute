@@ -494,4 +494,31 @@ public abstract class MethodReturnTest extends AbstractTrauteTest {
         expectNpeFromReturnCheck(testSource, "return (String)null", expectRunResult);
         doTest(testSource);
     }
+
+    @Test
+    public void defaultInterfaceMethod() {
+        String testSource = String.format(
+                "package %s;\n" +
+                "\n" +
+                "import %s;\n" +
+                "\n" +
+                "public interface %s {\n" +
+                "\n" +
+                "  @NotNull\n" +
+                "  default Object test() {\n" +
+                "    return null;\n" +
+                "  }\n" +
+                "\n" +
+                "  void implementMe();\n" +
+                "\n" +
+                "  public static void main(String[] args) {\n" +
+                "    new %s() {\n" +
+                "      public void implementMe() {\n" +
+                "      }\n" +
+                "    }.test();\n" +
+                "  }\n" +
+                "}", PACKAGE, NotNull.class.getName(), CLASS_NAME, CLASS_NAME);
+        expectNpeFromReturnCheck(testSource, "return null", expectRunResult);
+        doTest(testSource);
+    }
 }
