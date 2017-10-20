@@ -12,7 +12,7 @@ See the [LICENSE](LICENSE.md) file for license rights and limitations (MIT).
 
 ## 2. Overview
 
-This is a [Java Compiler](http://docs.oracle.com/javase/8/docs/technotes/tools/unix/javac.html) plugin which enhances resulting *\*.class* files by automatically generating *null*-checks based on source code annotations.  
+This is a [Java Compiler](http://docs.oracle.com/javase/8/docs/technotes/tools/unix/javac.html) plugin which enhances generated *\*.class* files by inserting *null*-checks based on source code annotations.  
 
 See [the main project page](../../README.md) for the rationale to have such an instrument.
 
@@ -26,7 +26,7 @@ public Integer add(@NotNull Integer a, @NotNull Integer b) {
 }
 ```
 
-The plugin modifies resulting byte code as if the source looks like this:
+The plugin modifies resulting byte code as if the source looked like this:
 ```java
 @NotNull
 public Integer add(@NotNull Integer a, @NotNull Integer b) {

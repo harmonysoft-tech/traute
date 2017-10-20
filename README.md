@@ -10,7 +10,7 @@ For example, here [IntelliJ IDEA](https://www.jetbrains.com/idea/) warns us abou
 
 ![warning-intellij.png](docs/img/warning-intellij.png)
 
-Moreover, when the code above is compiled by the *IDE* it automatically inserts *null*-checks:
+Moreover, when the code above is compiled by the *IDE*, it automatically inserts *null*-checks:
 
 ```java
 public void doJob(@NotNull String input) {
