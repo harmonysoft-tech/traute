@@ -4,7 +4,7 @@ This module serves for the following purposes:
   * *[compile](src/test/java/tech/harmonysoft/oss/traute/test/api/engine/TestCompiler.java)* - transform a _String_ (test source) into a _Collection<byte[]>_ (compiled binaries). Note that we use a _Collection_ here because a single source file might produce more than one *\*.class* file in case of [nested](https://docs.oracle.com/javase/tutorial/java/javaOO/nested.html) classes
   * *[run](src/test/java/tech/harmonysoft/oss/traute/test/api/engine/TestRunner.java)* - execute a class with the given name from the given binaries  
 
-  It's also allowed to define [expectations](src/test/java/tech/harmonysoft/oss/traute/test/api/expectation/Expectation.java) for every action above.
+  It's also allowed to define [expectations](src/test/java/tech/harmonysoft/oss/traute/test/api/expectation/Expectation.java) for the actions above.
    
   *Note: basic implementation is also provided by the current module -* [tech.harmonysoft.oss.traute.test.impl](src/test/java/tech/harmonysoft/oss/traute/test/impl)
 * an abstract test suite which is assumed to be re-used in every 'production' module - [ech.harmonysoft.oss.traute.test.suite](src/test/java/tech/harmonysoft/oss/traute/test/suite).  
