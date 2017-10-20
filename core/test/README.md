@@ -13,6 +13,6 @@ This module serves for the following purposes:
   
   *Note: [in-memory TestRunner](src/test/java/tech/harmonysoft/oss/traute/test/impl/engine/TrauteInMemoryTestRunner.java) is [used by default](src/test/java/tech/harmonysoft/oss/traute/test/impl/engine/AbstractTrauteExtension.java#L23)*
   
-E.g. [javac-plugin](../javac/README.md) is expected to implement the test engine in the following way:
+E.g. [javac-plugin](../javac/README.md) uses current module in the following way:
 1. Test sources provided in the suite are compiled in-memory by *javac* called [programmatically](https://docs.oracle.com/javase/8/docs/api/javax/tools/JavaCompiler.html)
 2. Compiled binaries are [executed](src/test/java/tech/harmonysoft/oss/traute/test/impl/engine/TrauteInMemoryTestRunner.java) by loading them by a custom class loader and calling *main()* through *Reflection API*
