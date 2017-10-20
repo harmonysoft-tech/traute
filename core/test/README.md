@@ -1,0 +1,2 @@
+This module serves for the following purposes:
+* it defines a test framework to be used for all 'production' modules - [tech.harmonysoft.oss.traute.test.api](src/test/java/tech/harmonysoft/oss/traute/test/api)
