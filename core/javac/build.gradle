@@ -8,3 +8,8 @@ dependencies {
     testCompile project(':core:test-common').sourceSets.test.output
     testCompile project(path: ':core:test-common', configuration: 'testCompile')
 }
+
+jar {
+    into('/')
+    from { configurations.compile.collect { it.isDirectory() ? it : zipTree(it) } }
+}
