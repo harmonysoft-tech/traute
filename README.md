@@ -28,7 +28,10 @@ Current tool solves the second problem - it allows to add *null*-checks into *\*
 
 ## 3. Alternatives
 
-TBD, mention Lombok
+I found the only alternative which provides similar functionality - [Project Lombok](https://projectlombok.org/features/NonNull). Here are pros and cons for using it:
+* only [lombok.NonNull](https://projectlombok.org/api/lombok/NonNull.html) annotation is supported - there might be problems with *IDE* highlighting possible errors in source code
+* the feature is implemented through a custom [Annotaton Processing Tool](https://docs.oracle.com/javase/7/docs/technotes/guides/apt/index.html), which means that there are two set of *\*.class* files after the compilation - one from original code and another one with the tool-added instrumentations. Compiler plugin-based approach is more natural for such task as it's completely transparent for the further assembly construction
+* a solution offered by the current project [works only for the javac8](core/javac/README.md#5-limitations), *Lombok* might operate with *javac6* and *javac7* (at least in theory as *APT API* is available starting from *java6*, have not verified *Lombok* processing with them though)
 
 ## 4. Overview
 

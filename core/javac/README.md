@@ -4,9 +4,10 @@
 * [2. Overview](#2-overview)
 * [3. Features](#3-features)
 * [4. Example](#4-example)
-* [5. Usage](#5-usage)
-* [6. Settings](#6-settings)
-* [7. Evolution](#7-evolution)
+* [5. Limitations](#5-limitations)
+* [6. Usage](#6-usage)
+* [7. Settings](#7-settings)
+* [8. Evolution](#8-evolution)
 
 ## 1. License
 
@@ -52,7 +53,11 @@ public Integer add(@NotNull Integer a, @NotNull Integer b) {
 }
 ```
 
-## 5. Usage
+## 5. Limitations
+
+The plugin works with *JDK8* or later. The reason is that [Compiler Plugin API](https://docs.oracle.com/javase/8/docs/jdk/api/javac/tree/com/sun/source/util/Plugin.html) is introduced only in *java8*.
+
+## 6. Usage
 
 1. Put plugin's jar to compiler's classpath
 2. Add *-Xplugin:Traute* option to the *javac* command
@@ -68,7 +73,7 @@ That makes compiler involve the plugin into the processing which, in turn, adds 
 
 It's also possible to specify a number of plugin-specific options (see below).
 
-## 6. Settings
+## 7. Settings
 
 All plugin settings are delivered through the *-A* command line switch. See [javac documentation](https://docs.oracle.com/javase/8/docs/technotes/tools/windows/javac.html) for more details.
 
@@ -140,7 +145,7 @@ Output:
 [Traute plugin]: added 1 instrumentation to the /Users/denis/sample/src/main/java/org/Test2.java - METHOD_PARAMETER: 1
 ```
 
-## 7. Evolution
+## 8. Evolution
 
 Current feature set is a must-have for runtime *null*-checks, however, it's possible to extend it. Here are some ideas on what might be done:
 * support *NotNull* annotations on fields - insert *null*-checks in constructors for *final* fields and add *null*-check to call-sites for non-*final* fields
