@@ -2,8 +2,8 @@
 
 * [1. License](#1-license)
 * [2. Overview](#2-overview)
-* [3. Example](#3-example)
-* [4. Features](#4-features)
+* [3. Features](#3-features)
+* [4. Example](#4-example)
 * [5. Usage](#5-usage)
 * [6. Settings](#6-settings)
 * [7. Evolution](#7-evolution)
@@ -19,7 +19,13 @@ This is a [Java Compiler](http://docs.oracle.com/javase/8/docs/technotes/tools/u
 See [the main project page](../../README.md#2-rationale) for the rationale to have such an instrument.  
 Also be aware of [alternatives](../../README.md#3-alternatives).
 
-## 3. Example
+## 3. Features
+
+Following instrumentations types are supported now:
+* *method parameter* - a *null*-check is created for a method parameter marked by a configured *NotNull* annotation
+* *method return* - a *return* expression inside a method marked by a configured *NotNull* annotation is re-written in a way to store its result in a local variable, then examine it for *null* and do return only if the check passes
+
+## 4. Example
 
 Consider a source code below:
 ```java
@@ -46,12 +52,6 @@ public Integer add(@NotNull Integer a, @NotNull Integer b) {
     return tmpVar;
 }
 ```
-
-## 4. Features
-
-Following instrumentations types are supported now:
-* *method parameter* - a *null*-check is created for a method parameter marked by a configured *NotNull* annotation
-* *method return* - a *return* expression inside a method marked by a configured *NotNull* annotation is re-written in a way to store its result in a local variable, then examine it for *null* and do return only if the check passes
 
 ## 5. Usage
 
