@@ -64,7 +64,7 @@ javac -cp src/main/java\
 -Xplugin:Traute \
 org/MyClass.java
 ```
-That makes the compiler involve the plugin into the processing which, in turn, adds *null*-checks to the *\*.class* file if necessary.
+That makes compiler involve the plugin into the processing which, in turn, adds *null*-checks to the *\*.class* file if necessary.
 
 It's also possible to specify a number of plugin-specific options (see below).
 
@@ -84,9 +84,11 @@ Following annotations are checked by default:
 It's possible to define a custom list of annotations to use through the [traute.annotations.not.null](https://github.com/denis-zhdanov/traute/blob/master/core/javac/src/main/java/tech/harmonysoft/oss/traute/javac/TrauteJavacPlugin.java#L118) option.  
 
 Example:
-* single custom annotation - ```javac -cp <classpath> -Xplugin:Traute -Atraute.annotations.not.null=mycompany.util.NotNull```  
+* single custom annotation:  
+  ```javac -cp <classpath> -Xplugin:Traute -Atraute.annotations.not.null=mycompany.util.NotNull```  
   This instructs the plugin not generating a check for, say, method declared like ```void service(@org.jetbrains.annotations.NotNull Sring param)``` (default annotations to use are replaced by a single given annotation)
-* multiple annotations - ```javac -cp <classpath> -Xplugin:Traute -Atraute.annotations.not.null=mycompany.util.NotNull:org.eclipse.jdt.annotation.NonNull```  
+* multiple annotations:  
+  ```javac -cp <classpath> -Xplugin:Traute -Atraute.annotations.not.null=mycompany.util.NotNull:org.eclipse.jdt.annotation.NonNull```  
   Here *null*-checks will be generated only for our custom annotation class and eclipse annotation
 
 ## 7. Evolution
