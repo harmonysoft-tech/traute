@@ -1,11 +1,12 @@
 ## Table of Contents
 
 * [1. License](#1-license)
-* [2. Rationale](#2-rationale)
+* [2. Overview](#2-overview)
 * [3. Example](#3-example)
 * [4. Features](#4-features)
 * [5. Usage](#5-usage)
 * [6. Settings](#6-settings)
+* [7. Evolution](#7-evolution)
 
 ## 1. License
 
@@ -15,8 +16,8 @@ See the [LICENSE](LICENSE.md) file for license rights and limitations (MIT).
 
 This is a [Java Compiler](http://docs.oracle.com/javase/8/docs/technotes/tools/unix/javac.html) plugin which enhances generated *\*.class* files by inserting *null*-checks based on source code annotations.  
 
-**!TODO reference target sub-section!**
-See [the main project page](../../README.md) for the rationale to have such an instrument.
+See [the main project page](../../README.md#2-rationale) for the rationale to have such an instrument.  
+Also be aware of [alternatives](../../README.md#3-alternatives).
 
 ## 3. Example
 
@@ -54,4 +55,39 @@ Following instrumentations types are supported now:
 
 ## 5. Usage
 
+1. Put plugin's jar to compiler's classpath
+2. Add *-Xplugin:Traute* option to the *javac* command
+
+Example:
+```
+javac -cp src/main/java\
+:~/.gradle/caches/modules-2/files-2.1/tech.harmonysoft:traute-javac-plugin/1.0.0/7a00452c350de0fb80ecbcecfb8ce0145c46141e/traute-javac-plugin-1.0.0.jar \
+-Xplugin:Traute \
+org/MyClass.java
+```
+That makes the compiler involve the plugin into the processing which, in turn, adds *null*-checks if necessary.
+
+It's also possible to specify a number of plugin-specific options (see below).
+
 ## 6. Settings
+
+**NotNull Annotations**
+
+Following annotations are checked by default:
+* [org.jetbrains.annotations.NotNull](https://www.jetbrains.com/help/idea/nullable-and-notnull-annotations.html) - IntelliJ IDEA
+* [javax.annotation.Nonnull](https://jcp.org/en/jsr/detail?id=305) - JSR-305
+* [javax.validation.constraints.NotNull](https://docs.oracle.com/javaee/7/api/javax/validation/constraints/NotNull.html) - JavaEE
+* [edu.umd.cs.findbugs.annotations.NonNull](http://findbugs.sourceforge.net/api/edu/umd/cs/findbugs/annotations/NonNull.html) - FindBugs
+* [android.support.annotation.NonNull](https://developer.android.com/reference/android/support/annotation/NonNull.html) - Android
+* [org.eclipse.jdt.annotation.NonNull](http://help.eclipse.org/oxygen/index.jsp?topic=%2Forg.eclipse.jdt.doc.user%2Ftasks%2Ftask-using_null_annotations.htm) - Eclipse
+* [lombok.NonNull](https://projectlombok.org/api/lombok/NonNull.html) - Lombok
+
+It's possible to define a custom list of annotations to use through the [traute.annotations.not.null](https://github.com/denis-zhdanov/traute/blob/master/core/javac/src/main/java/tech/harmonysoft/oss/traute/javac/TrauteJavacPlugin.java#L118) option.  
+
+Example:
+* single custom annotation - ```javac -cp <classpath> -Xplugin:Traute -Atraute.annotations.not.null=mycompany.util.NotNull```  
+  This instructs the plugin not generating a check for, say, method declared like ```void service(@org.jetbrains.annotations.NotNull Sring param)``` (default annotations to use are replaced by a single given annotation)
+* multiple annotations - ```javac -cp <classpath> -Xplugin:Traute -Atraute.annotations.not.null=mycompany.util.NotNull:org.eclipse.jdt.annotation.NonNull```  
+  Here *null*-checks will be generated only for our custom annotation class and eclipse annotation
+
+## 7. Evolution

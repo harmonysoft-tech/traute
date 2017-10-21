@@ -26,11 +26,15 @@ Unfortunately, it's not always convenient to use *IntelliJ* build system for com
 
 Current tool solves the second problem - it allows to add *null*-checks into *\*.class* files based on source code annotations.
 
-## 2. Overview
+## 3. Alternatives
+
+TBD, mention Lombok
+
+## 4. Overview
 
 TBD
 
-## 3. Build
+## 5. Build
 
 [![Build Status](https://travis-ci.org/denis-zhdanov/traute.svg?branch=master)](https://travis-ci.org/denis-zhdanov/traute)
 
