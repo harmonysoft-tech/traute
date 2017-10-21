@@ -70,7 +70,7 @@ It's also possible to specify a number of plugin-specific options (see below).
 
 ## 6. Settings
 
-All plugin settings are delivered through *-A* command line switch. See [javac documentation](https://docs.oracle.com/javase/8/docs/technotes/tools/windows/javac.html) for more details.
+All plugin settings are delivered through the *-A* command line switch. See [javac documentation](https://docs.oracle.com/javase/8/docs/technotes/tools/windows/javac.html) for more details.
 
 **NotNull Annotations**
 
@@ -87,10 +87,14 @@ It's possible to define a custom list of annotations to use through the [traute.
 
 Example:
 * single custom annotation:  
+
   ```javac -cp <classpath> -Xplugin:Traute -Atraute.annotations.not.null=mycompany.util.NotNull <classes-to-compile>```  
+
   This instructs the plugin not generating a check for, say, method declared like ```void service(@org.jetbrains.annotations.NotNull Sring param)``` (default annotations to use are replaced by a single given annotation)
 * multiple annotations:  
+
   ```javac -cp <classpath> -Xplugin:Traute -Atraute.annotations.not.null=mycompany.util.NotNull:org.eclipse.jdt.annotation.NonNull <classes-to-compile>```  
+
   Here *null*-checks will be generated only for our custom annotation class and eclipse annotation
 
 **Instrumentations Types**
