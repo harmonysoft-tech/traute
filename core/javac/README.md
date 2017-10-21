@@ -122,7 +122,7 @@ Compiler output:
 [Traute plugin]: using the following instrumentations: [parameter]
 ```
 
-It's possible to turn on *verbose mode* through the [traute.log.verbose](https://github.com/denis-zhdanov/traute/blob/master/core/javac/src/main/java/tech/harmonysoft/oss/traute/javac/TrauteJavacPlugin.java#L131) to get detailed data about performed instrumentations.  
+It's possible to turn on *verbose mode* through the [traute.log.verbose](https://github.com/denis-zhdanov/traute/blob/master/core/javac/src/main/java/tech/harmonysoft/oss/traute/javac/TrauteJavacPlugin.java#L131) to get detailed information about performed instrumentations.  
 
 Example:  
 
