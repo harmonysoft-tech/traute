@@ -70,6 +70,8 @@ It's also possible to specify a number of plugin-specific options (see below).
 
 ## 6. Settings
 
+All plugin settings are delivered through *-A* command line switch. See [javac documentation](https://docs.oracle.com/javase/8/docs/technotes/tools/windows/javac.html) for more details.
+
 **NotNull Annotations**
 
 Following annotations are checked by default:
@@ -81,14 +83,54 @@ Following annotations are checked by default:
 * [org.eclipse.jdt.annotation.NonNull](http://help.eclipse.org/oxygen/index.jsp?topic=%2Forg.eclipse.jdt.doc.user%2Ftasks%2Ftask-using_null_annotations.htm) - Eclipse
 * [lombok.NonNull](https://projectlombok.org/api/lombok/NonNull.html) - Lombok
 
-It's possible to define a custom list of annotations to use through the [traute.annotations.not.null](https://github.com/denis-zhdanov/traute/blob/master/core/javac/src/main/java/tech/harmonysoft/oss/traute/javac/TrauteJavacPlugin.java#L118) option.  
+It's possible to define a custom list of annotations to use through the [traute.annotations.not.null](src/main/java/tech/harmonysoft/oss/traute/javac/TrauteJavacPlugin.java#L118) option.  
 
 Example:
 * single custom annotation:  
-  ```javac -cp <classpath> -Xplugin:Traute -Atraute.annotations.not.null=mycompany.util.NotNull```  
+  ```javac -cp <classpath> -Xplugin:Traute -Atraute.annotations.not.null=mycompany.util.NotNull <classes-to-compile>```  
   This instructs the plugin not generating a check for, say, method declared like ```void service(@org.jetbrains.annotations.NotNull Sring param)``` (default annotations to use are replaced by a single given annotation)
 * multiple annotations:  
-  ```javac -cp <classpath> -Xplugin:Traute -Atraute.annotations.not.null=mycompany.util.NotNull:org.eclipse.jdt.annotation.NonNull```  
+  ```javac -cp <classpath> -Xplugin:Traute -Atraute.annotations.not.null=mycompany.util.NotNull:org.eclipse.jdt.annotation.NonNull <classes-to-compile>```  
   Here *null*-checks will be generated only for our custom annotation class and eclipse annotation
+
+**Instrumentations Types**
+
+Following instrumentation types are supported now:
+* [parameter](../common/src/main/java/tech/harmonysoft/oss/traute/common/instrumentation/InstrumentationType.java#L31) - adds *null*-checks for method parameters
+* [return](https://github.com/denis-zhdanov/traute/blob/master/core/common/src/main/java/tech/harmonysoft/oss/traute/common/instrumentation/InstrumentationType.java#L53) - re-writes *return* instructions in method bodies
+
+Even though they are [thoroughly tested](../test/src/test/java/tech/harmonysoft/oss/traute/test/suite) we can't exclude a possibility that particular use-case is not covered (e.g. we encountered tricky situations like [here](../test/src/test/java/tech/harmonysoft/oss/traute/test/suite/MethodReturnTest.java#L251)). That's why we allow to specify instrumentations to use through the [traute.instrumentations](src/main/java/tech/harmonysoft/oss/traute/javac/TrauteJavacPlugin.java#L139) option.  
+
+Example:  
+```javac -cp <classpath> -Xplugin:Traute -Atraute.instrumentations=parameter <classes-to-compile>```  
+This effectively disables *return* instrumentation.
+
+**Logging**
+
+The plugin logs only custom options by default:  
+
+```javac -cp <classpath> -Xplugin:Traute -Atraute.instrumentations=parameter <classes-to-compile>```
+  
+Compiler output:  
+```
+[Traute plugin]: using the following instrumentations: [parameter]
+```
+
+It's possible to turn on *verbose mode* through the [traute.log.verbose](https://github.com/denis-zhdanov/traute/blob/master/core/javac/src/main/java/tech/harmonysoft/oss/traute/javac/TrauteJavacPlugin.java#L131) to get detailed data about performed instrumentations.  
+
+Example:  
+```javac -cp <classpath> -Xplugin:Traute -Atraute.log.verbose=true <classes-to-compile>```  
+
+Output:  
+
+```
+[Traute plugin]: 'verbose mode' is set on
+[Traute plugin]: added a null-check for argument 'i2' in the method org.Test.test()
+[Traute plugin]: added a null-check for argument 'i1' in the method org.Test.test()
+[Traute plugin]: added a null-check for 'return' expression in method org.Test.test()
+[Traute plugin]: added 3 instrumentations to the /Users/denis/sample/src/main/java/org/Test.java - METHOD_PARAMETER: 2, METHOD_RETURN: 1
+[Traute plugin]: added a null-check for argument 'i1' in the method org.Test2.test()
+[Traute plugin]: added 1 instrumentation to the /Users/denis/sample/src/main/java/org/Test2.java - METHOD_PARAMETER: 1
+```
 
 ## 7. Evolution
