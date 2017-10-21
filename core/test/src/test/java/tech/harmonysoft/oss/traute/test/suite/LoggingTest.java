@@ -103,7 +103,7 @@ public abstract class LoggingTest extends AbstractTrauteTest {
     @Test
     public void customSetting_verbose() {
         settingsBuilder.withVerboseMode(true);
-        expectCompilationResult.withText("'verbose mode' is set on");
+        expectCompilationResult.withText("'verbose mode' is on");
         doCompile(prepareReturnTestSource("return 1;"));
     }
 }
