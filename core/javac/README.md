@@ -106,7 +106,9 @@ Following instrumentation types are supported now:
 Even though they are [thoroughly tested](../test/src/test/java/tech/harmonysoft/oss/traute/test/suite) it's not possible to exclude a possibility that particular use-case is not covered (e.g. we encountered tricky situations like [here](../test/src/test/java/tech/harmonysoft/oss/traute/test/suite/MethodReturnTest.java#L251)). That's why we allow to skip particular instrumentations through the [traute.instrumentations](src/main/java/tech/harmonysoft/oss/traute/javac/TrauteJavacPlugin.java#L139) option.  
 
 Example:  
+
 ```javac -cp <classpath> -Xplugin:Traute -Atraute.instrumentations=parameter <classes-to-compile>```  
+
 This effectively disables *return* instrumentation.
 
 **Logging**
@@ -123,6 +125,7 @@ Compiler output:
 It's possible to turn on *verbose mode* through the [traute.log.verbose](https://github.com/denis-zhdanov/traute/blob/master/core/javac/src/main/java/tech/harmonysoft/oss/traute/javac/TrauteJavacPlugin.java#L131) to get detailed data about performed instrumentations.  
 
 Example:  
+
 ```javac -cp <classpath> -Xplugin:Traute -Atraute.log.verbose=true <classes-to-compile>```  
 
 Output:  
