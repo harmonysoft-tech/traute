@@ -16,8 +16,7 @@ See the [LICENSE](LICENSE.md) file for license rights and limitations (MIT).
 
 This is a [Java Compiler](http://docs.oracle.com/javase/8/docs/technotes/tools/unix/javac.html) plugin which enhances generated *\*.class* files by inserting *null*-checks based on source code annotations.  
 
-See [the main project page](../../README.md#2-rationale) for the rationale to have such an instrument.  
-Also be aware of [alternatives](../../README.md#3-alternatives).
+See [the main project page](../../README.md#2-rationale) for the rationale to have such an instrument. Also be aware of [alternatives](../../README.md#3-alternatives).
 
 ## 3. Features
 
@@ -65,7 +64,7 @@ javac -cp src/main/java\
 -Xplugin:Traute \
 org/MyClass.java
 ```
-That makes the compiler involve the plugin into the processing which, in turn, adds *null*-checks if necessary.
+That makes the compiler involve the plugin into the processing which, in turn, adds *null*-checks to the *\*.class* file if necessary.
 
 It's also possible to specify a number of plugin-specific options (see below).
 
