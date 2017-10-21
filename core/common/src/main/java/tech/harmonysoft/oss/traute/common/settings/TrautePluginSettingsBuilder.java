@@ -31,7 +31,10 @@ public class TrautePluginSettingsBuilder {
             "android.support.annotation.NonNull",
 
             // Eclipse - http://help.eclipse.org/oxygen/index.jsp?topic=%2Forg.eclipse.jdt.doc.user%2Ftasks%2Ftask-using_null_annotations.htm
-            "org.eclipse.jdt.annotation.NonNull"
+            "org.eclipse.jdt.annotation.NonNull",
+
+            // Lombok - https://projectlombok.org/api/lombok/NonNull.html
+            "lombok.NonNull"
     ));
 
     public static final Set<InstrumentationType> DEFAULT_INSTRUMENTATIONS_TO_APPLY =
