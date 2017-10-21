@@ -103,7 +103,7 @@ Following instrumentation types are supported now:
 * [parameter](../common/src/main/java/tech/harmonysoft/oss/traute/common/instrumentation/InstrumentationType.java#L31) - adds *null*-checks for method parameters
 * [return](https://github.com/denis-zhdanov/traute/blob/master/core/common/src/main/java/tech/harmonysoft/oss/traute/common/instrumentation/InstrumentationType.java#L53) - re-writes *return* instructions in method bodies
 
-Even though they are [thoroughly tested](../test/src/test/java/tech/harmonysoft/oss/traute/test/suite) it's not possible to exclude a possibility that particular use-case is not covered (e.g. we encountered tricky situations like [here](../test/src/test/java/tech/harmonysoft/oss/traute/test/suite/MethodReturnTest.java#L251)). That's why we allow to specify instrumentations to use through the [traute.instrumentations](src/main/java/tech/harmonysoft/oss/traute/javac/TrauteJavacPlugin.java#L139) option.  
+Even though they are [thoroughly tested](../test/src/test/java/tech/harmonysoft/oss/traute/test/suite) it's not possible to exclude a possibility that particular use-case is not covered (e.g. we encountered tricky situations like [here](../test/src/test/java/tech/harmonysoft/oss/traute/test/suite/MethodReturnTest.java#L251)). That's why we allow to skip particular instrumentations through the [traute.instrumentations](src/main/java/tech/harmonysoft/oss/traute/javac/TrauteJavacPlugin.java#L139) option.  
 
 Example:  
 ```javac -cp <classpath> -Xplugin:Traute -Atraute.instrumentations=parameter <classes-to-compile>```  
