@@ -311,6 +311,9 @@ public class TrauteJavacPlugin implements Plugin {
                 } else {
                     builder.withInstrumentationToApply(type);
                 }
+                if (logger != null) {
+                    logger.info("using the following instrumentations: " + Arrays.toString(instrumentationNamesArray));
+                }
             }
         }
 
