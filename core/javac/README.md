@@ -8,6 +8,7 @@
 * [6. Usage](#6-usage)
 * [7. Settings](#7-settings)
 * [8. Evolution](#8-evolution)
+* [9. Releases](#9-releases)
 
 ## 1. License
 
@@ -151,3 +152,7 @@ Current feature set is a must-have for runtime *null*-checks, however, it's poss
 * support *NotNull* annotations on fields - insert *null*-checks in constructors for *final* fields and add *null*-check to call-sites for non-*final* fields
 * allow to specify that method arguments are *NotNull* by default (through plugin settings with filters like package/class or source code annotations like [@ParametersAreNonnullByDefault](https://www.jetbrains.com/help/idea/parametersarenonnullbydefault-annotation.html#ParametersAreNonnullByDefault) or [@NonNullByDefault](https://help.eclipse.org/mars/index.jsp?topic=%2Forg.eclipse.jdt.doc.isv%2Freference%2Fapi%2Forg%2Feclipse%2Fjdt%2Fannotation%2FNonNullByDefault.html)) and treat all parameters not annotated by *@Nullable* as implicitly marked by *@NotNull*
 * support more checks implied by existing annotations like [@Contract](https://www.jetbrains.com/help/idea/contract-annotations.html) or introduce new 'assure something' annotations
+
+## 9. Releases
+
+[Release Notes](RELEASE.md)

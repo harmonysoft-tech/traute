@@ -37,7 +37,7 @@ I found the only alternative which provides similar functionality - [Project Lom
 
 I really like German - how it sounds, language rules, everything, so, wanted to use a german word.  
 
-*Traute* sounds nice and has a good [meaning](http://dictionary.reverso.net/german-english/Traute) - *trust*. Our users trust the tool and the tool enforces trust in code :wink:
+*Traute* sounds nice and has a good [meaning](http://dictionary.reverso.net/german-english/Traute) - *trust*. Our users trust the tool and the tool enforces trust in application :wink:
 
 ## 5. Overview
 
@@ -49,14 +49,18 @@ TBD
 
 TBD
 
-## 7. How to Contribute
+## 7. Releases
+
+* [core javac plugin](core/javac/RELEASE.md)
+
+## 8. How to Contribute
 
 TBD
 
-## 8. Contributors
+## 9. Contributors
 
 * [Denis Zhdanov](https://github.com/denis-zhdanov)
 
-## 9. Feedback
+## 10. Feedback
 
 TBD
