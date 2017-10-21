@@ -4,7 +4,7 @@ See the [LICENSE](LICENSE.md) file for license rights and limitations (MIT).
 
 ## 2. Rationale
 
-Null references are [considered](https://en.wikipedia.org/wiki/Null_pointer#History) to be one of the most expensive mistakes in IT design. It's not surprising that there a many tools which try to report it as early as possible.  
+Null references are [considered](https://en.wikipedia.org/wiki/Null_pointer#History) to be one of the most expensive mistakes in IT design. It's not surprising that there are many tools which try to report it as early as possible.  
 
 For example, here [IntelliJ IDEA](https://www.jetbrains.com/idea/) warns us about possible *NPE*: 
 
