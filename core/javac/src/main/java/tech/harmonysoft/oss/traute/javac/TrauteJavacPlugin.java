@@ -275,7 +275,7 @@ public class TrauteJavacPlugin implements Plugin {
 
         boolean verbose = "true".equalsIgnoreCase(options.get(OPTION_LOG_VERBOSE));
         if (verbose && logger != null) {
-            logger.info("'verbose mode' is set on");
+            logger.info("'verbose mode' is on");
         }
         builder.withVerboseMode(verbose);
 

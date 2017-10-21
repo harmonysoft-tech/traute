@@ -131,7 +131,7 @@ Example:
 Output:  
 
 ```
-[Traute plugin]: 'verbose mode' is set on
+[Traute plugin]: 'verbose mode' is on
 [Traute plugin]: added a null-check for argument 'i2' in the method org.Test.test()
 [Traute plugin]: added a null-check for argument 'i1' in the method org.Test.test()
 [Traute plugin]: added a null-check for 'return' expression in method org.Test.test()
