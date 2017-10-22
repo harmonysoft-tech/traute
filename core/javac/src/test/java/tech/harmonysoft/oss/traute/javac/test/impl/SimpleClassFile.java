@@ -7,7 +7,6 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.URI;
-import java.util.Optional;
 
 /**
  * Compiled test binaries holder.
@@ -31,7 +30,11 @@ public class SimpleClassFile extends SimpleJavaFileObject {
     }
 
     @NotNull
-    public Optional<byte[]> getCompiledBinaries() {
-        return Optional.ofNullable(out == null ? null : out.toByteArray());
+    public byte[] getCompiledBinaries() {
+        if (out == null) {
+            throw new IllegalStateException(String.format("Not compiled binaries are supplied for the %s",
+                                                          uri.getPath()));
+        }
+        return out.toByteArray();
     }
 }

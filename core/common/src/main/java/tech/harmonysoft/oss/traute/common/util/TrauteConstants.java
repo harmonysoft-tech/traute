@@ -8,6 +8,8 @@ import static java.util.Arrays.asList;
 
 public class TrauteConstants {
 
+    public static final String PLUGIN_NAME = "Traute";
+
     public static final Set<String> PRIMITIVE_TYPES = Collections.unmodifiableSet(new HashSet<>(asList(
             "byte", "short", "char", "int", "long", "float", "double"
     )));

@@ -13,15 +13,18 @@ import com.sun.tools.javac.util.Log;
 import com.sun.tools.javac.util.Names;
 import org.jetbrains.annotations.NotNull;
 import tech.harmonysoft.oss.traute.common.instrumentation.InstrumentationType;
+import tech.harmonysoft.oss.traute.common.settings.TrautePluginSettings;
+import tech.harmonysoft.oss.traute.common.settings.TrautePluginSettingsBuilder;
 import tech.harmonysoft.oss.traute.common.stats.StatsCollector;
-import tech.harmonysoft.oss.traute.javac.common.*;
+import tech.harmonysoft.oss.traute.common.util.TrauteConstants;
+import tech.harmonysoft.oss.traute.javac.common.CompilationUnitProcessingContext;
+import tech.harmonysoft.oss.traute.javac.common.InstrumentationApplianceFinder;
+import tech.harmonysoft.oss.traute.javac.common.TrautePluginLogger;
 import tech.harmonysoft.oss.traute.javac.instrumentation.Instrumentator;
 import tech.harmonysoft.oss.traute.javac.instrumentation.method.MethodReturnInstrumentator;
 import tech.harmonysoft.oss.traute.javac.instrumentation.method.ReturnToInstrumentInfo;
 import tech.harmonysoft.oss.traute.javac.instrumentation.parameter.ParameterInstrumentator;
 import tech.harmonysoft.oss.traute.javac.instrumentation.parameter.ParameterToInstrumentInfo;
-import tech.harmonysoft.oss.traute.common.settings.TrautePluginSettings;
-import tech.harmonysoft.oss.traute.common.settings.TrautePluginSettingsBuilder;
 
 import javax.tools.JavaFileObject;
 import java.io.PrintWriter;
@@ -33,8 +36,8 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static java.util.stream.Collectors.joining;
-import static tech.harmonysoft.oss.traute.javac.common.TrautePluginLogger.getProblemMessageSuffix;
 import static tech.harmonysoft.oss.traute.common.settings.TrautePluginSettingsBuilder.settingsBuilder;
+import static tech.harmonysoft.oss.traute.javac.common.TrautePluginLogger.getProblemMessageSuffix;
 
 /**
  * <p>A {@code javac} plugin which inserts {@code null}-checks for target method arguments and returns from method.</p>
@@ -93,11 +96,6 @@ import static tech.harmonysoft.oss.traute.common.settings.TrautePluginSettingsBu
 public class TrauteJavacPlugin implements Plugin {
 
     /**
-     * Current plugin's name. It should be used with the {@code -Xplugin} setting, i.e. {@code -Xplugin:Traute}
-     * */
-    public static final String NAME = "Traute";
-
-    /**
      * <p>
      *     Compiler's option name to use for specifying custom {@code @NotNull} annotations to use
      *     ({@value #SEPARATOR}-separated).
@@ -152,7 +150,7 @@ public class TrauteJavacPlugin implements Plugin {
 
     @Override
     public String getName() {
-        return NAME;
+        return TrauteConstants.PLUGIN_NAME;
     }
 
     @Override

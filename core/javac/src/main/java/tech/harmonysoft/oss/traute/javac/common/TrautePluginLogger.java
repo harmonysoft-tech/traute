@@ -2,7 +2,7 @@ package tech.harmonysoft.oss.traute.javac.common;
 
 import com.sun.tools.javac.util.Log;
 import org.jetbrains.annotations.NotNull;
-import tech.harmonysoft.oss.traute.javac.TrauteJavacPlugin;
+import tech.harmonysoft.oss.traute.common.util.TrauteConstants;
 
 import javax.tools.JavaCompiler;
 
@@ -11,7 +11,7 @@ import javax.tools.JavaCompiler;
  */
 public class TrautePluginLogger {
 
-    private static final String NOTICE_PREFIX = String.format("[%s plugin]: ", TrauteJavacPlugin.NAME);
+    private static final String NOTICE_PREFIX = String.format("[%s plugin]: ", TrauteConstants.PLUGIN_NAME);
 
     @NotNull private final Log log;
 
@@ -75,7 +75,7 @@ public class TrautePluginLogger {
     public static String getProblemMessage(@NotNull String details) {
         return String.format(
                 "NotNull-instrumentation failed, it might be that javac implementation has significantly changed "
-                + "- '%s' javac plugin expected to %s. %s", TrauteJavacPlugin.NAME, details, getProblemMessageSuffix()
+                + "- '%s' javac plugin expected to %s. %s", TrauteConstants.PLUGIN_NAME, details, getProblemMessageSuffix()
         );
     }
 

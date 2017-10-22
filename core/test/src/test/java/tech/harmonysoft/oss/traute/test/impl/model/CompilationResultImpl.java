@@ -6,27 +6,26 @@ import tech.harmonysoft.oss.traute.test.api.model.CompilationResult;
 import tech.harmonysoft.oss.traute.test.api.model.TestSource;
 
 import java.util.Collection;
-import java.util.function.Supplier;
 
 public class CompilationResultImpl implements CompilationResult {
 
-    @NotNull private final Supplier<Collection<ClassFile>> compiledBinariesSupplier;
+    @NotNull private final Collection<ClassFile> compiledClasses;
     @NotNull private final String compilationOutput;
     @NotNull private final TestSource input;
 
-    public CompilationResultImpl(@NotNull Supplier<Collection<ClassFile>> compiledBinariesSupplier,
+    public CompilationResultImpl(@NotNull Collection<ClassFile> compiledClasses,
                                  @NotNull String compilationOutput,
                                  @NotNull TestSource input)
     {
-        this.compiledBinariesSupplier = compiledBinariesSupplier;
+        this.compiledClasses = compiledClasses;
         this.compilationOutput = compilationOutput;
         this.input = input;
     }
 
     @Override
     @NotNull
-    public Supplier<Collection<ClassFile>> getCompiledClassesSupplier() {
-        return compiledBinariesSupplier;
+    public Collection<ClassFile> getCompiledClasses() {
+        return compiledClasses;
     }
 
     @Override

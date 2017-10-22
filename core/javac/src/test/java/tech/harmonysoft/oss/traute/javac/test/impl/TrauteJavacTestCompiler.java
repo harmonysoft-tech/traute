@@ -3,6 +3,7 @@ package tech.harmonysoft.oss.traute.javac.test.impl;
 import org.jetbrains.annotations.NotNull;
 import tech.harmonysoft.oss.traute.common.instrumentation.InstrumentationType;
 import tech.harmonysoft.oss.traute.common.settings.TrautePluginSettings;
+import tech.harmonysoft.oss.traute.common.util.TrauteConstants;
 import tech.harmonysoft.oss.traute.test.api.engine.TestCompiler;
 import tech.harmonysoft.oss.traute.test.api.model.ClassFile;
 import tech.harmonysoft.oss.traute.test.api.model.CompilationResult;
@@ -13,18 +14,17 @@ import tech.harmonysoft.oss.traute.test.impl.model.CompilationResultImpl;
 import javax.tools.JavaCompiler;
 import javax.tools.ToolProvider;
 import java.io.StringWriter;
-import java.util.*;
-import java.util.function.Supplier;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
 
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.joining;
+import static java.util.stream.Collectors.toList;
 import static org.junit.jupiter.api.Assertions.fail;
-import static tech.harmonysoft.oss.traute.common.settings.TrautePluginSettingsBuilder.DEFAULT_INSTRUMENTATIONS_TO_APPLY;
-import static tech.harmonysoft.oss.traute.common.settings.TrautePluginSettingsBuilder.DEFAULT_NOT_NULL_ANNOTATIONS;
-import static tech.harmonysoft.oss.traute.common.settings.TrautePluginSettingsBuilder.DEFAULT_VERBOSE_MODE;
+import static tech.harmonysoft.oss.traute.common.settings.TrautePluginSettingsBuilder.*;
 import static tech.harmonysoft.oss.traute.javac.TrauteJavacPlugin.*;
-import static tech.harmonysoft.oss.traute.javac.TrauteJavacPlugin.OPTION_LOG_VERBOSE;
 
 public class TrauteJavacTestCompiler implements TestCompiler {
 
@@ -58,40 +58,20 @@ public class TrauteJavacTestCompiler implements TestCompiler {
                                testSource.getSourceText(), output));
         }
 
-        List<SimpleClassFile> compiled = fileManager.getCompiled();
-        Supplier<Collection<ClassFile>> binaries = () -> {
-            Supplier<String> error = () -> String.format(
-                    "Failed to fetch compiled binaries for the source below.%nCompilation output: '%s'"
-                    + "%nTest source:%n%n%s", output, testSource.getSourceText()
-            );
-            if (compiled.isEmpty()) {
-                throw new RuntimeException(error.get());
-            }
-
-            Collection<ClassFile> result = new ArrayList<>();
-            for (SimpleClassFile simpleClassFile : compiled) {
-                Optional<byte[]> o = simpleClassFile.getCompiledBinaries();
-                if (!o.isPresent()) {
-                    fail(String.format("No compiled binaries are found for %s. Full test source:%n%n%s",
-                                       simpleClassFile.getUri(), testSource.getSourceText()));
-                } else {
-                    String className = simpleClassFile.getUri()
-                                                      .getSchemeSpecificPart()
-                                                      .replaceAll("\\/", "");
-                    result.add(new ClassFileImpl(className, o.get()));
-                }
-            }
-
-            return result;
-        };
-
-        return new CompilationResultImpl(binaries, output.toString(), testSource);
+        List<SimpleClassFile> compiledJavacClasses = fileManager.getCompiled();
+        List<ClassFile> classFiles = compiledJavacClasses.stream().map(c -> {
+            String className = c.getUri()
+                                .getSchemeSpecificPart()
+                                .replaceAll("\\/", "");
+            return new ClassFileImpl(className, c.getCompiledBinaries());
+        }).collect(toList());
+        return new CompilationResultImpl(classFiles, output.toString(), testSource);
     }
 
     @NotNull
     private List<String> getAdditionalCompilerArgs(@NotNull TrautePluginSettings settings) {
         List<String> result = new ArrayList<>();
-        result.add("-Xplugin:" + NAME);
+        result.add("-Xplugin:" + TrauteConstants.PLUGIN_NAME);
 
         Set<String> notNullAnnotations = settings.getNotNullAnnotations();
         if (!notNullAnnotations.equals(DEFAULT_NOT_NULL_ANNOTATIONS)) {
