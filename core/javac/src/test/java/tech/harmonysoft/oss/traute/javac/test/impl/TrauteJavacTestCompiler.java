@@ -15,8 +15,10 @@ import javax.tools.JavaCompiler;
 import javax.tools.ToolProvider;
 import java.io.StringWriter;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Supplier;
 
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
@@ -58,14 +60,17 @@ public class TrauteJavacTestCompiler implements TestCompiler {
                                testSource.getSourceText(), output));
         }
 
-        List<SimpleClassFile> compiledJavacClasses = fileManager.getCompiled();
-        List<ClassFile> classFiles = compiledJavacClasses.stream().map(c -> {
-            String className = c.getUri()
-                                .getSchemeSpecificPart()
-                                .replaceAll("\\/", "");
-            return new ClassFileImpl(className, c.getCompiledBinaries());
-        }).collect(toList());
-        return new CompilationResultImpl(classFiles, output.toString(), testSource);
+        Supplier<Collection<ClassFile>> compiledClassesSupplier = () -> {
+            List<SimpleClassFile> compiledJavacClasses = fileManager.getCompiled();
+            return compiledJavacClasses.stream().map(c -> {
+                String className = c.getUri()
+                                    .getSchemeSpecificPart()
+                                    .replaceAll("\\/", "");
+                return new ClassFileImpl(className, c.getCompiledBinaries());
+            }).collect(toList());
+        };
+
+        return new CompilationResultImpl(compiledClassesSupplier, output.toString(), testSource);
     }
 
     @NotNull

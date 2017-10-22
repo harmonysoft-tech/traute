@@ -23,7 +23,7 @@ public class TrauteInMemoryTestRunner implements TestRunner {
     @Override
     @NotNull
     public RunResult run(@NotNull CompilationResult compilationResult) {
-        Map<String, @NotNull byte[]> compiled = compilationResult.getCompiledClasses()
+        Map<String, @NotNull byte[]> compiled = compilationResult.getCompiledClassesSupplier().get()
                                                                  .stream()
                                                                  .collect(toMap(ClassFile::getName,
                                                                                 ClassFile::getBinaries));
