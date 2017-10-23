@@ -4,7 +4,7 @@ See the [LICENSE](LICENSE.md) file for license rights and limitations (MIT).
 
 ## 2. Rationale
 
-Null references are [considered](https://en.wikipedia.org/wiki/Null_pointer#History) to be one of the most expensive mistakes in IT design. It's not surprising that there are numerous efforts to solve it. Here are couple of examples from the *java* world:
+Null references are [considered](https://en.wikipedia.org/wiki/Null_pointer#History) to be one of the most expensive mistakes in IT design. It's not surprising that there are numerous efforts to solve it. Here are couple of examples from the *Java* world:
 * [Kotlin](https://kotlinlang.org/) fights it at the [language level](https://kotlinlang.org/docs/reference/null-safety.html)
 * many tools try to report it as early as possible, for example, here [IntelliJ IDEA](https://www.jetbrains.com/idea/) warns us about a possible *NPE*: 
 
@@ -13,10 +13,11 @@ Null references are [considered](https://en.wikipedia.org/wiki/Null_pointer#Hist
   Moreover, when the code above is compiled by the *IDE*, it automatically inserts *null*-checks:
 
   ```java
-  public void doJob(@NotNull String input) {
+  public void service(@NotNull String input) {
       if (input == null) {
           throw new NullPointerException("Argument for @NotNull parameter 'input' must not be null");
       }
+      // Process the input
   }
   ```
 * production code often looks like below:
@@ -28,12 +29,13 @@ Null references are [considered](https://en.wikipedia.org/wiki/Null_pointer#Hist
 
   public void service(Input input) {
     checkNotNull(input, "'input' argument must not be null");
+    // Process the input
   }
   ```
 
-*Kotlin* really solves the problem but *Java* is still a very popular language, so, we have to live with nullable values. It's not always convenient to use *IntelliJ* build system for compiling sources to get that *null*-checks and the code which explicitly ensures preconditions like *checkNotNull()* also looks not that appealing.  
+*Kotlin* really solves the problem but *Java* is still a very popular language, so, we have to deal with nullable values. It's not always convenient to use *IntelliJ* build system for compiling sources to get that *null*-checks and the code which explicitly ensures preconditions via *checkNotNull()* or explicit *if (input == null) { throw new NullPointerException("<description>") }* also looks not that appealing.  
 
-More common setup is to configure a build through [Gradle](https://gradle.org/)/[Maven](http://maven.apache.org/). It would not harm to get *IDE* tips on possible *null*-related problems and that auto-generated runtime checks without explicitly programming them though.  
+More common setup is to configure a build through [Gradle](https://gradle.org/)/[Maven](http://maven.apache.org/). It would not harm to get *IDE* tips on possible *null*-related problems and that auto-generated runtime checks without explicitly putting them into code.  
 
 Current tool solves the second problem - it allows to add *null*-checks into *\*.class* files during compilation based on source code annotations.
 
