@@ -156,7 +156,7 @@ Current feature set is a must-have for runtime *null*-checks, however, it's poss
 
 ## 9. Implementation
 
-Implementation details are described [in this blog post](http://denis-zhdanov.blogspot.com/2017/10/how-to-write-javac-plugin.html).
+Implementation details are described [in this blog post](http://blog.harmonysoft.tech/2017/10/how-to-write-javac-plugin.html).
 
 ## 10. Releases
 
