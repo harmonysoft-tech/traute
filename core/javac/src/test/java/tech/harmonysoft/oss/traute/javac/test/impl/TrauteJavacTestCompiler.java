@@ -26,7 +26,6 @@ import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
 import static org.junit.jupiter.api.Assertions.fail;
 import static tech.harmonysoft.oss.traute.common.settings.TrautePluginSettingsBuilder.*;
-import static tech.harmonysoft.oss.traute.javac.TrauteJavacPlugin.*;
 
 public class TrauteJavacTestCompiler implements TestCompiler {
 
@@ -80,22 +79,27 @@ public class TrauteJavacTestCompiler implements TestCompiler {
 
         Set<String> notNullAnnotations = settings.getNotNullAnnotations();
         if (!notNullAnnotations.equals(DEFAULT_NOT_NULL_ANNOTATIONS)) {
-            String optionValue = notNullAnnotations.stream().collect(joining(SEPARATOR));
-            result.add(String.format("-A%s=%s", OPTION_ANNOTATIONS_NOT_NULL, optionValue));
+            String optionValue = notNullAnnotations.stream().collect(joining(TrauteConstants.SEPARATOR));
+            result.add(String.format("-A%s=%s", TrauteConstants.OPTION_ANNOTATIONS_NOT_NULL, optionValue));
         }
 
         Set<InstrumentationType> instrumentationTypes = settings.getInstrumentationsToApply();
         if (!instrumentationTypes.equals(DEFAULT_INSTRUMENTATIONS_TO_APPLY)) {
             String optionValue = instrumentationTypes.stream()
                                                      .map(InstrumentationType::getShortName)
-                                                     .collect(joining(SEPARATOR));
-            result.add(String.format("-A%s=%s", OPTION_INSTRUMENTATIONS_TO_USE, optionValue));
+                                                     .collect(joining(TrauteConstants.SEPARATOR));
+            result.add(String.format("-A%s=%s", TrauteConstants.OPTION_INSTRUMENTATIONS_TO_USE, optionValue));
         }
 
         boolean verboseLog = settings.isVerboseMode();
         if (verboseLog != DEFAULT_VERBOSE_MODE) {
-            result.add(String.format("-A%s=true", OPTION_LOG_VERBOSE));
+            result.add(String.format("-A%s=true", TrauteConstants.OPTION_LOG_VERBOSE));
         }
         return result;
+    }
+
+    @Override
+    public void release(@NotNull CompilationResult result) {
+        // We don't need to do any cleanup as we compile into memory.
     }
 }

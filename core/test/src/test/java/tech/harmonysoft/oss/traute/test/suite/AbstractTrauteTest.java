@@ -34,7 +34,11 @@ public abstract class AbstractTrauteTest {
 
     protected void doTest(@NotNull String testSource) {
         CompilationResult compilationResult = doCompile(testSource);
-        runner.run(compilationResult, expectRunResult.build());
+        try {
+            runner.run(compilationResult, expectRunResult.build());
+        } finally {
+            compiler.release(compilationResult);
+        }
     }
 
     @NotNull

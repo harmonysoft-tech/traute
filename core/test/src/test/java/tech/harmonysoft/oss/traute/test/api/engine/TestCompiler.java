@@ -35,4 +35,10 @@ public interface TestCompiler {
         expectation.match(result);
         return result;
     }
+
+    /**
+     * @param result    notifies that given compilation result is not needed anymore and all resources associated
+     *                  with it can be released
+     */
+    void release(@NotNull CompilationResult result);
 }
