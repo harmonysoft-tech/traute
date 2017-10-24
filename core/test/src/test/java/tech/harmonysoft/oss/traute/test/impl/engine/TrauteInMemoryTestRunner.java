@@ -31,6 +31,12 @@ public class TrauteInMemoryTestRunner implements TestRunner {
             @Override
             protected Class<?> findClass(String name) throws ClassNotFoundException {
                 byte[] compiledBinaries = compiled.get(name);
+                if (compiledBinaries == null) {
+                    throw new IllegalArgumentException(String.format(
+                            "Can't find compiled binaries for class %s. Available binaries found for %s",
+                            name, compiled.keySet()
+                    ));
+                }
                 return defineClass(name, compiledBinaries, 0, compiledBinaries.length);
             }
         };
