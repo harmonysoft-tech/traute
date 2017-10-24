@@ -22,4 +22,9 @@ public class ClassFileImpl implements ClassFile {
     public byte[] getBinaries() {
         return binaries;
     }
+
+    @Override
+    public String toString() {
+        return getName();
+    }
 }
