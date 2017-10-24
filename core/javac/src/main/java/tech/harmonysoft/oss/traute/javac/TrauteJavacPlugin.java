@@ -95,53 +95,6 @@ import static tech.harmonysoft.oss.traute.javac.common.TrautePluginLogger.getPro
  */
 public class TrauteJavacPlugin implements Plugin {
 
-    /**
-     * <p>
-     *     Compiler's option name to use for specifying custom {@code @NotNull} annotations to use
-     *     ({@value #SEPARATOR}-separated).
-     * </p>
-     * <p>
-     *     This is not mandatory setting as default annotations are used otherwise. Only given annotations are
-     *     checked if this argument is specified.
-     * </p>
-     * <p>
-     *     Example: consider a situation when given parameter's value is
-     *     {@code 'org.eclipse.jdt.annotation.NonNull:android.support.annotation.NonNull'} (eclipse and android
-     *     annotations, defined as
-     *     {@code -Atraute.annotations.not.null=org.eclipse.jdt.annotation.NonNull:android.support.annotation.NonNull}
-     *     in the {@code javac} command line). That means that a method which parameter is marked by, say
-     *     {@code org.jetbrains.annotations.NotNull} won't trigger {@code null}-check generation by the plugin.
-     * </p>
-     */
-    public static final String OPTION_ANNOTATIONS_NOT_NULL = "traute.annotations.not.null";
-
-    /**
-     * <p>
-     *     Compiler's option name to use for specifying if the plugin should produce verbose output
-     *     for its processing
-     * </p>
-     * <p>
-     *     Verbose output is produced if this option's value is {@code 'true'}, e.g.
-     *     {@code '-Atraute.log.verbose=true'} in the {@code javac} command line. Any other value (or now value)
-     *     mean that no verbose output should be provided.
-     * </p>
-     */
-    public static final String OPTION_LOG_VERBOSE = "traute.log.verbose";
-
-    /**
-     * Compiler's option name to use for specifying instrumentation types to use
-     *
-     * @see InstrumentationType
-     * @see InstrumentationType#getShortName()
-     */
-    public static final String OPTION_INSTRUMENTATIONS_TO_USE = "traute.instrumentations";
-
-    /**
-     * Separator to use for composite properties, e.g. when a user want to specify more than one
-     * {@code NonNull} annotation.
-     */
-    public static final String SEPARATOR = ":";
-
     private final AtomicReference<WeakReference<TrautePluginLogger>> loggerRef         = new AtomicReference<>();
     private final AtomicReference<TrautePluginSettings>              pluginSettingsRef = new AtomicReference<>();
 
@@ -271,16 +224,16 @@ public class TrauteJavacPlugin implements Plugin {
             return builder.build();
         }
 
-        boolean verbose = "true".equalsIgnoreCase(options.get(OPTION_LOG_VERBOSE));
+        boolean verbose = "true".equalsIgnoreCase(options.get(TrauteConstants.OPTION_LOG_VERBOSE));
         if (verbose && logger != null) {
             logger.info("'verbose mode' is on");
         }
         builder.withVerboseMode(verbose);
 
-        String notNullAnnotationsString = options.get(OPTION_ANNOTATIONS_NOT_NULL);
+        String notNullAnnotationsString = options.get(TrauteConstants.OPTION_ANNOTATIONS_NOT_NULL);
         if (notNullAnnotationsString != null) {
             notNullAnnotationsString = notNullAnnotationsString.trim();
-            String[] notNullAnnotations = notNullAnnotationsString.split(SEPARATOR);
+            String[] notNullAnnotations = notNullAnnotationsString.split(TrauteConstants.SEPARATOR);
             if (notNullAnnotations.length > 0) {
                 builder.withNotNullAnnotations(notNullAnnotations);
                 if (logger != null) {
@@ -289,10 +242,10 @@ public class TrauteJavacPlugin implements Plugin {
             }
         }
 
-        String instrumentationsString = options.get(OPTION_INSTRUMENTATIONS_TO_USE);
+        String instrumentationsString = options.get(TrauteConstants.OPTION_INSTRUMENTATIONS_TO_USE);
         if (instrumentationsString != null) {
             instrumentationsString = instrumentationsString.trim();
-            String[] instrumentationNamesArray = instrumentationsString.split(SEPARATOR);
+            String[] instrumentationNamesArray = instrumentationsString.split(TrauteConstants.SEPARATOR);
             for (String instrumentationShortName : instrumentationNamesArray) {
                 InstrumentationType type = InstrumentationType.byShortName(instrumentationShortName.trim());
                 if (type == null) {
@@ -303,7 +256,7 @@ public class TrauteJavacPlugin implements Plugin {
                         logger.report(String.format(
                                 "Unknown instrumentation type is defined through the '%s' option - '%s'. "
                                 + "Known types: %s",
-                                OPTION_INSTRUMENTATIONS_TO_USE, instrumentationShortName, knownTypes
+                                TrauteConstants.OPTION_INSTRUMENTATIONS_TO_USE, instrumentationShortName, knownTypes
                         ));
                     }
                 } else {
