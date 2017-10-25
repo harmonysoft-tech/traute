@@ -4,7 +4,6 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import tech.harmonysoft.oss.traute.test.api.expectation.Expectation;
 import tech.harmonysoft.oss.traute.test.api.model.RunResult;
-import tech.harmonysoft.oss.traute.test.api.model.TestSource;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
@@ -37,26 +36,24 @@ public class RunResultExpectation implements Expectation<RunResult> {
                                   || exceptionMessageSnippet != null
                                   || exceptionMessageText != null;
         Optional<Throwable> exceptionOptional = actual.getException();
-        TestSource testSource = actual.getInput().getInput();
         if (exceptionOptional.isPresent()) {
             if (!expectException) {
                 fail(String.format(
-                        "Expected that running the program below doesn't produce any exception but got %s.%n" +
-                        "Test source:%n%n%s",
-                        exceptionOptional.get(), testSource.getSourceText()
+                        "Expected that running the program below doesn't produce any exception but got %s.%n%s",
+                        exceptionOptional.get(), actual.getInput()
                 ));
             }
-            matchException(exceptionOptional.get(), testSource);
+            matchException(exceptionOptional.get(), actual.getInput());
         } else {
             if (expectException) {
                 fail(String.format(
-                        "Expected that running the program below produces %s but it is executed successfully."
-                        + "%nTest source:%n%n%s", getExpectedExceptionDetails(), testSource.getSourceText()));
+                        "Expected that running the program below produces %s but it is executed successfully.%n%s",
+                        getExpectedExceptionDetails(), actual.getInput()));
             }
         }
     }
 
-    private void matchException(@NotNull Throwable actual, @NotNull TestSource testSource) {
+    private void matchException(@NotNull Throwable actual, @NotNull Object input) {
         String exceptionDescription;
 
         if (exceptionClass == null) {
@@ -64,8 +61,8 @@ public class RunResultExpectation implements Expectation<RunResult> {
         } else {
             if (exceptionClass != actual.getClass()) {
                 fail(String.format(
-                        "Expected that running the program below throws a %s but got a %s.%nSource:%n%n%s",
-                        exceptionClass.getName(), actual.getClass().getName(), testSource.getSourceText()
+                        "Expected that running the program below throws a %s but got a %s.%n%s",
+                        exceptionClass.getName(), actual.getClass().getName(), input
                 ));
             }
             exceptionDescription = "a " + exceptionClass.getName();
@@ -76,9 +73,8 @@ public class RunResultExpectation implements Expectation<RunResult> {
             if (!message.contains(exceptionMessageSnippet)) {
                 fail(String.format(
                         "Expected that running the program below throws %s with a text which contains '%s'. "
-                        + "However, the text is different: '%s'.%nSource:%n%n%s",
-                        exceptionDescription, exceptionMessageSnippet, exceptionMessageText,
-                        testSource.getSourceText()
+                        + "However, the text is different: '%s'.%n%s",
+                        exceptionDescription, exceptionMessageSnippet, exceptionMessageText, input
                 ));
             }
         }
@@ -87,9 +83,8 @@ public class RunResultExpectation implements Expectation<RunResult> {
             String message = actual.getMessage();
             if (!exceptionMessageText.equalsIgnoreCase(message)) {
                 assertEquals(exceptionMessageText, message, () -> String.format(
-                        "Expected that running the program below throws %s with particular error message."
-                        + "%nSource:%n%n%s",
-                        exceptionDescription, testSource.getSourceText()
+                        "Expected that running the program below throws %s with particular error message.%n%s",
+                        exceptionDescription, input
                 ));
             }
         }
@@ -102,8 +97,8 @@ public class RunResultExpectation implements Expectation<RunResult> {
             if (lineNumber != thrownAtLine) {
                 fail(String.format(
                         "Expected that running the program below throws %s exception from line %d but it's thrown "
-                        + "from line %d:%n%s%nTest source:%n%n%s",
-                        exceptionDescription, thrownAtLine, lineNumber, stringWriter, testSource.getSourceText()
+                        + "from line %d:%n%s%n%s",
+                        exceptionDescription, thrownAtLine, lineNumber, stringWriter, input
                 ));
             }
         }
