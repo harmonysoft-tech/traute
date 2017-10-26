@@ -4,23 +4,28 @@ import groovy.io.FileType
 import org.gradle.testkit.runner.GradleRunner
 import org.gradle.testkit.runner.UnexpectedBuildFailure
 import org.jetbrains.annotations.NotNull
+import org.junit.Test
+import tech.harmonysoft.oss.traute.common.settings.TrautePluginSettings
 import tech.harmonysoft.oss.traute.common.settings.TrautePluginSettingsBuilder
 import tech.harmonysoft.oss.traute.javac.TrauteJavacPlugin
 import tech.harmonysoft.oss.traute.test.api.engine.TestCompiler
 import tech.harmonysoft.oss.traute.test.api.model.ClassFile
 import tech.harmonysoft.oss.traute.test.api.model.CompilationResult
 import tech.harmonysoft.oss.traute.test.api.model.TestSource
+import tech.harmonysoft.oss.traute.test.fixture.NN
 import tech.harmonysoft.oss.traute.test.impl.model.ClassFileImpl
 import tech.harmonysoft.oss.traute.test.impl.model.CompilationResultImpl
 
 import java.nio.file.Files
 
-class TrauteGradleTestCompiler implements TestCompiler {
+class GradleTestCompiler implements TestCompiler {
 
-    static final def INSTANCE = new TrauteGradleTestCompiler()
+    static final def INSTANCE = new GradleTestCompiler()
 
-    static final def BUILD_GRADLE_CONTENT =
+    private static final def MARKER_CUSTOM_NOT_NULL_ANNOTATION = '<CUSTOM_NOT_NULL_ANNOTATIONS>'
+    private static final def BUILD_GRADLE_CONTENT =
             """plugins {
+              |    id 'java'
               |    id 'tech.harmonysoft.oss.traute'
               |}
               |
@@ -33,6 +38,7 @@ class TrauteGradleTestCompiler implements TestCompiler {
               |
               |traute {
               |    javacPluginSpec = ${getTrauteJavacDependencySpec()}
+              |    $MARKER_CUSTOM_NOT_NULL_ANNOTATION
               |}
               |
               |dependencies {
@@ -42,6 +48,7 @@ class TrauteGradleTestCompiler implements TestCompiler {
               |    compile 'findbugs:annotations:1.0.0'
               |    compile 'com.android.support:support-core-utils:26.1.0'
               |    compile 'org.eclipse.jdt:org.eclipse.jdt.annotation:2.1.0'
+              |    compile ${getCommonDependency()}
               |}""".stripMargin()
 
     private final def projectDirs = new WeakHashMap<CompilationResult, File>()
@@ -50,7 +57,7 @@ class TrauteGradleTestCompiler implements TestCompiler {
     @Override
     CompilationResult compile(@NotNull TestSource testSource) {
         def projectRootDir = createRootDir()
-        createBuildGradle(projectRootDir)
+        def buildGradleText = createBuildGradle(projectRootDir, testSource.settings)
 
         def sourceRoot = createSourceRootDir(projectRootDir)
         def sourceFile = createFile(testSource.qualifiedClassName, sourceRoot)
@@ -63,7 +70,7 @@ class TrauteGradleTestCompiler implements TestCompiler {
 
         def pluginClasspath = pluginClasspathResource.readLines().collect { new File(it) }
 
-        def additionalInfo = ['build.gradle': BUILD_GRADLE_CONTENT]
+        def additionalInfo = ['build.gradle': buildGradleText]
         try {
             def buildResult = GradleRunner.create()
                     .withProjectDir(projectRootDir)
@@ -80,7 +87,8 @@ class TrauteGradleTestCompiler implements TestCompiler {
             projectRootDir.deleteDir()
             return new CompilationResultImpl(
                     { throw new IllegalStateException(
-                            "There are no binaries for failed compilation. Build output:\n\n${e.buildResult.output}")
+                            "There are no binaries for failed compilation. Build output:\n\n${e.buildResult.output}\n\n"
+                            + "Build config:\n\n${buildGradleText}")
                     },
                     e.buildResult.output,
                     testSource,
@@ -99,9 +107,20 @@ class TrauteGradleTestCompiler implements TestCompiler {
         return result
     }
 
-    private static void createBuildGradle(@NotNull File projectRootDir) {
+    @NotNull
+    private static String createBuildGradle(@NotNull File projectRootDir, @NotNull TrautePluginSettings settings) {
         def file = new File(projectRootDir, 'build.gradle')
-        file.text = BUILD_GRADLE_CONTENT
+        def content = BUILD_GRADLE_CONTENT
+
+        content = content.replace(
+                MARKER_CUSTOM_NOT_NULL_ANNOTATION,
+                settings.notNullAnnotations
+                        ? "notNullAnnotations = [${settings.notNullAnnotations.collect{"'$it'"}.join(', ')}]"
+                        : ''
+        )
+
+        file.text = content
+        return content
     }
 
     @NotNull
@@ -156,7 +175,7 @@ class TrauteGradleTestCompiler implements TestCompiler {
      * are different roots for binaries and resources by default) and specify them as a
      * <a href="https://docs.gradle.org/current/userguide/working_with_files.html#sec:file_collections">FileCollection</a>
      *
-     * @return
+     * @return  dependency spec to the {@code 'javac-plugin'} classpath root(s)
      */
     @NotNull
     private static String getTrauteJavacDependencySpec() {
@@ -168,6 +187,17 @@ class TrauteGradleTestCompiler implements TestCompiler {
         return "files(${roots.collect {"'$it'"}.join(',')})"
     }
 
+    /**
+     * Some of the test work with the custom {@code NotNull} annotation ({@link NN), that's why we explicitly add
+     * a dependency to the 'common' classpath root in the test project
+     *
+     * @return dependency spec for the {@code 'common'} classpath root
+     */
+    @Test
+    private static String getCommonDependency() {
+        return "files('${findRootInClassPath(NN)}')"
+    }
+
     @NotNull
     private static String findRootInClassPath(@NotNull Class<?> anchor) {
         return findRootInClassPath(anchor.name.replace('.', '/') + '.class')
@@ -175,7 +205,7 @@ class TrauteGradleTestCompiler implements TestCompiler {
 
     @NotNull
     private static String findRootInClassPath(@NotNull String anchor) {
-        def url = TrauteGradleTestCompiler.classLoader.getResource(anchor)
+        def url = GradleTestCompiler.classLoader.getResource(anchor)
         if (!url) {
             throw new IllegalStateException(
                     "Can't setup gradle test compiler - failed to find resource '$anchor' in classpath"

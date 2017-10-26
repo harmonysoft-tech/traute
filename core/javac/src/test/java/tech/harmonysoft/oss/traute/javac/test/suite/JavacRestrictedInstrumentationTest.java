@@ -5,5 +5,5 @@ import tech.harmonysoft.oss.traute.javac.test.impl.TrauteJavacExtension;
 import tech.harmonysoft.oss.traute.test.suite.RestrictedInstrumentationTest;
 
 @ExtendWith(TrauteJavacExtension.class)
-public class TrauteJavacRestrictedInstrumentationTest extends RestrictedInstrumentationTest {
+public class JavacRestrictedInstrumentationTest extends RestrictedInstrumentationTest {
 }

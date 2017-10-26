@@ -14,6 +14,6 @@ public class TrauteJavacExtension extends AbstractTrauteExtension {
     @Override
     @NotNull
     protected TestCompiler getCompiler() {
-        return TrauteJavacTestCompiler.INSTANCE;
+        return JavacTestCompiler.INSTANCE;
     }
 }

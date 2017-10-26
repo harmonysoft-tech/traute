@@ -5,5 +5,5 @@ import tech.harmonysoft.oss.traute.gradle.test.impl.TrauteGradleExtension
 import tech.harmonysoft.oss.traute.test.suite.MethodParameterTest
 
 @ExtendWith(TrauteGradleExtension)
-class TrauteGradleMethodParameterTest extends MethodParameterTest {
+class GradleMethodParameterTest extends MethodParameterTest {
 }

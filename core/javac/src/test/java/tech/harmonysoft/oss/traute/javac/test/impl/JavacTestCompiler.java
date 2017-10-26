@@ -27,9 +27,9 @@ import static java.util.stream.Collectors.toList;
 import static org.junit.jupiter.api.Assertions.fail;
 import static tech.harmonysoft.oss.traute.common.settings.TrautePluginSettingsBuilder.*;
 
-public class TrauteJavacTestCompiler implements TestCompiler {
+public class JavacTestCompiler implements TestCompiler {
 
-    public static final TrauteJavacTestCompiler INSTANCE = new TrauteJavacTestCompiler();
+    public static final JavacTestCompiler INSTANCE = new JavacTestCompiler();
 
     @Override
     @NotNull

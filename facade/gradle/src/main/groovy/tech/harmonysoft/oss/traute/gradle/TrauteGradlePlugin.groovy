@@ -25,13 +25,12 @@ class TrauteGradlePlugin implements Plugin<Project> {
     void apply(Project project) {
         def extension = project.extensions.create('traute', TrautePluginExtension)
 
-        project.pluginManager.apply(JavaPlugin)
         project.afterEvaluate {
             addTrauteDependency(project, extension)
-        }
 
-        project.tasks.withType(JavaCompile) {
-            applyOptions(options.compilerArgs, extension)
+            project.tasks.withType(JavaCompile) {
+                applyOptions(options.compilerArgs, extension)
+            }
         }
     }
 

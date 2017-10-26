@@ -12,6 +12,6 @@ class TrauteGradleExtension extends AbstractTrauteExtension {
 
     @Override
     protected TestCompiler getCompiler() {
-        return TrauteGradleTestCompiler.INSTANCE
+        return GradleTestCompiler.INSTANCE
     }
 }
