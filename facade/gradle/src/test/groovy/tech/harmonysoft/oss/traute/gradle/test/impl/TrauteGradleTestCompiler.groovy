@@ -189,6 +189,8 @@ class TrauteGradleTestCompiler implements TestCompiler {
             )
         }
 
+        // When a resource is located inside a jar, an url looks like file://<my-path>/<my-jar>.jar!/<anchor>.
+        // We want to reference a jar then
         def result = path.substring(0, path.indexOf(anchor))
         if (result.endsWith('/')) {
             result = result[0..-2]
