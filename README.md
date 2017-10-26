@@ -74,6 +74,10 @@ TBD
 
 * [Denis Zhdanov](https://github.com/denis-zhdanov)
 
-## 10. Feedback
+## 10. Evolution
+
+As the project is basically a [javac plugin](core/javac/README.md) and convenient build system-specific adapters to it, new features should be added to the core part. Please check the [corresponding chapter](core/javac/README.md#8-evolution).
+
+## 11. Feedback
 
 TBD
