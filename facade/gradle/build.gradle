@@ -32,3 +32,12 @@ dependencies {
 
     testRuntime files(createClasspathManifest)
 }
+
+jar {
+    into('/')
+    from {
+        configurations.compile
+                .filter { it.name.contains('traute') }
+                .collect { it.isDirectory() ? it : zipTree(it) }
+    }
+}
