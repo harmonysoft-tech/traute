@@ -2,7 +2,6 @@ package tech.harmonysoft.oss.traute.gradle
 
 import org.gradle.api.Plugin
 import org.gradle.api.Project
-import org.gradle.api.plugins.JavaPlugin
 import org.gradle.api.plugins.PluginInstantiationException
 import org.gradle.api.tasks.compile.JavaCompile
 
@@ -52,13 +51,20 @@ class TrauteGradlePlugin implements Plugin<Project> {
 
     private static void applyOptions(compilerArgs, extension) {
         compilerArgs << "-Xplugin:${PLUGIN_NAME}"
-        meyBeApplyNotNullAnnotations(compilerArgs, extension)
+        mayBeApplyNotNullAnnotations(compilerArgs, extension)
+        mayBeApplyLoggingSettings(compilerArgs, extension)
     }
 
-    private static void meyBeApplyNotNullAnnotations(compilerArgs, extension) {
+    private static void mayBeApplyNotNullAnnotations(compilerArgs, extension) {
         def notNullAnnotations = getList(extension, 'notNullAnnotations')
         if (notNullAnnotations) {
             compilerArgs << "-A${OPTION_ANNOTATIONS_NOT_NULL}=${notNullAnnotations.join(SEPARATOR)}"
+        }
+    }
+
+    private static void mayBeApplyLoggingSettings(compilerArgs, extension) {
+        if (extension.verbose) {
+            compilerArgs << "-A${OPTION_LOG_VERBOSE}=true"
         }
     }
 

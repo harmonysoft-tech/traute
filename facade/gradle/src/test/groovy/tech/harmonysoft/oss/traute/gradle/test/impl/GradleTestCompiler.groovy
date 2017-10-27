@@ -22,7 +22,8 @@ class GradleTestCompiler implements TestCompiler {
 
     static final def INSTANCE = new GradleTestCompiler()
 
-    private static final def MARKER_CUSTOM_NOT_NULL_ANNOTATION = '<CUSTOM_NOT_NULL_ANNOTATIONS>'
+    private static final def MARKER_CUSTOM_NOT_NULL_ANNOTATION = '<NOT_NULL_ANNOTATIONS>'
+    private static final def MARKER_LOGGING = '<LOGGING>'
     private static final def BUILD_GRADLE_CONTENT =
             """plugins {
               |    id 'java'
@@ -39,6 +40,7 @@ class GradleTestCompiler implements TestCompiler {
               |traute {
               |    javacPluginSpec = ${getTrauteJavacDependencySpec()}
               |    $MARKER_CUSTOM_NOT_NULL_ANNOTATION
+              |    $MARKER_LOGGING
               |}
               |
               |dependencies {
@@ -117,6 +119,11 @@ class GradleTestCompiler implements TestCompiler {
                 settings.notNullAnnotations
                         ? "notNullAnnotations = [${settings.notNullAnnotations.collect{"'$it'"}.join(', ')}]"
                         : ''
+        )
+
+        content = content.replace(
+                MARKER_LOGGING,
+                settings.verboseMode ? 'verbose = true' : ''
         )
 
         file.text = content

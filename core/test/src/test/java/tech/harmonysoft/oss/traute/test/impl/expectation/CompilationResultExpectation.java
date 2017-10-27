@@ -7,6 +7,7 @@ import tech.harmonysoft.oss.traute.test.api.model.CompilationResult;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.regex.Pattern;
 
 import static org.junit.jupiter.api.Assertions.fail;
 
@@ -24,12 +25,14 @@ public class CompilationResultExpectation implements Expectation<CompilationResu
     public void match(@NotNull CompilationResult actual) {
         String output = actual.getCompilationOutput();
         for (String s : included) {
-            if (!output.contains(s)) {
+            Pattern pattern = Pattern.compile(s);
+            if (!pattern.matcher(output).find()) {
                 fail(String.format("Expected to find text '%s' in the compilation output:%n%n%s", s, output));
             }
         }
         for (String s : excluded) {
-            if (output.contains(s)) {
+            Pattern pattern = Pattern.compile(s);
+            if (pattern.matcher(output).find()) {
                 fail(String.format("Expected that text '%s' is not contained in the compilation output:%n%n%s",
                                    s, output));
             }

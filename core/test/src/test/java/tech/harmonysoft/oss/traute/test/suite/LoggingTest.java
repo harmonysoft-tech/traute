@@ -86,7 +86,7 @@ public abstract class LoggingTest extends AbstractTrauteTest {
                 "}", PACKAGE, NotNull.class.getName(), CLASS_NAME);
 
         expectCompilationResult.withText(String.format(
-                "added 7 instrumentations to the /%s/%s%s - METHOD_PARAMETER: 4, METHOD_RETURN: 3",
+                "added 7 instrumentations to the .*?/%s/%s%s - METHOD_PARAMETER: 4, METHOD_RETURN: 3",
                 PACKAGE.replaceAll("\\.", "/"), CLASS_NAME, JavaFileObject.Kind.SOURCE.extension
         ));
         doCompile(testSource);
@@ -95,7 +95,7 @@ public abstract class LoggingTest extends AbstractTrauteTest {
     @Test
     public void customSetting_annotations() {
         settingsBuilder.withNotNullAnnotations(NN.class.getName());
-        expectCompilationResult.withText(String.format("using the following NotNull annotations: [%s]",
+        expectCompilationResult.withText(String.format("using the following NotNull annotations: \\[%s\\]",
                                                        NN.class.getName()));
         doCompile(prepareReturnTestSource("return 1;"));
     }
