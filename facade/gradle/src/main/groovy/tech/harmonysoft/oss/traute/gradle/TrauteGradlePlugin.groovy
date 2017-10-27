@@ -4,6 +4,7 @@ import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.plugins.PluginInstantiationException
 import org.gradle.api.tasks.compile.JavaCompile
+import tech.harmonysoft.oss.traute.common.instrumentation.InstrumentationType
 
 import static tech.harmonysoft.oss.traute.common.util.TrauteConstants.*
 
@@ -53,6 +54,7 @@ class TrauteGradlePlugin implements Plugin<Project> {
         compilerArgs << "-Xplugin:${PLUGIN_NAME}"
         mayBeApplyNotNullAnnotations(compilerArgs, extension)
         mayBeApplyLoggingSettings(compilerArgs, extension)
+        mayBeApplyInstrumentations(compilerArgs, extension)
     }
 
     private static void mayBeApplyNotNullAnnotations(compilerArgs, extension) {
@@ -66,6 +68,26 @@ class TrauteGradlePlugin implements Plugin<Project> {
         if (extension.verbose) {
             compilerArgs << "-A${OPTION_LOG_VERBOSE}=true"
         }
+    }
+
+    private static void mayBeApplyInstrumentations(compilerArgs, extension) {
+        def instrumentations = getList(extension, 'instrumentations')
+        if (!instrumentations) {
+            return
+        }
+
+        // Validate parameters
+        instrumentations.forEach { shortName ->
+            if (!InstrumentationType.byShortName(shortName)) {
+                throw new PluginInstantiationException(
+                        "Error on ${PLUGIN_NAME} plugin initialization - unsupported instrumentation type is "
+                                + "provided in the 'instrumentations' option - '$shortName'. "
+                                + "Supported names: ${InstrumentationType.values().collect { it.shortName}}"
+                )
+            }
+        }
+
+        compilerArgs << "-A${OPTION_INSTRUMENTATIONS_TO_USE}=${instrumentations.join(SEPARATOR)}"
     }
 
     private static List<String> getList(extension, propertyName) {

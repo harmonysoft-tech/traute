@@ -22,8 +22,9 @@ class GradleTestCompiler implements TestCompiler {
 
     static final def INSTANCE = new GradleTestCompiler()
 
-    private static final def MARKER_CUSTOM_NOT_NULL_ANNOTATION = '<NOT_NULL_ANNOTATIONS>'
+    private static final def MARKER_NOT_NULL_ANNOTATION = '<NOT_NULL_ANNOTATIONS>'
     private static final def MARKER_LOGGING = '<LOGGING>'
+    private static final def MARKER_INSTRUMENTATIONS = '<INSTRUMENTATIONS>'
     private static final def BUILD_GRADLE_CONTENT =
             """plugins {
               |    id 'java'
@@ -39,8 +40,9 @@ class GradleTestCompiler implements TestCompiler {
               |
               |traute {
               |    javacPluginSpec = ${getTrauteJavacDependencySpec()}
-              |    $MARKER_CUSTOM_NOT_NULL_ANNOTATION
+              |    $MARKER_NOT_NULL_ANNOTATION
               |    $MARKER_LOGGING
+              |    $MARKER_INSTRUMENTATIONS
               |}
               |
               |dependencies {
@@ -115,7 +117,7 @@ class GradleTestCompiler implements TestCompiler {
         def content = BUILD_GRADLE_CONTENT
 
         content = content.replace(
-                MARKER_CUSTOM_NOT_NULL_ANNOTATION,
+                MARKER_NOT_NULL_ANNOTATION,
                 settings.notNullAnnotations
                         ? "notNullAnnotations = [${settings.notNullAnnotations.collect{"'$it'"}.join(', ')}]"
                         : ''
@@ -124,6 +126,13 @@ class GradleTestCompiler implements TestCompiler {
         content = content.replace(
                 MARKER_LOGGING,
                 settings.verboseMode ? 'verbose = true' : ''
+        )
+
+        content = content.replace(
+                MARKER_INSTRUMENTATIONS,
+                settings.instrumentationsToApply
+                        ? "instrumentations = [${settings.instrumentationsToApply.collect{"'${it.shortName}'"}.join(', ')}]"
+                        : ''
         )
 
         file.text = content
