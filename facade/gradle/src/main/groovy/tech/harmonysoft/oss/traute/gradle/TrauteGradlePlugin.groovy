@@ -46,8 +46,8 @@ class TrauteGradlePlugin implements Plugin<Project> {
                             + "is undefined"
             )
         }
-        project.dependencies.add('compileOnly', "tech.harmonysoft:traute-javac-plugin:$extension.javacPluginVersion")
-        project.dependencies.add('testCompileOnly', "tech.harmonysoft:traute-javac-plugin:$extension.javacPluginVersion")
+        project.dependencies.add('compileOnly', "tech.harmonysoft:traute-javac:$extension.javacPluginVersion")
+        project.dependencies.add('testCompileOnly', "tech.harmonysoft:traute-javac:$extension.javacPluginVersion")
     }
 
     private static void applyOptions(compilerArgs, extension) {
