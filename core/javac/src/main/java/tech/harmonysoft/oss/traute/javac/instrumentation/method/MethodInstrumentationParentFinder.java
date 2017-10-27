@@ -14,10 +14,12 @@ import org.jetbrains.annotations.NotNull;
  * <p>
  *     The trick here is that there is a possible case that we need to instrument a {@code 'return'} expression
  *     which is not contained in a code block, like below:
- *     <pre>
- *         if (something)
- *             return result;
- *     </pre>
+ * </p>
+ * <pre>
+ * if (something)
+ *     return result;
+ * </pre>
+ * <p>
  *     Here we need to insert a code block instead of the {@code 'return'} expression and provide it back.
  * </p>
  */

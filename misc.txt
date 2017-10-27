@@ -1,0 +1,2 @@
+./gradlew :core:javac-plugin:uploadArchives
+./gradlew closeAndReleaseRepository

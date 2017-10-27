@@ -17,27 +17,25 @@ import java.util.Optional;
  *     Enhances target method annotated by {@code NotNull} in a way to insert {@code null}-checks for
  *     its return points.
  * </p>
- * <p>
- *     Example.
- *     Original code:
- *     <pre>
- *         &#064;NotNull
- *         public Integer compute() {
- *           return doCompute();
+ * <p>Example.</p>
+ * <pre>
+ * Original code:
+ *     &#064;NotNull
+ *     public Integer compute() {
+ *         return doCompute();
+ *     }
+ * </pre>
+ * <pre>
+ * Instrumented code:
+ *     &#064;NotNull
+ *     public Integer compute() {
+ *         Integer tmpVar = doCompute();
+ *         if (tmpVar == null) {
+ *             throw new NullPointerException("[the details]");
  *         }
- *     </pre>
- *     Instrumented code:
- *     <pre>
- *         &#064;NotNull
- *         public Integer compute() {
- *           Integer tmpVar = doCompute();
- *           if (tmpVar == null) {
- *               throw new NullPointerException("[the details]");
- *           }
- *           return tmpVar;
- *         }
- *     </pre>
- * </p>
+ *         return tmpVar;
+ *     }
+ * </pre>
  * <p>Thread-safe.</p>
  */
 public class MethodReturnInstrumentator extends AbstractInstrumentator<ReturnToInstrumentInfo> {

@@ -41,57 +41,49 @@ import static tech.harmonysoft.oss.traute.javac.common.TrautePluginLogger.getPro
 
 /**
  * <p>A {@code javac} plugin which inserts {@code null}-checks for target method arguments and returns from method.</p>
+ * <p><b><i>Method argument check example</i></b></p>
+ * <p>Consider the sources below:</p>
+ * <pre>
+ * public void service(&#064;NotNull Data data) {
+ *     // Method instructions
+ * }
+ * </pre>
  * <p>
- *     <i>Method argument check example</i>
- *     <p>
- *         Consider the sources below:
- *         <pre>
- *             public void service(&#064;NotNull Data data) {
- *                 // Method instructions
- *             }
- *         </pre>
- *         When this code is compiled with the current plugin enabled, resulting binary looks like if it's compiled
- *         from a source below:
- *         <pre>
- *             public void serve(&#064;NotNull Data data) {
- *                 if (data == null) {
- *                     throw new NullPointerException("Argument 's' of type Data is declared as &#064;NotNull but got null for it");
- *                 }
- *                 // Method instructions
- *             }
- *         </pre>
- *         <i>
- *             Note: exact message text is slightly different in a way that it provides more details about the problem.
- *         </i>
- *     </p>
+ *     When this code is compiled with the current plugin enabled, resulting binary looks like if it's compiled
+ *     from a source below:
  * </p>
+ * <pre>
+ * public void serve(&#064;NotNull Data data) {
+ *     if (data == null) {
+ *         throw new NullPointerException("Argument 's' of type Data is declared as &#064;NotNull but got null for it");
+ *     }
+ *     // Method instructions
+ * }
+ * </pre>
+ * <i>Note: exact message text is slightly different in a way that it provides more details about the problem.</i>
+ * <p><b><i>Method return type example</i></b></p>
+ * <p>Consider the source below:</p>
+ * <pre>
+ * &#064;NotNull
+ * public Data fetch() {
+ *     return dao.fetch();
+ * }
+ * </pre>
  * <p>
- *     <i>Method return type example</i>
- *     <p>
- *         Consider the source below:
- *         <pre>
- *             &#064;NotNull
- *             public Data fetch() {
- *                 return dao.fetch();
- *             }
- *         </pre>
- *         When it's compiled with the current plugin enabled, resulting binary looks like if it's compiled
- *         from a source below:
- *         <pre>
- *             &#064;NotNull
- *             public Data fetch() {
- *                 Data tmpVar1 = dao.fetch();
- *                 if (tmpVar1 == null) {
- *                     throw new NullPointerException("Detected an attempt to return null from a method marked by &#064;NotNull");
- *                 }
- *                 return tmpVar1;
- *             }
- *         </pre>
- *         <i>
- *             Note: exact message text is slightly different in a way that it provides more details about the problem.
- *         </i>
- *     </p>
+ *     When it's compiled with the current plugin enabled, resulting binary looks like if it's compiled
+ *     from a source below:
  * </p>
+ * <pre>
+ * &#064;NotNull
+ * public Data fetch() {
+ *     Data tmpVar1 = dao.fetch();
+ *     if (tmpVar1 == null) {
+ *         throw new NullPointerException("Detected an attempt to return null from a method marked by &#064;NotNull");
+ *     }
+ *     return tmpVar1;
+ * }
+ * </pre>
+ * <i>Note: exact message text is slightly different in a way that it provides more details about the problem.</i>
  */
 public class TrauteJavacPlugin implements Plugin {
 

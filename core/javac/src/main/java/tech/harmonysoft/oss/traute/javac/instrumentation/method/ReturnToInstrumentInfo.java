@@ -76,35 +76,33 @@ public class ReturnToInstrumentInfo implements InstrumentationInfo {
 
     /**
      * <p>Allows to get a name of the variable to use for storing {@code return}'s expression value (if necessary).</p>
-     * <p>
-     *     E.g. we don't need a temp variable in code like below:
-     *     <pre>
-     *         String s = ...;
-     *         ...
-     *         return s;
+     * <p>E.g. we don't need a temp variable in code like below:</p>
+     * <pre>
+     * String s = ...;
+     * ...
+     * return s;
+     * </pre>
+     * <p>I.e resulting code might be written as follows:</p>
+     * <pre>
+     * String s = ...;
+     * ...
+     * if (s == null) {
+     *     throw new NullPointerException("...");
+     * }
+     * return s;
      *     </pre>
-     *     I.e resulting code might be written as follows:
-     *     <pre>
-     *         String s = ...;
-     *         ...
-     *         if (s == null) {
-     *             throw new NullPointerException("...");
-     *         }
-     *         return s;
-     *     </pre>
-     *     However, there is a possible situation that we do need a temp variable:
-     *     <pre>
-     *         return compute();
-     *     </pre>
-     *     This code should be transformed at the following way:
-     *     <pre>
-     *         String tmpVar = compute();
-     *         if (tmpVar == null) {
-     *             throw new NullPointerException("...");
-     *         }
-     *         return tmpVar;
-     *     </pre>
-     * </p>
+     * <p>However, there is a possible situation that we do need a temp variable:</p>
+     * <pre>
+     * return compute();
+     * </pre>
+     * <p>This code should be transformed at the following way:</p>
+     * <pre>
+     * String tmpVar = compute();
+     * if (tmpVar == null) {
+     *     throw new NullPointerException("...");
+     * }
+     * return tmpVar;
+     * </pre>
      *
      * @return  name of the variable to use for storing {@code return}'s expression value (if necessary)
      */

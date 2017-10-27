@@ -5,7 +5,7 @@ import org.jetbrains.annotations.NotNull;
 /**
  * A utility {@link Instrumentator} base class which provides logic common for all implementations
  *
- * @param <T>
+ * @param <T>   target instrumentation info
  */
 public abstract class AbstractInstrumentator<T extends InstrumentationInfo> implements Instrumentator<T> {
 

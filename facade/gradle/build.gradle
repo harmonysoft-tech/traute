@@ -23,7 +23,7 @@ task createClasspathManifest {
 }
 
 dependencies {
-    compile project(':core:traute-javac-plugin')
+    compile project(':core:javac-plugin')
 
     testCompile gradleTestKit()
     testCompile localGroovy()

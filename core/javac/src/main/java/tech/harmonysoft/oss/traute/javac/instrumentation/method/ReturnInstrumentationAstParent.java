@@ -9,31 +9,29 @@ import org.jetbrains.annotations.NotNull;
  * <p>
  *     Wraps underlying {@link Tree AST element(s)} and provides an API to apply {@code method instrumentation} on it.
  * </p>
- * <p>
- *     The rationale is that we generally have two {@code AST} parent types:
- *     <ul>
- *       <li>
- *           code block like below
- *           <pre>
- *               if (something) {
- *                   return result; <- instrumentation should be applied to the instruction inside a code block ({})
- *               }
- *           </pre>
+ * <p>The rationale is that we generally have two {@code AST} parent types:</p>
+ *  <ul>
+ *      <li>
+ *          code block like below
+ *          <pre>
+ * if (something) {
+ *     return result; &lt;- instrumentation should be applied to the instruction inside a code block ({})
+ * }
+ *          </pre>
  *       </li>
  *       <li>
  *           {@code 'case/default'} group:
  *           <pre>
- *               switch (var) {
- *                   case 1:
- *                     // do something
- *                     return result; <- instrumentation should be applied to the instruction inside a {@code 'case'}
- *                   default:
- *                     return defaultValue; <- an instruction inside a {@code 'default'}
- *               }
+ * switch (var) {
+ *     case 1:
+ *         // do something
+ *         return result; &lt;- instrumentation should be applied to the instruction inside a {@code 'case'}
+ *     default:
+ *         return defaultValue; &lt;- an instruction inside a {@code 'default'}
+ * }
  *           </pre>
  *       </li>
- *     </ul>
- * </p>
+ * </ul>
  */
 public interface ReturnInstrumentationAstParent {
 
