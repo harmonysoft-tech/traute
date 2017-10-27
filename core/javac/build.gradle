@@ -2,8 +2,7 @@ import org.gradle.internal.jvm.Jvm
 
 dependencies {
     compileOnly files(Jvm.current().toolsJar)
-
-    compile project(':core:common')
+    compileOnly project(':core:common')
 
     testCompile project(':core:test-common').sourceSets.test.output
     testCompile project(path: ':core:test-common', configuration: 'testCompile')
@@ -15,7 +14,7 @@ jar {
 }
 
 archivesBaseName = 'traute-javac'
-version = '1.0.0'
+version = '1.0.1'
 
 uploadArchives {
     repositories {
