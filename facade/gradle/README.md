@@ -15,6 +15,8 @@ See the [LICENSE](LICENSE.md) file for license rights and limitations (MIT).
 
 This is a [Gradle](https://gradle.org/) plugin which allows to seamlessly use [Traute Javac Plugin](../../core/javac/README.md) plugin in your *Gradle* projects.  
 
+This functionality is applicable either for java *Gradle* projects or *Android* projects.  
+
 ## 3. Usage
 
 Your *Gradle* project can be configured to fetch current plugin from the sources below:
