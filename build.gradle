@@ -22,6 +22,7 @@ allprojects {
     apply plugin: 'java'
     apply plugin: 'org.junit.platform.gradle.plugin'
     apply plugin: 'maven'
+    apply plugin: 'maven-publish'
     apply plugin: 'signing'
 
     sourceCompatibility = 1.8
@@ -29,6 +30,7 @@ allprojects {
     repositories {
         mavenLocal()
         mavenCentral()
+        jcenter()
 
         // For android annotations
         maven {
@@ -103,6 +105,19 @@ allprojects {
                         }
                     }
                 }
+            }
+        }
+    }
+
+    publishing {
+        publications {
+            MyPublication(MavenPublication) {
+                from components.java
+                artifact sourcesJar
+                artifact javadocJar
+                groupId 'tech.harmonysoft'
+                artifactId archivesBaseName
+                version version
             }
         }
     }
