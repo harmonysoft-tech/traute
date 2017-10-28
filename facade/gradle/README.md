@@ -119,3 +119,5 @@ When the activity is resumed, it shows that a *null*-check was inserted into act
 ## 6. Releases
 
 [Release Notes](RELEASE.md)
+
+<a href='https://bintray.com/denis-zhdanov/harmonysoft.tech/traute-gradle?source=watch' alt='Get automatic notifications about new "traute-gradle" versions'><img src='https://www.bintray.com/docs/images/bintray_badge_color.png'></a>
