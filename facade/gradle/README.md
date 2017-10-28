@@ -5,6 +5,7 @@
 * [3. Usage](#3-usage)
 * [4. Configuration](#4-configuration)
 * [5. Samples](#5-samples)
+* [6. Releases](#6-releases)
 
 ## License
 
@@ -95,3 +96,7 @@ traute {
 ## 5. Samples
 
 TBD
+
+## 6. Releases
+
+[Release Notes](RELEASE.md)
