@@ -161,3 +161,5 @@ Implementation details are described [in this blog post](http://blog.harmonysoft
 ## 10. Releases
 
 [Release Notes](RELEASE.md)
+
+<a href='https://bintray.com/bintray/jcenter/tech.harmonysoft%3Atraute-javac?source=watch' alt='Get automatic notifications about new "tech.harmonysoft:traute-javac" versions'><img src='https://www.bintray.com/docs/images/bintray_badge_color.png'></a>
