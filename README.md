@@ -65,6 +65,7 @@ TBD
 ## 7. Releases
 
 * [core javac plugin](core/javac/RELEASE.md)
+* [gradle plugin](facade/gradle/RELEASE.md)
 
 ## 8. How to Contribute
 
