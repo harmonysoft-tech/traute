@@ -1,4 +1,6 @@
 ./gradlew :core:javac-plugin:uploadArchives
 ./gradlew closeAndReleaseRepository
+./gradlew closeRepository
+./gradlew releaseRepository
 
 ./gradlew :core:javac-plugin:bintrayUpload
