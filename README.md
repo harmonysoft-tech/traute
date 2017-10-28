@@ -54,13 +54,11 @@ I really like German - how it sounds, language rules, everything, so, wanted to 
 
 ## 5. Overview
 
-TBD
+The core functionality is a [Javac plugin](core/javac/README.md) which adds *null*-checks into the generated *\*.class* files. Even though it's possible to [use the plugin](core/javac/README.md#6-usage) directly from a command line, there are a number of wrappers adapter for popular build systems, namely, [Gradle](facade/gradle/README.md), TBD
 
 ## 6. Build
 
 [![Build Status](https://travis-ci.org/denis-zhdanov/traute.svg?branch=master)](https://travis-ci.org/denis-zhdanov/traute)
-
-TBD
 
 ## 7. Releases
 
@@ -69,6 +67,8 @@ TBD
 
 ## 8. How to Contribute
 
+* [report a problem/ask for enhancement](https://github.com/denis-zhdanov/traute/issues)
+* [submit a pull request](https://github.com/denis-zhdanov/traute/pulls)
 TBD
 
 ## 9. Contributors
