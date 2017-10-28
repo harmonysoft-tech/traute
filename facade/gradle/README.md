@@ -27,7 +27,7 @@ Add the following to your *build.gradle*:
 
 ```groovy
 plugins {
-  id "tech.harmonysoft.oss.traute" version "1.0.0"
+  id "tech.harmonysoft.oss.traute" version "1.0.1"
 }
 ```
 
@@ -37,7 +37,7 @@ plugins {
 buildscript {
   mavenCentral()
   dependencies {
-    classpath "gradle.plugin.tech.harmonysoft:gradle:1.0.0"
+    classpath "gradle.plugin.tech.harmonysoft:gradle:1.0.1"
   }
 }
 
@@ -50,7 +50,7 @@ apply plugin: "tech.harmonysoft.oss.traute"
 buildscript {
   jcenter()
   dependencies {
-    classpath "gradle.plugin.tech.harmonysoft:gradle:1.0.0"
+    classpath "gradle.plugin.tech.harmonysoft:gradle:1.0.1"
   }
 }
 
@@ -115,6 +115,33 @@ We get the following console output when it's built:
 When the activity is resumed, it shows that a *null*-check was inserted into activity's code:
 
 <img src="/docs/img/android-ui.png" height="300px">
+
+**Java**
+
+A sample *Java* project which is configured to use the current plugin can be found [here](https://github.com/denis-zhdanov/traute/tree/master/facade/gradle/sample/java):
+
+```
+radlew build execute
+:compileJava
+[Traute plugin]: 'verbose mode' is on
+[Traute plugin]: added a null-check for 'return' expression in method tech.harmonysoft.oss.traute.Test.getInt()
+[Traute plugin]: added 1 instrumentation to the /Users/denis/project/my/traute/facade/gradle/sample/java/src/main/java/tech/harmonysoft/oss/traute/Test.java - METHOD_RETURN: 1
+:processResources NO-SOURCE
+:classes
+:jar
+:assemble
+:compileTestJava NO-SOURCE
+:processTestResources NO-SOURCE
+:testClasses UP-TO-DATE
+:test NO-SOURCE
+:check UP-TO-DATE
+:build
+:execute
+Exception in thread "main" java.lang.NullPointerException: Detected an attempt to return null from a method marked by org.jetbrains.annotations.NotNull
+        at tech.harmonysoft.oss.traute.Test.getInt(Test.java:13)
+        at tech.harmonysoft.oss.traute.Test.main(Test.java:8)
+:execute FAILED
+```
 
 ## 6. Releases
 

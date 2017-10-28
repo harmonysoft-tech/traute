@@ -1,0 +1,28 @@
+plugins {
+    id "tech.harmonysoft.oss.traute" version "1.0.1"
+}
+
+group 'tech.harmonysoft.oss.traute'
+version '1.0.0-SNAPSHOT'
+
+apply plugin: 'java'
+
+sourceCompatibility = 1.8
+
+repositories {
+    mavenCentral()
+}
+
+traute {
+    javacPluginVersion = '1.0.4'
+    verbose = true
+}
+
+dependencies {
+    compile 'org.jetbrains:annotations:15.0'
+}
+
+task execute(type:JavaExec) {
+    main = 'tech.harmonysoft.oss.traute.Test'
+    classpath = sourceSets.main.runtimeClasspath
+}
