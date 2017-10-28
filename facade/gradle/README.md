@@ -114,7 +114,7 @@ We get the following console output when it's built:
 
 When the activity is resumed, it shows that a *null*-check was inserted into activity's code:
 
-<img src="/docs/img/android-ui.png" width="300px">
+<img src="/docs/img/android-ui.png" height="150px">
 
 ## 6. Releases
 
