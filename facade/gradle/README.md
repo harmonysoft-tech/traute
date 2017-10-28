@@ -97,7 +97,24 @@ traute {
 
 ## 5. Samples
 
-TBD
+**Android**
+
+A sample *Android* project which is configured to use the current plugin can be found [here](https://github.com/denis-zhdanov/traute/tree/master/facade/gradle/sample/android). It uses a custom *NotNull* annotation and 'verbose mode' is set on.  
+
+We get the following console output when it's built:  
+
+```
+...
+:app:compileDebugJavaWithJavac
+[Traute plugin]: 'verbose mode' is on
+[Traute plugin]: using the following NotNull annotations: [org.myapplication.NN]
+[Traute plugin]: added a null-check for argument 's' in the method org.myapplication.MainActivity.check()
+[Traute plugin]: added 1 instrumentation to the /Users/denis/project/my/traute/facade/gradle/sample/android/app/src/main/java/org/myapplication/MainActivity.java - METHOD_PARAMETER: 1
+```
+
+When the activity is resumed, it shows that a *null*-check was inserted into activity's code:
+
+<img src="/img/android-ui.png" width="300px">
 
 ## 6. Releases
 
