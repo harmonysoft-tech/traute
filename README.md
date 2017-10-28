@@ -54,7 +54,7 @@ I really like German - how it sounds, language rules, everything, so, wanted to 
 
 ## 5. Overview
 
-The core functionality is a [Javac plugin](core/javac/README.md) which adds *null*-checks into the generated *\*.class* files. Even though it's possible to [use the plugin](core/javac/README.md#6-usage) directly from a command line, there are a number of wrappers adapter for popular build systems, namely, [Gradle](facade/gradle/README.md), TBD
+The core functionality is a [Javac plugin](core/javac/README.md) which adds *null*-checks into the generated *\*.class* files. Even though it's possible to [use the plugin directly](core/javac/README.md#6-usage) from a command line, there are a number of adapters for popular build systems, namely, [Gradle](facade/gradle/README.md), TBD
 
 ## 6. Build
 
@@ -69,7 +69,7 @@ The core functionality is a [Javac plugin](core/javac/README.md) which adds *nul
 
 * [report a problem/ask for enhancement](https://github.com/denis-zhdanov/traute/issues)
 * [submit a pull request](https://github.com/denis-zhdanov/traute/pulls)
-TBD
+* TBD
 
 ## 9. Contributors
 
