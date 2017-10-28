@@ -4,6 +4,9 @@ plugins {
     id "com.jfrog.bintray" version '1.7.3'
 }
 
+version = '1.0.5'
+archivesBaseName = 'traute-javac'
+
 dependencies {
     compileOnly files(Jvm.current().toolsJar)
     compileOnly project(':core:common')
@@ -16,8 +19,6 @@ jar {
     into('/')
     from { configurations.compileOnly.filter {it.name.contains('common')}.collect { it.isDirectory() ? it : zipTree(it) } }
 }
-
-archivesBaseName = 'traute-javac'
 
 uploadArchives {
     repositories {

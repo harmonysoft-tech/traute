@@ -16,6 +16,11 @@ apply plugin: 'groovy'
 apply plugin: 'java-gradle-plugin'
 apply plugin: 'com.gradle.plugin-publish'
 
+version = '1.0.1'
+archivesBaseName = 'traute-gradle'
+def pluginDisplayName = 'Traute Gradle plugin'
+def pluginDescription = 'A Gradle plugin which eases Traute Javac plugin appliance in Gradle projects'
+def pluginUrl = 'http://traute.oss.harmonysoft.tech/facade/gradle/'
 def pluginId = 'tech.harmonysoft.oss.traute'
 
 gradlePlugin {
@@ -60,11 +65,6 @@ jar {
                 .collect { it.isDirectory() ? it : zipTree(it) }
     }
 }
-
-archivesBaseName = 'traute-gradle'
-def pluginDisplayName = 'Traute Gradle plugin'
-def pluginDescription = 'A Gradle plugin which eases Traute Javac plugin appliance in Gradle projects'
-def pluginUrl = 'http://traute.oss.harmonysoft.tech/facade/gradle/'
 
 uploadArchives {
     repositories {
