@@ -4,3 +4,5 @@
 ./gradlew releaseRepository
 
 ./gradlew :core:javac-plugin:bintrayUpload
+
+./gradlew :facade:gradle:publishPlugins

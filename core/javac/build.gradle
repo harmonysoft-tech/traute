@@ -18,7 +18,6 @@ jar {
 }
 
 archivesBaseName = 'traute-javac'
-version = '1.0.4'
 
 uploadArchives {
     repositories {
@@ -32,21 +31,4 @@ uploadArchives {
     }
 }
 
-bintray {
-    user = bintrayUser
-    key = bintrayApiKey
-    publications = ['MyPublication']
-
-    pkg {
-
-        repo = 'harmonysoft.tech'
-        name = archivesBaseName
-        licenses = ['MIT']
-        vcsUrl = 'https://github.com/denis-zhdanov/traute.git'
-
-        version {
-            name = version
-            released  = new Date()
-        }
-    }
-}
+setupBintray()

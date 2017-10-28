@@ -1,10 +1,27 @@
+buildscript {
+    repositories {
+        maven {
+            url "https://plugins.gradle.org/m2/"
+        }
+    }
+    dependencies {
+        classpath "com.gradle.publish:plugin-publish-plugin:0.9.9"
+    }
+}
+
+plugins {
+    id "com.jfrog.bintray" version '1.7.3'
+}
 apply plugin: 'groovy'
 apply plugin: 'java-gradle-plugin'
+apply plugin: 'com.gradle.plugin-publish'
+
+def pluginId = 'tech.harmonysoft.oss.traute'
 
 gradlePlugin {
     plugins {
         traute {
-            id = 'tech.harmonysoft.oss.traute'
+            id = pluginId
             implementationClass = 'tech.harmonysoft.oss.traute.gradle.TrauteGradlePlugin'
         }
     }
@@ -41,5 +58,38 @@ jar {
         configurations.compile
                 .filter { it.name.contains('traute') }
                 .collect { it.isDirectory() ? it : zipTree(it) }
+    }
+}
+
+archivesBaseName = 'traute-gradle'
+def pluginDisplayName = 'Traute Gradle plugin'
+def pluginDescription = 'A Gradle plugin which eases Traute Javac plugin appliance in Gradle projects'
+def pluginUrl = 'http://traute.oss.harmonysoft.tech/facade/gradle/'
+
+uploadArchives {
+    repositories {
+        mavenDeployer {
+            pom.project {
+                name pluginDisplayName
+                description pluginDescription
+                url pluginUrl
+            }
+        }
+    }
+}
+
+setupBintray()
+
+pluginBundle {
+    website = pluginUrl
+    vcsUrl = 'https://github.com/denis-zhdanov/traute'
+    description = pluginDescription
+    tags = ['javac']
+
+    plugins {
+        greetingsPlugin {
+            id = pluginId
+            displayName = pluginDisplayName
+        }
     }
 }
