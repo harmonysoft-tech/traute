@@ -42,7 +42,7 @@ task createClasspathManifest {
 
 dependencies {
     compileOnly project(':core:common')
-    compile project(':core:javac-plugin')
+    compileOnly project(':core:javac-plugin')
 
     testCompile gradleTestKit()
     testCompile localGroovy()
@@ -55,8 +55,8 @@ dependencies {
 jar {
     into('/')
     from {
-        configurations.compile
-                .filter { it.name.contains('traute') }
+        configurations.compileOnly
+                .filter { it.name.contains('common') }
                 .collect { it.isDirectory() ? it : zipTree(it) }
     }
 }
