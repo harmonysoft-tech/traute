@@ -12,7 +12,7 @@ import static tech.harmonysoft.oss.traute.test.util.TestConstants.PACKAGE;
 public class TestUtil {
 
     public static final String PARAMETER_TEST_CLASS_TEMPLATE =
-            "package " + PACKAGE + ";\n" +
+            "package %s;\n" +
             "%s\n" +
             "public class " + CLASS_NAME + " {\n" +
             "\n" +
@@ -48,7 +48,8 @@ public class TestUtil {
     }
 
     /**
-     * Applies given data to the {@link TestUtil#PARAMETER_TEST_CLASS_TEMPLATE test source template}.
+     * Delegates to the {@link #prepareParameterTestSource(String, String, String, String)} with
+     * {@link TestConstants#PACKAGE} as a package name.
      *
      * @param importString  an expression for the {@code import} keyword (if any)
      * @param testMethod    {@value TestConstants#METHOD_NAME}() method body
@@ -57,6 +58,24 @@ public class TestUtil {
      */
     @NotNull
     public static String prepareParameterTestSource(@Nullable String importString,
+                                                    @NotNull String testMethod,
+                                                    @NotNull String callArguments)
+    {
+        return prepareParameterTestSource(PACKAGE, importString, testMethod, callArguments);
+    }
+
+    /**
+     * Applies given data to the {@link TestUtil#PARAMETER_TEST_CLASS_TEMPLATE test source template}.
+     *
+     * @param packageName   package name to use
+     * @param importString  an expression for the {@code import} keyword (if any)
+     * @param testMethod    {@value TestConstants#METHOD_NAME}() method body
+     * @param callArguments arguments to use for calling the {@value TestConstants#METHOD_NAME}() method
+     * @return              complete test source for the given arguments. It's assumed to be properly formatted
+     */
+    @NotNull
+    public static String prepareParameterTestSource(@NotNull String packageName,
+                                                    @Nullable String importString,
                                                     @NotNull String testMethod,
                                                     @NotNull String callArguments)
     {
@@ -79,7 +98,8 @@ public class TestUtil {
         String indentedTestMethodBody = "  " + testMethodBody.replaceAll("\n", "\n    ");
         String indentedTestMethod = String.format("  %s%n%s%n  }", testMethodDeclaration, indentedTestMethodBody);
 
-        return String.format(PARAMETER_TEST_CLASS_TEMPLATE, completeImportString, indentedTestMethod, callArguments);
+        return String.format(PARAMETER_TEST_CLASS_TEMPLATE,
+                             packageName, completeImportString, indentedTestMethod, callArguments);
     }
 
     @NotNull

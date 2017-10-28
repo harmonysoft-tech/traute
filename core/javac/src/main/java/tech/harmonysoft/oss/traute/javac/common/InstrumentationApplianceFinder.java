@@ -270,6 +270,12 @@ public class InstrumentationApplianceFinder extends TreeScanner<Void, Void> {
                 // Qualified annotation, like 'void test(@javax.annotation.Nonnul String s) {}'
                 return Optional.of(annotationInSource);
             }
+            if (packageName != null) {
+                String candidate = String.format("%s.%s", packageName, annotationInSource);
+                if (notNullAnnotations.contains(candidate)) {
+                    return Optional.of(candidate);
+                }
+            }
             for (String anImport : context.getImports()) {
                 // Support an import like 'import org.jetbrains.annotations.*;'
                 if (anImport.endsWith(".*")) {

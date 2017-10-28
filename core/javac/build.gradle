@@ -18,7 +18,7 @@ jar {
 }
 
 archivesBaseName = 'traute-javac'
-version = '1.0.2'
+version = '1.0.3'
 
 uploadArchives {
     repositories {

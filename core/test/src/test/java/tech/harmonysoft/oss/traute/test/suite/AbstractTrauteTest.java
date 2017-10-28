@@ -33,7 +33,11 @@ public abstract class AbstractTrauteTest {
     }
 
     protected void doTest(@NotNull String testSource) {
-        CompilationResult compilationResult = doCompile(testSource);
+        doTest(TestUtil.QUALIFIED_CLASS_NAME, testSource);
+    }
+
+    protected void doTest(@NotNull String qualifiedClassName, @NotNull String testSource) {
+        CompilationResult compilationResult = doCompile(qualifiedClassName, testSource);
         try {
             runner.run(compilationResult, expectRunResult.build());
         } finally {
@@ -42,9 +46,14 @@ public abstract class AbstractTrauteTest {
     }
 
     @NotNull
-    protected CompilationResult doCompile(@NotNull String testSource) {
+    protected void doCompile(@NotNull String testSource) {
+        doCompile(TestUtil.QUALIFIED_CLASS_NAME, testSource);
+    }
+
+    @NotNull
+    protected CompilationResult doCompile(@NotNull String qualifiedClassName, @NotNull String testSource) {
         return compiler.compile(new TestSourceImpl(testSource,
-                                                   TestUtil.QUALIFIED_CLASS_NAME,
+                                                   qualifiedClassName,
                                                    settingsBuilder.build()),
                                                                    expectCompilationResult.build());
     }

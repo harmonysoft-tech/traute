@@ -6,6 +6,7 @@ import tech.harmonysoft.oss.traute.test.fixture.NN;
 
 import javax.annotation.Nonnull;
 
+import static tech.harmonysoft.oss.traute.test.util.TestConstants.CLASS_NAME;
 import static tech.harmonysoft.oss.traute.test.util.TestConstants.METHOD_NAME;
 import static tech.harmonysoft.oss.traute.test.util.TestUtil.*;
 
@@ -72,5 +73,33 @@ public abstract class CustomAnnotationTest extends AbstractTrauteTest {
         );
         expectNpeFromParameterCheck(testSource, "i1", expectRunResult);
         doTest(testSource);
+    }
+
+    @Test
+    public void samePackage_shortAnnotationName() {
+        settingsBuilder.withNotNullAnnotations(NN.class.getName());
+        String packageName = NN.class.getPackage().getName();
+        String testSource = prepareParameterTestSource(
+                packageName,
+                null,
+                String.format("public void %s(@%s Integer i1) {}", METHOD_NAME, NN.class.getSimpleName()),
+                "null"
+        );
+        expectNpeFromParameterCheck(testSource, "i1", expectRunResult);
+        doTest(String.format("%s.%s", packageName, CLASS_NAME), testSource);
+    }
+
+    @Test
+    public void samePackage_qualifiedAnnotationName() {
+        settingsBuilder.withNotNullAnnotations(NN.class.getName());
+        String packageName = NN.class.getPackage().getName();
+        String testSource = prepareParameterTestSource(
+                packageName,
+                null,
+                String.format("public void %s(@%s Integer i1) {}", METHOD_NAME, NN.class.getName()),
+                "null"
+        );
+        expectNpeFromParameterCheck(testSource, "i1", expectRunResult);
+        doTest(String.format("%s.%s", packageName, CLASS_NAME), testSource);
     }
 }
