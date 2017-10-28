@@ -10,6 +10,7 @@ import javax.tools.JavaFileObject;
 
 import static tech.harmonysoft.oss.traute.test.util.TestConstants.CLASS_NAME;
 import static tech.harmonysoft.oss.traute.test.util.TestConstants.PACKAGE;
+import static tech.harmonysoft.oss.traute.test.util.TestUtil.prepareParameterTestSource;
 import static tech.harmonysoft.oss.traute.test.util.TestUtil.prepareReturnTestSource;
 
 public abstract class LoggingTest extends AbstractTrauteTest {
@@ -105,5 +106,12 @@ public abstract class LoggingTest extends AbstractTrauteTest {
         settingsBuilder.withVerboseMode(true);
         expectCompilationResult.withText("'verbose mode' is on");
         doCompile(prepareReturnTestSource("return 1;"));
+    }
+
+    @Test
+    public void noReportForNonEnhancedSource() {
+        settingsBuilder.withVerboseMode(true);
+        expectCompilationResult.withText("added 0 instrumentation", false);
+        doCompile(prepareParameterTestSource(null, "public void test() {}", ""));
     }
 }

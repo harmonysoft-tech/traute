@@ -273,29 +273,24 @@ public class TrauteJavacPlugin implements Plugin {
                                                 .stream()
                                                 .mapToLong(Map.Entry::getValue)
                                                 .sum();
+        if (totalInstrumentationsNumber <= 0) {
+            return;
+        }
         StringBuilder details = new StringBuilder();
-        if (totalInstrumentationsNumber > 0) {
-            details.append(" - ");
-            boolean first = true;
-            for (InstrumentationType type : InstrumentationType.values()) {
-                Long count = stats.get(type);
-                if (count != null) {
-                    if (first) {
-                        first = false;
-                    } else {
-                        details.append(", ");
-                    }
-                    details.append(type).append(": ").append(count);
-                }
+        for (InstrumentationType type : InstrumentationType.values()) {
+            Long count = stats.get(type);
+            if (count != null) {
+                details.append(type).append(": ").append(count).append(", ");
             }
         }
+        details.setLength(details.length() - 2);
 
         String fileName = file.toUri().getSchemeSpecificPart();
         while (fileName.startsWith("//")) {
             fileName = fileName.substring(1);
         }
         logger.info(String.format(
-                "added %d instrumentation%s to the %s%s",
+                "added %d instrumentation%s to the %s - %s",
                 totalInstrumentationsNumber, totalInstrumentationsNumber > 1 ? "s" : "", fileName, details)
         );
     }
