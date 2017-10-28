@@ -92,7 +92,7 @@ class GradleTestCompiler implements TestCompiler {
             return new CompilationResultImpl(
                     { throw new IllegalStateException(
                             "There are no binaries for failed compilation. Build output:\n\n${e.buildResult.output}\n\n"
-                            + "Build config:\n\n${buildGradleText}")
+                            + "Classpath:\n  ${pluginClasspath.join('\n  ')}\n\nBuild config:\n\n${buildGradleText}")
                     },
                     e.buildResult.output,
                     testSource,

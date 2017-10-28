@@ -18,11 +18,13 @@ task createClasspathManifest {
 
     doLast {
         outputDir.mkdirs()
-        file("$outputDir/plugin-classpath.txt").text = sourceSets.main.runtimeClasspath.join("\n")
+        file("$outputDir/plugin-classpath.txt").text =
+                sourceSets.main.runtimeClasspath.join('\n') + '\n' + sourceSets.main.compileClasspath.join('\n')
     }
 }
 
 dependencies {
+    compileOnly project(':core:common')
     compile project(':core:javac-plugin')
 
     testCompile gradleTestKit()
