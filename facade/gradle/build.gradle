@@ -52,6 +52,7 @@ dependencies {
     testCompile gradleTestKit()
     testCompile localGroovy()
     testCompile project(':core:test-common').sourceSets.test.output
+    testCompile project(':core:javac-plugin')
     testCompile project(path: ':core:test-common', configuration: 'testCompile')
 
     testRuntime files(createClasspathManifest)
