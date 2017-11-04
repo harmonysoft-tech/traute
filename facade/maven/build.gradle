@@ -1,0 +1,119 @@
+buildscript {
+    repositories {
+        maven {
+            url "https://plugins.gradle.org/m2/"
+        }
+    }
+    dependencies {
+        classpath "com.gradle.publish:plugin-publish-plugin:0.9.9"
+    }
+}
+
+plugins {
+    id "com.jfrog.bintray" version '1.7.3'
+}
+
+apply plugin: 'com.gradle.plugin-publish'
+apply plugin: 'maven'
+
+version = '1.0.0'
+archivesBaseName = 'traute-maven'
+def pluginDisplayName = 'Traute Maven plugin'
+def pluginDescription = 'A Maven plugin which eases Traute Javac plugin appliance in Gradle projects'
+def pluginUrl = 'http://traute.oss.harmonysoft.tech/facade/maven/'
+def pluginId = 'tech.harmonysoft.oss.traute'
+
+ext {
+    mavenCoreVersion = '3.5.2'
+    mavenPluginAnnotationsVersion = '3.5'
+}
+
+configurations {
+    mavenTest
+}
+
+dependencies {
+    compileOnly project(':core:common')
+    compile "org.apache.maven:maven-plugin-api:$mavenCoreVersion"
+    compile "org.apache.maven.plugin-tools:maven-plugin-annotations:$mavenPluginAnnotationsVersion"
+
+    testCompile project(':core:test-common').sourceSets.test.output
+    testCompile project(path: ':core:test-common', configuration: 'testCompile')
+
+    mavenTest project(path: ':core:test-common', configuration: 'testCompile')
+}
+
+tasks.withType(JavaExec) {
+    def toSkip = ['junit', 'mail', 'aar', 'hamcrest', 'opentest4j', 'activation', 'android.arch', 'jdk']
+    def testDependencies = configurations.mavenTest.dependencies[0].dependencyProject.configurations.testCompile
+            .filter { d -> toSkip.inject(true) { result, s -> result && !d.absolutePath.contains(s) }
+    }.join(':')
+    testDependencies += ':' + sourceSets.main.java.outputDir
+    testDependencies += ':' + sourceSets.main.output.resourcesDir
+    systemProperties([
+            'trauteTestDependencies': testDependencies,
+            'trauteGroupId'         : project.group,
+            'trauteArtifactId'      : archivesBaseName,
+            'trauteVersion'         : project.version
+    ])
+}
+
+gradle.taskGraph.beforeTask {
+    if (it.name.contains('junit')) {
+        createMavenPluginFiles()
+    }
+}
+
+def createMavenPluginFiles() {
+    def p = pom {
+        project {
+            artifactId archivesBaseName
+            packaging 'maven-plugin'
+        }
+    }.withXml {
+        Node pomNode = asNode()
+        pomNode.dependencies.'*'.findAll() {
+            !it.scope.text().contains('compile')
+        }.each() {
+            it.parent().remove(it)
+        }
+    }
+    p.writeTo("${sourceSets.main.output.resourcesDir}/META-INF/maven/${project.group}/${archivesBaseName}/pom.xml")
+}
+
+jar {
+    into('/')
+    from {
+        configurations.compileOnly
+                .filter { it.name.contains('common') }
+                .collect { it.isDirectory() ? it : zipTree(it) }
+    }
+}
+
+uploadArchives {
+    repositories {
+        mavenDeployer {
+            pom.project {
+                name pluginDisplayName
+                description pluginDescription
+                url pluginUrl
+            }
+        }
+    }
+}
+
+setupBintray()
+
+pluginBundle {
+    website = pluginUrl
+    vcsUrl = 'https://github.com/denis-zhdanov/traute'
+    description = pluginDescription
+    tags = ['javac']
+
+    plugins {
+        greetingsPlugin {
+            id = pluginId
+            displayName = pluginDisplayName
+        }
+    }
+}
