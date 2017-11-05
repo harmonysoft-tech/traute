@@ -12,3 +12,8 @@ dependencies {
     testCompile 'com.android.support:support-core-utils:26.1.0'
     testCompile 'org.eclipse.jdt:org.eclipse.jdt.annotation:2.1.0'
 }
+
+task testJar(type: Jar) {
+    classifier = 'tests'
+    from sourceSets.test.output
+}
