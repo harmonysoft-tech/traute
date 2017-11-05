@@ -42,15 +42,22 @@ public class MavenTestCompiler implements TestCompiler {
             "\n" +
             "  <build>\n" +
             "    <plugins>\n" +
-            "      <plugin>\n"
-            + "        <groupId>" + MAVEN_COMPILER_PLUGIN_GROUP + "</groupId>\n"
-            + "        <artifactId>" + MAVEN_COMPILER_PLUGIN_ARTIFACT + "</artifactId>\n"
-            + "        <version>" + MAVEN_COMPILER_PLUGIN_VERSION + "</version>\n"
-            + "    </plugin>\n" +
+            "      <plugin>\n" +
+            "        <groupId>" + MAVEN_COMPILER_PLUGIN_GROUP + "</groupId>\n" +
+            "        <artifactId>" + MAVEN_COMPILER_PLUGIN_ARTIFACT + "</artifactId>\n" +
+            "        <version>" + MAVEN_COMPILER_PLUGIN_VERSION + "</version>\n" +
+            "      </plugin>\n" +
             "      <plugin>\n" +
             "        <groupId>" + MARKER_TRAUTE_PLUGIN_GROUP + "</groupId>\n" +
             "        <artifactId>" + MARKER_TRAUTE_PLUGIN_ARTIFACT + "</artifactId>\n" +
             "        <version>" + MARKER_TRAUTE_PLUGIN_VERSION + "</version>\n" +
+            "        <executions>\n" +
+            "          <execution>\n" +
+            "            <goals>\n" +
+            "              <goal>traute</goal>\n" +
+            "            </goals>\n" +
+            "          </execution>\n" +
+            "        </executions>\n" +
             "      </plugin>\n" +
             "    </plugins>\n" +
             "  </build>\n" +
@@ -78,10 +85,11 @@ public class MavenTestCompiler implements TestCompiler {
 
         File stdOut = new File(projectRootDir, "stdout");
         File stdErr = new File(projectRootDir, "stderr");
-        ProcessBuilder processBuilder = new ProcessBuilder("bash", "-c", "mvn compile")
-                .directory(projectRootDir)
-                .redirectOutput(stdOut)
-                .redirectError(stdErr);
+        ProcessBuilder processBuilder = new ProcessBuilder(
+                "bash", "-c", String.format("mvn -Dmaven.repo.local=%s compile", System.getProperty("localRepo"))
+        ).directory(projectRootDir)
+         .redirectOutput(stdOut)
+         .redirectError(stdErr);
         Process start = processBuilder.start();
         int exitCode = start.waitFor();
 

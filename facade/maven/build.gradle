@@ -36,6 +36,7 @@ dependencies {
     compileOnly project(':core:common')
     compile "org.apache.maven:maven-plugin-api:$mavenCoreVersion"
     compile "org.apache.maven.plugin-tools:maven-plugin-annotations:$mavenPluginAnnotationsVersion"
+    compile 'org.apache.maven:maven-project:2.2.1'
 
     testCompile project(':core:test-common').sourceSets.test.output
     testCompile project(path: ':core:test-common', configuration: 'testCompile')
@@ -48,23 +49,54 @@ tasks.withType(JavaExec) {
     def testDependencies = configurations.mavenTest.dependencies[0].dependencyProject.configurations.testCompile
             .filter { d -> toSkip.inject(true) { result, s -> result && !d.absolutePath.contains(s) }
     }.join(':')
-    testDependencies += ':' + sourceSets.main.java.outputDir
-    testDependencies += ':' + sourceSets.main.output.resourcesDir
     systemProperties([
             'trauteTestDependencies': testDependencies,
             'trauteGroupId'         : project.group,
             'trauteArtifactId'      : archivesBaseName,
-            'trauteVersion'         : project.version
+            'trauteVersion'         : project.version,
+            'localRepo'             : "${buildDir}/mavenLocalRepo"
     ])
 }
 
-gradle.taskGraph.beforeTask {
-    if (it.name.contains('junit')) {
-        createMavenPluginFiles()
-    }
+def getMavenDependencies() {
+    return configurations.compile.dependencies.collect {
+        """<dependency>
+           |  <groupId>${it.group}</groupId> 
+           |  <artifactId>${it.name}</artifactId> 
+           |  <version>${it.version}</version> 
+           |</dependency> 
+""".stripMargin()
+    }.join('\n')
 }
 
-def createMavenPluginFiles() {
+task mavenPluginXml(type: Copy) {
+    from 'src/template/plugin.xml'
+    into "${sourceSets.main.output.resourcesDir}/META-INF/maven"
+    expand([
+            version: project.version,
+            dependencies: getMavenDependencies().replace('\n', '\n        ')
+    ])
+}
+
+task mavenPomXml(type: Copy) {
+    from 'src/template/pom.xml'
+    into "${sourceSets.main.output.resourcesDir}/META-INF/maven/${project.group}/${archivesBaseName}"
+    expand([
+            version: project.version,
+            dependencies: getMavenDependencies().replace('\n', '\n        ')
+    ])
+}
+
+task mavenPomProperties(type: Copy) {
+    from 'src/template/pom.properties'
+    into "${sourceSets.main.output.resourcesDir}/META-INF/maven/${project.group}/${archivesBaseName}"
+    expand([
+            version: project.version,
+            dependencies: getMavenDependencies().replace('\n', '\n        ')
+    ])
+}
+
+task createMavenPluginFiles(dependsOn: [mavenPluginXml, mavenPomXml, mavenPomProperties]) {
     def p = pom {
         project {
             artifactId archivesBaseName
@@ -80,6 +112,35 @@ def createMavenPluginFiles() {
     }
     p.writeTo("${sourceSets.main.output.resourcesDir}/META-INF/maven/${project.group}/${archivesBaseName}/pom.xml")
 }
+
+processResources.dependsOn createMavenPluginFiles
+
+task mavenLocalRepoMetadata(type: Copy) {
+    from 'src/template/maven-metadata-local.xml'
+    into "build/mavenLocalRepo/${project.group.replace('.', '/')}/${archivesBaseName}"
+    expand([
+            'groupId'         : project.group,
+            'artifactId'      : archivesBaseName,
+            'version'         : project.version
+    ])
+}
+
+task mavenLocalRepoJar(type: Copy, dependsOn: [jar]) {
+    from "${libsDir}/${archivesBaseName}-${project.version}.jar"
+    into "build/mavenLocalRepo/${project.group.replace('.', '/')}/${archivesBaseName}/${project.version}"
+}
+
+task mavenLocalRepoPom(type: Copy, dependsOn: processResources) {
+    from ("${sourceSets.main.output.resourcesDir}/META-INF/maven/${project.group}/${archivesBaseName}/pom.xml") {
+        rename 'pom.xml', "${archivesBaseName}-${project.version}.pom"
+    }
+    into "${buildDir}/mavenLocalRepo/${project.group.replace('.', '/')}/${archivesBaseName}/${project.version}"
+}
+
+task preparePluginRepo(dependsOn: [mavenLocalRepoMetadata, mavenLocalRepoJar, mavenLocalRepoPom]) {
+}
+
+junitPlatformTest.dependsOn preparePluginRepo
 
 jar {
     into('/')

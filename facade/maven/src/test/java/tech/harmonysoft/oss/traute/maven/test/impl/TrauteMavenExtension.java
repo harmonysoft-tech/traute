@@ -7,7 +7,8 @@ import tech.harmonysoft.oss.traute.test.impl.engine.AbstractTrauteExtension;
 public class TrauteMavenExtension extends AbstractTrauteExtension {
 
     @Override
-    protected @NotNull TestCompiler getCompiler() {
+    @NotNull
+    protected TestCompiler getCompiler() {
         return MavenTestCompiler.INSTANCE;
     }
 }
