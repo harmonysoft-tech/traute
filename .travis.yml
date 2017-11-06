@@ -3,7 +3,8 @@ language: java
 sudo: false
 
 env:
-  - GRADLE_OPTS="-DossrhUsername=dummy -DossrhPassword=dummy"
+  - ORG_GRADLE_PROJECT_ossrhUsername=dummy
+  - ORG_GRADLE_PROJECT_ossrhPassword=dummy
 
 before_cache:
   - rm -f  $HOME/.gradle/caches/modules-2/modules-2.lock
