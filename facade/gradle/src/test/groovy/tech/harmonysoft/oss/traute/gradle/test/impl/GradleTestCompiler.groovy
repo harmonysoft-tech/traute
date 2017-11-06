@@ -82,22 +82,28 @@ class GradleTestCompiler implements TestCompiler {
                     .withArguments('compileJava')
                     .withDebug(true)
                     .build()
-            return new CompilationResultImpl(
+            def result = new CompilationResultImpl(
                     { findBinaries(projectRootDir) },
                     buildResult.output,
                     testSource,
                     additionalInfo)
+            projectDirs[result] = projectRootDir
+            return result
         } catch (UnexpectedBuildFailure e) {
             projectRootDir.deleteDir()
-            return new CompilationResultImpl(
-                    { throw new IllegalStateException(
-                            "There are no binaries for failed compilation. Build output:\n\n${e.buildResult.output}\n\n"
-                            + "Classpath:\n  ${pluginClasspath.join('\n  ')}\n\nBuild config:\n\n${buildGradleText}")
+            def result = new CompilationResultImpl(
+                    {
+                        throw new IllegalStateException(
+                                "There are no binaries for failed compilation. Build output:\n\n${e.buildResult.output}\n\n"
+                                        +
+                                "Classpath:\n  ${pluginClasspath.join('\n  ')}\n\nBuild config:\n\n${buildGradleText}")
                     },
                     e.buildResult.output,
                     testSource,
                     additionalInfo
             )
+            projectDirs[result] = projectRootDir
+            return result
         }
     }
 

@@ -1,180 +1,40 @@
-buildscript {
-    repositories {
-        maven {
-            url "https://plugins.gradle.org/m2/"
-        }
-    }
-    dependencies {
-        classpath "com.gradle.publish:plugin-publish-plugin:0.9.9"
-    }
-}
-
-plugins {
-    id "com.jfrog.bintray" version '1.7.3'
-}
-
-apply plugin: 'com.gradle.plugin-publish'
 apply plugin: 'maven'
 
 version = '1.0.0'
-archivesBaseName = 'traute-maven'
-def pluginDisplayName = 'Traute Maven plugin'
-def pluginDescription = 'A Maven plugin which eases Traute Javac plugin appliance in Gradle projects'
-def pluginUrl = 'http://traute.oss.harmonysoft.tech/facade/maven/'
-def pluginId = 'tech.harmonysoft.oss.traute'
-
-ext {
-    mavenCoreVersion = '3.5.2'
-    mavenPluginAnnotationsVersion = '3.5'
-}
-
-configurations {
-    mavenTest
-}
 
 dependencies {
-    compileOnly project(':core:common')
-    compile "org.apache.maven:maven-plugin-api:$mavenCoreVersion"
-    compile "org.apache.maven.plugin-tools:maven-plugin-annotations:$mavenPluginAnnotationsVersion"
-    compile 'org.apache.maven:maven-project:2.2.1'
-
-    testCompile project(':core:test-common').sourceSets.test.output
+    testCompile project(':core:common')
     testCompile project(path: ':core:test-common', configuration: 'testCompile')
-
-    mavenTest project(path: ':core:test-common', configuration: 'testCompile')
+    testCompile project(':core:test-common').sourceSets.test.output
 }
 
 tasks.withType(JavaExec) {
-    def toSkip = ['junit', 'mail', 'aar', 'hamcrest', 'opentest4j', 'activation', 'android.arch', 'jdk']
-    def testDependencies = configurations.mavenTest.dependencies[0].dependencyProject.configurations.testCompile
-            .filter { d -> toSkip.inject(true) { result, s -> result && !d.absolutePath.contains(s) }
-    }.join(':')
+    def testDependencies = project(':core:test-common').configurations.testCompile.allDependencies.findAll {
+        it.group && it.name && it.version && !it.name.contains('junit') && !it.group.contains('harmonysoft')
+    }.collect {
+        toMavenDependency(it.group, it.name, it.version)
+    }
+    def javacPluginProject = project(':core:javac-plugin')
+    testDependencies = testDependencies <<
+                       """|<dependency>
+                          |  <groupId>${javacPluginProject.group}</groupId>
+                          |  <artifactId>${javacPluginProject.name}</artifactId>
+                          |  <version>${javacPluginProject.version}</version>
+                          |  <scope>system</scope>
+                          |  <systemPath>${javacPluginProject.buildDir}/libs/${javacPluginProject.archivesBaseName}-${javacPluginProject.version}.jar</systemPath>
+                          |</dependency>""".stripMargin()
     systemProperties([
-            'trauteTestDependencies': testDependencies,
-            'trauteGroupId'         : project.group,
-            'trauteArtifactId'      : archivesBaseName,
-            'trauteVersion'         : project.version,
-            'localRepo'             : "${buildDir}/mavenLocalRepo"
+            'trauteTestDependencies': testDependencies.join('\n')
     ])
 }
 
-def getMavenDependencies() {
-    return configurations.compile.dependencies.collect {
-        """<dependency>
-           |  <groupId>${it.group}</groupId> 
-           |  <artifactId>${it.name}</artifactId> 
-           |  <version>${it.version}</version> 
-           |</dependency> 
-""".stripMargin()
-    }.join('\n')
+static def toMavenDependency(group, artifact, version) {
+    """<dependency>
+       |  <groupId>${group}</groupId> 
+       |  <artifactId>${artifact}</artifactId> 
+       |  <version>${version}</version> 
+       |  <scope>compile</scope> 
+       |</dependency>""".stripMargin()
 }
 
-task mavenPluginXml(type: Copy) {
-    from 'src/template/plugin.xml'
-    into "${sourceSets.main.output.resourcesDir}/META-INF/maven"
-    expand([
-            version: project.version,
-            dependencies: getMavenDependencies().replace('\n', '\n        ')
-    ])
-}
-
-task mavenPomXml(type: Copy) {
-    from 'src/template/pom.xml'
-    into "${sourceSets.main.output.resourcesDir}/META-INF/maven/${project.group}/${archivesBaseName}"
-    expand([
-            version: project.version,
-            dependencies: getMavenDependencies().replace('\n', '\n        ')
-    ])
-}
-
-task mavenPomProperties(type: Copy) {
-    from 'src/template/pom.properties'
-    into "${sourceSets.main.output.resourcesDir}/META-INF/maven/${project.group}/${archivesBaseName}"
-    expand([
-            version: project.version,
-            dependencies: getMavenDependencies().replace('\n', '\n        ')
-    ])
-}
-
-task createMavenPluginFiles(dependsOn: [mavenPluginXml, mavenPomXml, mavenPomProperties]) {
-    def p = pom {
-        project {
-            artifactId archivesBaseName
-            packaging 'maven-plugin'
-        }
-    }.withXml {
-        Node pomNode = asNode()
-        pomNode.dependencies.'*'.findAll() {
-            !it.scope.text().contains('compile')
-        }.each() {
-            it.parent().remove(it)
-        }
-    }
-    p.writeTo("${sourceSets.main.output.resourcesDir}/META-INF/maven/${project.group}/${archivesBaseName}/pom.xml")
-}
-
-processResources.dependsOn createMavenPluginFiles
-
-task mavenLocalRepoMetadata(type: Copy) {
-    from 'src/template/maven-metadata-local.xml'
-    into "build/mavenLocalRepo/${project.group.replace('.', '/')}/${archivesBaseName}"
-    expand([
-            'groupId'         : project.group,
-            'artifactId'      : archivesBaseName,
-            'version'         : project.version
-    ])
-}
-
-task mavenLocalRepoJar(type: Copy, dependsOn: [jar]) {
-    from "${libsDir}/${archivesBaseName}-${project.version}.jar"
-    into "build/mavenLocalRepo/${project.group.replace('.', '/')}/${archivesBaseName}/${project.version}"
-}
-
-task mavenLocalRepoPom(type: Copy, dependsOn: processResources) {
-    from ("${sourceSets.main.output.resourcesDir}/META-INF/maven/${project.group}/${archivesBaseName}/pom.xml") {
-        rename 'pom.xml', "${archivesBaseName}-${project.version}.pom"
-    }
-    into "${buildDir}/mavenLocalRepo/${project.group.replace('.', '/')}/${archivesBaseName}/${project.version}"
-}
-
-task preparePluginRepo(dependsOn: [mavenLocalRepoMetadata, mavenLocalRepoJar, mavenLocalRepoPom]) {
-}
-
-junitPlatformTest.dependsOn preparePluginRepo
-
-jar {
-    into('/')
-    from {
-        configurations.compileOnly
-                .filter { it.name.contains('common') }
-                .collect { it.isDirectory() ? it : zipTree(it) }
-    }
-}
-
-uploadArchives {
-    repositories {
-        mavenDeployer {
-            pom.project {
-                name pluginDisplayName
-                description pluginDescription
-                url pluginUrl
-            }
-        }
-    }
-}
-
-setupBintray()
-
-pluginBundle {
-    website = pluginUrl
-    vcsUrl = 'https://github.com/denis-zhdanov/traute'
-    description = pluginDescription
-    tags = ['javac']
-
-    plugins {
-        greetingsPlugin {
-            id = pluginId
-            displayName = pluginDisplayName
-        }
-    }
-}
+junitPlatformTest.dependsOn project(':core:javac-plugin').tasks.jar

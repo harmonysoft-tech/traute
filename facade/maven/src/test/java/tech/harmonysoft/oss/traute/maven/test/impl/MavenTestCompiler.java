@@ -2,15 +2,18 @@ package tech.harmonysoft.oss.traute.maven.test.impl;
 
 import org.jetbrains.annotations.NotNull;
 import tech.harmonysoft.oss.traute.common.settings.TrautePluginSettings;
+import tech.harmonysoft.oss.traute.common.util.TrauteConstants;
 import tech.harmonysoft.oss.traute.test.api.engine.TestCompiler;
 import tech.harmonysoft.oss.traute.test.api.model.ClassFile;
 import tech.harmonysoft.oss.traute.test.api.model.CompilationResult;
 import tech.harmonysoft.oss.traute.test.api.model.TestSource;
 import tech.harmonysoft.oss.traute.test.impl.model.ClassFileImpl;
+import tech.harmonysoft.oss.traute.test.impl.model.CompilationResultImpl;
 
 import java.io.*;
 import java.nio.file.Files;
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class MavenTestCompiler implements TestCompiler {
 
@@ -20,10 +23,8 @@ public class MavenTestCompiler implements TestCompiler {
     private static final String MAVEN_COMPILER_PLUGIN_ARTIFACT = "maven-compiler-plugin";
     private static final String MAVEN_COMPILER_PLUGIN_VERSION = "3.7.0";
 
-    private static final String MARKER_TRAUTE_PLUGIN_GROUP      = "<TRAUTE_PLUGIN_GROUP>";
-    private static final String MARKER_TRAUTE_PLUGIN_ARTIFACT   = "<TRAUTE_PLUGIN_ARTIFACT>";
-    private static final String MARKER_TRAUTE_PLUGIN_VERSION    = "<TRAUTE_PLUGIN_VERSION>";
-    private static final String MARKER_TRAUTE_TEST_DEPENDENCIES = "<TRAUTE_TEST_DEPENDENCIES>";
+    private static final String MARKER_DEPENDENCIES  = "<DEPENDENCIES>";
+    private static final String MARKER_COMPILER_ARGS = "<COMPILER_ARGS>";
 
     private static final String POM_XML_CONTENT =
             "<project xmlns=\"http://maven.apache.org/POM/4.0.0\"\n" +
@@ -36,8 +37,16 @@ public class MavenTestCompiler implements TestCompiler {
             "  <version>1.0-SNAPSHOT</version>\n" +
             "  <packaging>jar</packaging>\n" +
             "\n" +
+            "  <repositories>\n" +
+            "    <repository>\n" +
+            "      <id>android</id>\n" +
+            "      <name>Android Repo</name>\n" +
+            "      <url>https://maven.google.com</url>\n" +
+            "    </repository>\n" +
+            "  </repositories>\n" +
+            "\n" +
             "  <dependencies>\n" +
-            MARKER_TRAUTE_TEST_DEPENDENCIES +
+            MARKER_DEPENDENCIES +
             "  </dependencies>\n" +
             "\n" +
             "  <build>\n" +
@@ -46,22 +55,20 @@ public class MavenTestCompiler implements TestCompiler {
             "        <groupId>" + MAVEN_COMPILER_PLUGIN_GROUP + "</groupId>\n" +
             "        <artifactId>" + MAVEN_COMPILER_PLUGIN_ARTIFACT + "</artifactId>\n" +
             "        <version>" + MAVEN_COMPILER_PLUGIN_VERSION + "</version>\n" +
-            "      </plugin>\n" +
-            "      <plugin>\n" +
-            "        <groupId>" + MARKER_TRAUTE_PLUGIN_GROUP + "</groupId>\n" +
-            "        <artifactId>" + MARKER_TRAUTE_PLUGIN_ARTIFACT + "</artifactId>\n" +
-            "        <version>" + MARKER_TRAUTE_PLUGIN_VERSION + "</version>\n" +
-            "        <executions>\n" +
-            "          <execution>\n" +
-            "            <goals>\n" +
-            "              <goal>traute</goal>\n" +
-            "            </goals>\n" +
-            "          </execution>\n" +
-            "        </executions>\n" +
+            "        <configuration>\n" +
+            "          <source>1.8</source>\n" +
+            "          <target>1.8</target>\n" +
+            "          <compilerArgs>\n" +
+            "            <arg>-Xplugin:" + TrauteConstants.PLUGIN_NAME + "</arg>\n" +
+            "            " + MARKER_COMPILER_ARGS + "\n" +
+            "          </compilerArgs>\n" +
+            "        </configuration>\n" +
             "      </plugin>\n" +
             "    </plugins>\n" +
             "  </build>\n" +
             "</project>";
+
+    private final Map<CompilationResult, File> projectDirs = new WeakHashMap<>();
 
     @Override
     @NotNull
@@ -85,23 +92,21 @@ public class MavenTestCompiler implements TestCompiler {
 
         File stdOut = new File(projectRootDir, "stdout");
         File stdErr = new File(projectRootDir, "stderr");
-        ProcessBuilder processBuilder = new ProcessBuilder(
-                "bash", "-c", String.format("mvn -Dmaven.repo.local=%s compile", System.getProperty("localRepo"))
-        ).directory(projectRootDir)
-         .redirectOutput(stdOut)
-         .redirectError(stdErr);
+        ProcessBuilder processBuilder = new ProcessBuilder("bash", "-c", "mvn compile")
+                .directory(projectRootDir)
+                .redirectOutput(stdOut)
+                .redirectError(stdErr);
         Process start = processBuilder.start();
-        int exitCode = start.waitFor();
+        start.waitFor();
 
-        int asdf = 1;
-
-//        MojoRule mojoRule = new MojoRule();
-//        Mojo mojo = mojoRule.lookupMojo(MAVEN_COMPILER_PLUGIN_GROUP,
-//                                        MAVEN_COMPILER_PLUGIN_ARTIFACT,
-//                                        MAVEN_COMPILER_PLUGIN_VERSION,
-//                                        "compiler:compile", null);
-//        mojo.execute();
-        throw new UnsupportedOperationException();
+        CompilationResultImpl result = new CompilationResultImpl(
+                () -> findBinaries(projectRootDir),
+                new String(read(stdOut)),
+                testSource,
+                Collections.singletonMap("pom.xml", content)
+        );
+        projectDirs.put(result, projectRootDir);
+        return result;
     }
 
     @NotNull
@@ -120,24 +125,15 @@ public class MavenTestCompiler implements TestCompiler {
     {
         String content = POM_XML_CONTENT;
 
-        content = content.replace(MARKER_TRAUTE_PLUGIN_GROUP, System.getProperty("trauteGroupId"));
-        content = content.replace(MARKER_TRAUTE_PLUGIN_ARTIFACT, System.getProperty("trauteArtifactId"));
-        content = content.replace(MARKER_TRAUTE_PLUGIN_VERSION, System.getProperty("trauteVersion"));
+        content = content.replace(MARKER_DEPENDENCIES,
+                                  "    " + System.getProperty("trauteTestDependencies")
+                                                 .replace("\n", "\n    ") + "\n");
 
-        String[] dependencies = System.getProperty("trauteTestDependencies").split(":");
-        StringBuilder buffer = new StringBuilder();
-        int counter = 0;
-        for (String dependency : dependencies) {
-            buffer.append("\n    <dependency>")
-                  .append("\n      ").append("<groupId>traute</groupId>")
-                  .append("\n      ").append("<artifactId>traute").append(++counter).append("</artifactId>")
-                  .append("\n      ").append("<version>1.0</version>")
-                  .append("\n      ").append("<scope>system</scope>")
-                  .append("\n      ").append("<systemPath>").append(dependency).append("</systemPath>")
-                  .append("\n    </dependency>");
-        }
-        content = content.replace(MARKER_TRAUTE_TEST_DEPENDENCIES, buffer);
-
+        List<String> arguments = new ArrayList<>();
+        content = content.replace(MARKER_COMPILER_ARGS,
+                                  arguments.stream()
+                                           .map(arg -> String.format("<arg>%s</arg>", arg))
+                                           .collect(Collectors.joining("\n            ")));
 //        content = content.replace(
 //                MARKER_NOT_NULL_ANNOTATION,
 //                settings.notNullAnnotations
@@ -208,13 +204,23 @@ public class MavenTestCompiler implements TestCompiler {
     }
 
     @NotNull
-    private static Collection<ClassFile> findBinaries(@NotNull File projectRoot) throws IOException {
-        File binariesRoot = new File(projectRoot, "build/classes/java/main");
+    private static Collection<ClassFile> findBinaries(@NotNull File projectRoot) {
+        try {
+            return doFindBinaries(projectRoot);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @NotNull
+    private static Collection<ClassFile> doFindBinaries(@NotNull File projectRoot) throws IOException {
+        File binariesRoot = new File(projectRoot, "target/classes");
         if (!binariesRoot.isDirectory()) {
             return Collections.emptyList();
         }
         List<ClassFile> result = new ArrayList<>();
         Stack<File> toProcess = new Stack<>();
+        toProcess.push(binariesRoot);
         while (!toProcess.isEmpty()) {
             File file = toProcess.pop();
             if (file.isDirectory()) {
@@ -240,6 +246,22 @@ public class MavenTestCompiler implements TestCompiler {
 
     @Override
     public void release(@NotNull CompilationResult result) {
-        // TODO den implement
+        File rootDir = projectDirs.get(result);
+        if (rootDir.isDirectory()) {
+            delete(rootDir);
+        }
+    }
+
+    private void delete(@NotNull File file) {
+        File[] children = file.listFiles();
+        if (children != null) {
+            for (File child : children) {
+                delete(child);
+            }
+        }
+        boolean deleted = file.delete();
+        if (!deleted) {
+            throw new RuntimeException("Can't remove file system entry " + file.getAbsolutePath());
+        }
     }
 }
