@@ -9,7 +9,7 @@ dependencies {
     testCompile 'com.google.code.findbugs:jsr305:3.0.2'
     testCompile 'javax:javaee-api:8.0'
     testCompile 'findbugs:annotations:1.0.0'
-    testCompile 'com.android.support:support-core-utils:26.1.0'
+    testCompile 'com.android.support:support-annotations:26.1.0'
     testCompile 'org.eclipse.jdt:org.eclipse.jdt.annotation:2.1.0'
 }
 
