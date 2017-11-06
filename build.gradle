@@ -44,7 +44,9 @@ allprojects {
     apply plugin: 'org.junit.platform.gradle.plugin'
     apply plugin: 'maven'
     apply plugin: 'maven-publish'
-    apply plugin: 'signing'
+    if (!System.getenv('CI_ENV')) {
+        apply plugin: 'signing'
+    }
 
     sourceCompatibility = 1.8
 
@@ -84,14 +86,18 @@ allprojects {
         archives javadocJar, sourcesJar
     }
 
-    signing {
-        sign configurations.archives
+    if (!System.getenv('CI_ENV')) {
+        signing {
+            sign configurations.archives
+        }
     }
 
     uploadArchives {
         repositories {
             mavenDeployer {
-                beforeDeployment { MavenDeployment deployment -> signing.signPom(deployment) }
+                if (!System.getenv('CI_ENV')) {
+                    beforeDeployment { MavenDeployment deployment -> signing.signPom(deployment) }
+                }
 
                 repository(url: "https://oss.sonatype.org/service/local/staging/deploy/maven2/") {
                     authentication(userName: ossrhUsername, password: ossrhPassword)
