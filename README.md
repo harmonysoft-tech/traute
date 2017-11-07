@@ -3,10 +3,14 @@
 * [1. License](#1-license)
 * [2. Rationale](#2-rationale)
 * [3. Alternatives](#3-alternatives)
-* [4. Name Choice](#4-namechoice)
+* [4. Name Choice](#4-name-choice)
 * [5. Overview](#5-overview)
 * [6. Build](#6-build)
 * [7. Releases](#7-releases)
+* [8. How to Contribute](#8-how-to-contribute)
+* [9. Contributors](#9-contributors)
+* [10. Evolution](#10-evolution)
+* [11. Feedback](#11-feedback)
 
 ## 1. License
 
