@@ -7,7 +7,7 @@
 * [5. Samples](#5-samples)
 * [6. Releases](#6-releases)
 
-## License
+## 1. License
 
 See the [LICENSE](LICENSE.md) file for license rights and limitations (MIT).
 
