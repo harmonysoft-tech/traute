@@ -19,8 +19,8 @@ See the [LICENSE](LICENSE.md) file for license rights and limitations (MIT).
 ## 2. Rationale
 
 Null references are [considered](https://en.wikipedia.org/wiki/Null_pointer#History) to be one of the most expensive mistakes in IT design. It's not surprising that there are numerous efforts to solve it. Here are couple of examples from the *Java* world:
-* [Kotlin](https://kotlinlang.org/) fights it at the [language level](https://kotlinlang.org/docs/reference/null-safety.html)
-* many tools try to report it as early as possible, for example, here [IntelliJ IDEA](https://www.jetbrains.com/idea/) warns us about a possible *NPE*: 
+* [*Kotlin*](https://kotlinlang.org/) fights it at the [language level](https://kotlinlang.org/docs/reference/null-safety.html)
+* many tools try to report it as early as possible, for example, here [*IntelliJ IDEA*](https://www.jetbrains.com/idea/) warns us about a possible *NPE*: 
 
   ![warning-intellij.png](docs/img/warning-intellij.png)
 
@@ -49,15 +49,15 @@ Null references are [considered](https://en.wikipedia.org/wiki/Null_pointer#Hist
 
 *Kotlin* really solves the problem but *Java* is still a very popular language, so, we have to deal with nullable values. It's not always convenient to use *IntelliJ* build system for compiling sources to get that *null*-checks and the code which explicitly ensures preconditions via *checkNotNull()* or explicit *if (input == null) { throw new NullPointerException("<description>") }* also looks not that appealing.  
 
-More common setup is to configure a build through [Gradle](https://gradle.org/)/[Maven](http://maven.apache.org/). It would not harm to get *IDE* tips on possible *null*-related problems and that auto-generated runtime checks without explicitly putting them into code.  
+More common setup is to configure a build through [*Gradle*](https://gradle.org/)/[*Maven*](http://maven.apache.org/). It would not harm to get *IDE* tips on possible *null*-related problems and that auto-generated runtime checks without explicitly putting them into code.  
 
 Current tool solves the second problem - it allows to add *null*-checks into *\*.class* files during compilation based on source code annotations.
 
 ## 3. Alternatives
 
-I found the only alternative which provides similar functionality - [Project Lombok](https://projectlombok.org/features/NonNull). Here are pros and cons for using it:
-* only [lombok.NonNull](https://projectlombok.org/api/lombok/NonNull.html) annotation is supported - there might be problems with *IDE* highlighting possible *NPE*s in source code
-* the feature is implemented through a custom [Annotaton Processing Tool](https://docs.oracle.com/javase/7/docs/technotes/guides/apt/index.html), which means that there are two set of *\*.class* files after the compilation - one from original code and another one with the tool-added instrumentations. Compiler plugin-based approach is more natural for such task as it's completely transparent for the further assembly construction
+I found the only alternative which provides similar functionality - [*Project Lombok*](https://projectlombok.org/features/NonNull). Here are pros and cons for using it:
+* only [*lombok.NonNull*](https://projectlombok.org/api/lombok/NonNull.html) annotation is supported - there might be problems with *IDE* highlighting possible *NPE*s in source code
+* the feature is implemented through a custom [*Annotaton Processing Tool*](https://docs.oracle.com/javase/7/docs/technotes/guides/apt/index.html), which means that there are two set of *\*.class* files after the compilation - one from original code and another one with the tool-added instrumentations. Compiler plugin-based approach is more natural for such task as it's completely transparent for the further assembly construction
 * a solution offered by the current project [works only for the javac8](core/javac/README.md#5-limitations), *Lombok* might operate with *javac6* and *javac7* (as *APT API* is available starting from *java6*, however, I have not verified that)
 
 ## 4. Name Choice
@@ -68,7 +68,7 @@ I really like German - how it sounds, language rules, everything, so, wanted to 
 
 ## 5. Overview
 
-The core functionality is a [Javac plugin](core/javac/README.md) which adds *null*-checks into the generated *\*.class* files. Even though it's possible to [use the plugin directly](core/javac/README.md#6-usage) from a command line, there are a number of adapters for popular build systems, namely, [Gradle](facade/gradle/README.md), [Maven](facade/maven/README.md), [Ant](facade/ant/README.md).
+The core functionality is a [*Javac* plugin](core/javac/README.md) which adds *null*-checks into the generated *\*.class* files. Even though it's possible to [use the plugin directly](core/javac/README.md#6-usage) from a command line, there are a number of adapters for popular build systems, namely, [*Gradle*](facade/gradle/README.md), [*Maven*](facade/maven/README.md), [*Ant*](facade/ant/README.md).
 
 ## 6. Build
 
@@ -76,8 +76,8 @@ The core functionality is a [Javac plugin](core/javac/README.md) which adds *nul
 
 ## 7. Releases
 
-* [core javac plugin](core/javac/RELEASE.md)
-* [gradle plugin](facade/gradle/RELEASE.md)
+* [core *Javac* plugin](core/javac/RELEASE.md)
+* [*Gradle* plugin](facade/gradle/RELEASE.md)
 
 ## 8. How to Contribute
 
@@ -91,7 +91,7 @@ The core functionality is a [Javac plugin](core/javac/README.md) which adds *nul
 
 ## 10. Evolution
 
-As the project is basically a [javac plugin](core/javac/README.md) and convenient build system-specific adapters to it, new features should be added to the core part. Please check the [corresponding chapter](core/javac/README.md#8-evolution).
+As the project is basically a [*Javac* plugin](core/javac/README.md) and convenient build system-specific adapters to it, new features should be added to the core part. Please check the [corresponding chapter](core/javac/README.md#8-evolution).
 
 ## 11. Feedback
 
