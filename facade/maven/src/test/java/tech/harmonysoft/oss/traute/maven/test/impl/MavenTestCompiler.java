@@ -1,6 +1,7 @@
 package tech.harmonysoft.oss.traute.maven.test.impl;
 
 import org.jetbrains.annotations.NotNull;
+import tech.harmonysoft.oss.traute.common.instrumentation.InstrumentationType;
 import tech.harmonysoft.oss.traute.common.settings.TrautePluginSettings;
 import tech.harmonysoft.oss.traute.common.util.TrauteConstants;
 import tech.harmonysoft.oss.traute.test.api.engine.TestCompiler;
@@ -13,7 +14,11 @@ import tech.harmonysoft.oss.traute.test.impl.model.CompilationResultImpl;
 import java.io.*;
 import java.nio.file.Files;
 import java.util.*;
-import java.util.stream.Collectors;
+
+import static java.util.stream.Collectors.joining;
+import static tech.harmonysoft.oss.traute.common.settings.TrautePluginSettingsBuilder.DEFAULT_INSTRUMENTATIONS_TO_APPLY;
+import static tech.harmonysoft.oss.traute.common.settings.TrautePluginSettingsBuilder.DEFAULT_NOT_NULL_ANNOTATIONS;
+import static tech.harmonysoft.oss.traute.common.util.TrauteConstants.*;
 
 public class MavenTestCompiler implements TestCompiler {
 
@@ -101,7 +106,7 @@ public class MavenTestCompiler implements TestCompiler {
 
         CompilationResultImpl result = new CompilationResultImpl(
                 () -> findBinaries(projectRootDir),
-                new String(read(stdOut)),
+                new String(read(stdOut)) + "\n" + new String(read(stdErr)),
                 testSource,
                 Collections.singletonMap("pom.xml", content)
         );
@@ -130,27 +135,30 @@ public class MavenTestCompiler implements TestCompiler {
                                                  .replace("\n", "\n    ") + "\n");
 
         List<String> arguments = new ArrayList<>();
+
+        Set<String> notNullAnnotations = settings.getNotNullAnnotations();
+        if (!notNullAnnotations.isEmpty() && !DEFAULT_NOT_NULL_ANNOTATIONS.equals(notNullAnnotations))
+        {
+            String notNullAnnotationsString = notNullAnnotations.stream().collect(joining(TrauteConstants.SEPARATOR));
+            arguments.add(String.format("-A%s=%s", OPTION_ANNOTATIONS_NOT_NULL, notNullAnnotationsString));
+        }
+
+        Set<InstrumentationType> instrumentationsToApply = settings.getInstrumentationsToApply();
+        if (!instrumentationsToApply.isEmpty() && !DEFAULT_INSTRUMENTATIONS_TO_APPLY.equals(instrumentationsToApply)) {
+            String instrumentationsString = instrumentationsToApply.stream()
+                                                                   .map(InstrumentationType::getShortName)
+                                                                   .collect(joining(TrauteConstants.SEPARATOR));
+            arguments.add(String.format("-A%s=%s", OPTION_INSTRUMENTATIONS_TO_USE, instrumentationsString));
+        }
+
+        if (settings.isVerboseMode()) {
+            arguments.add(String.format("-A%s=true", OPTION_LOG_VERBOSE));
+        }
+
         content = content.replace(MARKER_COMPILER_ARGS,
                                   arguments.stream()
                                            .map(arg -> String.format("<arg>%s</arg>", arg))
-                                           .collect(Collectors.joining("\n            ")));
-//        content = content.replace(
-//                MARKER_NOT_NULL_ANNOTATION,
-//                settings.notNullAnnotations
-//                ? "notNullAnnotations = [${settings.notNullAnnotations.collect{"'$it'"}.join(', ')}]"
-//                        : ''
-//        )
-//
-//        content = content.replace(
-//                MARKER_LOGGING,
-//                settings.verboseMode ? 'verbose = true' : ''
-//        )
-//
-//        content = content.replace(
-//                MARKER_INSTRUMENTATIONS,
-//                settings.instrumentationsToApply
-//                ? "instrumentations = [${settings.instrumentationsToApply.collect{"'${it.shortName}'"}.join(', ')}]"
-//                        : ''
+                                           .collect(joining("\n            ")));
 
         write(pom, content);
         return content;
@@ -171,9 +179,9 @@ public class MavenTestCompiler implements TestCompiler {
     private static File createFile(@NotNull String qualifiedClassName, @NotNull File sourceRootDir) {
         int i = qualifiedClassName.lastIndexOf('.');
         if (i <= 0) {
-            return new File(sourceRootDir, "${qualifiedClassName}.java");
+            return new File(sourceRootDir, qualifiedClassName + ".java");
         } else {
-            File dir = new File(sourceRootDir, qualifiedClassName.substring(0, i - 1)
+            File dir = new File(sourceRootDir, qualifiedClassName.substring(0, i)
                                                                  .replace('.', '/'));
             boolean created = dir.mkdirs();
             if (!created) {

@@ -9,11 +9,21 @@ dependencies {
 }
 
 tasks.withType(JavaExec) {
-    def testDependencies = project(':core:test-common').configurations.testCompile.allDependencies.findAll {
+    def testCommonProject = project(':core:test-common')
+    def testDependencies = testCommonProject.configurations.testCompile.allDependencies.findAll {
         it.group && it.name && it.version && !it.name.contains('junit') && !it.group.contains('harmonysoft')
     }.collect {
         toMavenDependency(it.group, it.name, it.version)
     }
+    testDependencies = testDependencies <<
+                       """|<dependency>
+                          |  <groupId>${testCommonProject.group}</groupId>
+                          |  <artifactId>${testCommonProject.name}</artifactId>
+                          |  <version>${testCommonProject.version}</version>
+                          |  <scope>system</scope>
+                          |  <systemPath>${testCommonProject.buildDir}/libs/${testCommonProject.name}-${testCommonProject.version}-tests.jar</systemPath>
+                          |</dependency>""".stripMargin()
+
     def javacPluginProject = project(':core:javac-plugin')
     testDependencies = testDependencies <<
                        """|<dependency>
@@ -38,3 +48,4 @@ static def toMavenDependency(group, artifact, version) {
 }
 
 junitPlatformTest.dependsOn project(':core:javac-plugin').tasks.jar
+junitPlatformTest.dependsOn project(':core:test-common').tasks.testJar
