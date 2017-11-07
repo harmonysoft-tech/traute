@@ -10,7 +10,7 @@ See the [LICENSE](LICENSE.md) file for license rights and limitations (MIT).
 
 ## 2. Overview
 
-It does not make sense to create a *Maven* plugin for simplifying the [*Javac* plugin](../../core/javac/README.md) usage like is done for [*Gradle*](../gradle/README.md) due to rather restrictive *Maven* facilities (more details on that [here](http://blog.harmonysoft.tech/2017/11/maven-plugins-does-it-worth-it.html)). So, we just provide information and examples on how to configure your *Maven* build to be able to use the target functionality.
+It does not make sense to create a *Maven* plugin for simplifying the [*Javac* plugin](../../core/javac/README.md) usage like is done for [*Gradle*](../gradle/README.md) due to rather restrictive *Maven* facilities (more details on that [here](http://blog.harmonysoft.tech/2017/11/maven-plugins-does-it-worth-it.html)). So, we just provide information and examples on how to configure your *Maven* build to be able to use the target *Javac* plugin.
 
 ## 3. Usage
 
