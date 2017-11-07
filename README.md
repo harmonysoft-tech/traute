@@ -1,3 +1,13 @@
+## Table of Contents
+
+* [1. License](#1-license)
+* [2. Rationale](#2-rationale)
+* [3. Alternatives](#3-alternatives)
+* [4. Name Choice](#4-namechoice)
+* [5. Overview](#5-overview)
+* [6. Build](#6-build)
+* [7. Releases](#7-releases)
+
 ## 1. License
 
 See the [LICENSE](LICENSE.md) file for license rights and limitations (MIT).
@@ -54,7 +64,7 @@ I really like German - how it sounds, language rules, everything, so, wanted to 
 
 ## 5. Overview
 
-The core functionality is a [Javac plugin](core/javac/README.md) which adds *null*-checks into the generated *\*.class* files. Even though it's possible to [use the plugin directly](core/javac/README.md#6-usage) from a command line, there are a number of adapters for popular build systems, namely, [Gradle](facade/gradle/README.md), TBD
+The core functionality is a [Javac plugin](core/javac/README.md) which adds *null*-checks into the generated *\*.class* files. Even though it's possible to [use the plugin directly](core/javac/README.md#6-usage) from a command line, there are a number of adapters for popular build systems, namely, [Gradle](facade/gradle/README.md), [Maven](facade/maven/README.md), [Ant](facade/ant/README.md).
 
 ## 6. Build
 
