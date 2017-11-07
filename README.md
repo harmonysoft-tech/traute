@@ -4,7 +4,7 @@
 * [2. Rationale](#2-rationale)
 * [3. Alternatives](#3-alternatives)
 * [4. Name Choice](#4-name-choice)
-* [5. Overview](#5-overview)
+* [5. Usage](#5-usage)
 * [6. Build](#6-build)
 * [7. Releases](#7-releases)
 * [8. How to Contribute](#8-how-to-contribute)
@@ -66,7 +66,7 @@ I really like German - how it sounds, language rules, everything, so, wanted to 
 
 *Traute* sounds nice and has a good [meaning](http://dictionary.reverso.net/german-english/Traute) - *trust*. Our users trust the tool and the tool enforces trust in application :wink:
 
-## 5. Overview
+## 5. Usage
 
 The core functionality is a [*Javac* plugin](core/javac/README.md) which adds *null*-checks into the generated *\*.class* files. Even though it's possible to [use the plugin directly](core/javac/README.md#6-usage) from a command line, there are a number of adapters for popular build systems, namely, [*Gradle*](facade/gradle/README.md), [*Maven*](facade/maven/README.md), [*Ant*](facade/ant/README.md).
 
