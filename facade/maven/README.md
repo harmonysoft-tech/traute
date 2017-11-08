@@ -3,6 +3,7 @@
 * [1. License](#1-license)
 * [2. Overview](#2-overview)
 * [3. Usage](#3-usage)
+* [4. Sample](#4-sample)
 
 ## 1. License
 
@@ -80,3 +81,7 @@ It's possible to specify additional options [available in the *Javac* plugin](..
   </plugins>
 </build>
 ```
+
+## 4. Sample
+
+A sample *Maven* project is configured to use *Traute* is available [here](https://github.com/denis-zhdanov/traute/tree/master/facade/maven/sample)
