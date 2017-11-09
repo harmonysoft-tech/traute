@@ -1,24 +1,16 @@
 package tech.harmonysoft.oss.traute.gradle.test.impl
 
-import groovy.io.FileType
 import org.gradle.testkit.runner.GradleRunner
 import org.gradle.testkit.runner.UnexpectedBuildFailure
 import org.jetbrains.annotations.NotNull
 import org.junit.Test
-import tech.harmonysoft.oss.traute.common.settings.TrautePluginSettings
 import tech.harmonysoft.oss.traute.common.settings.TrautePluginSettingsBuilder
 import tech.harmonysoft.oss.traute.javac.TrauteJavacPlugin
-import tech.harmonysoft.oss.traute.test.api.engine.TestCompiler
-import tech.harmonysoft.oss.traute.test.api.model.ClassFile
-import tech.harmonysoft.oss.traute.test.api.model.CompilationResult
 import tech.harmonysoft.oss.traute.test.api.model.TestSource
 import tech.harmonysoft.oss.traute.test.fixture.NN
-import tech.harmonysoft.oss.traute.test.impl.model.ClassFileImpl
-import tech.harmonysoft.oss.traute.test.impl.model.CompilationResultImpl
+import tech.harmonysoft.oss.traute.test.impl.engine.AbstractExternalSystemTestCompiler
 
-import java.nio.file.Files
-
-class GradleTestCompiler implements TestCompiler {
+class GradleTestCompiler extends AbstractExternalSystemTestCompiler {
 
     static final def INSTANCE = new GradleTestCompiler()
 
@@ -55,72 +47,14 @@ class GradleTestCompiler implements TestCompiler {
               |    compile ${getCommonDependency()}
               |}""".stripMargin()
 
-    private final def projectDirs = new WeakHashMap<CompilationResult, File>()
-
-    @NotNull
     @Override
-    CompilationResult compile(@NotNull TestSource testSource) {
-        def projectRootDir = createRootDir()
-        def buildGradleText = createBuildGradle(projectRootDir, testSource.settings)
-
-        def sourceRoot = createSourceRootDir(projectRootDir)
-        def sourceFile = createFile(testSource.qualifiedClassName, sourceRoot)
-        sourceFile.text = testSource.sourceText
-
-        def pluginClasspathResource = getClass().classLoader.getResource("plugin-classpath.txt")
-        if (pluginClasspathResource == null) {
-            throw new IllegalStateException("Did not find plugin classpath resource, run `testClasses` build task.")
-        }
-
-        def pluginClasspath = pluginClasspathResource.readLines().collect { new File(it) }
-
-        def additionalInfo = ['build.gradle': buildGradleText]
-        try {
-            def buildResult = GradleRunner.create()
-                    .withProjectDir(projectRootDir)
-                    .withPluginClasspath(pluginClasspath)
-                    .withArguments('compileJava')
-                    .withDebug(true)
-                    .build()
-            def result = new CompilationResultImpl(
-                    { findBinaries(projectRootDir) },
-                    buildResult.output,
-                    testSource,
-                    additionalInfo)
-            projectDirs[result] = projectRootDir
-            return result
-        } catch (UnexpectedBuildFailure e) {
-            projectRootDir.deleteDir()
-            def result = new CompilationResultImpl(
-                    {
-                        throw new IllegalStateException(
-                                "There are no binaries for failed compilation. Build output:\n\n${e.buildResult.output}\n\n"
-                                        +
-                                "Classpath:\n  ${pluginClasspath.join('\n  ')}\n\nBuild config:\n\n${buildGradleText}")
-                    },
-                    e.buildResult.output,
-                    testSource,
-                    additionalInfo
-            )
-            projectDirs[result] = projectRootDir
-            return result
-        }
-    }
-
-    @NotNull
-    private static File createRootDir() {
-        def result = Files.createTempDirectory("gradle-traute").toFile()
-        if (!result.directory) {
-            throw new IllegalStateException("Can't create a root directory for a test "
-                    + "project at ${result.absolutePath}")
-        }
-        return result
-    }
-
-    @NotNull
-    private static String createBuildGradle(@NotNull File projectRootDir, @NotNull TrautePluginSettings settings) {
+    protected File createExternalSystemConfig(@NotNull File projectRootDir,
+                                              @NotNull TestSource testSource)
+            throws IOException
+    {
         def file = new File(projectRootDir, 'build.gradle')
         def content = BUILD_GRADLE_CONTENT
+        def settings = testSource.settings
 
         content = content.replace(
                 MARKER_NOT_NULL_ANNOTATION,
@@ -142,53 +76,40 @@ class GradleTestCompiler implements TestCompiler {
         )
 
         file.text = content
-        return content
+        return file
     }
 
-    @NotNull
-    private static File createSourceRootDir(@NotNull File projectRootDir) {
-        def result = new File(projectRootDir, 'src/main/java')
-        boolean created = result.mkdirs()
-        if (!created) {
-            throw new IllegalStateException("Can't create a source root directory for a "
-                    + "test project at $result.absolutePath")
-        }
-        return result
+    @Override
+    protected String getRelativeSrcPath() {
+        return 'src/main/java'
     }
 
-    @NotNull
-    private static File createFile(@NotNull String qualifiedClassName, @NotNull File sourceRootDir) {
-        def i = qualifiedClassName.lastIndexOf('.')
-        if (i <= 0) {
-            return new File(sourceRootDir, "${qualifiedClassName}.java")
-        } else {
-            def dir = new File(sourceRootDir, qualifiedClassName[0..i - 1].replace('.', '/'))
-            def created = dir.mkdirs()
-            if (!created) {
-                throw new IllegalStateException("Can't create a directory for the source class "
-                        + "$qualifiedClassName at ${dir.absolutePath}")
-            }
-            return new File(dir, qualifiedClassName.substring(i + 1) + ".java")
+    @Override
+    protected String compile(@NotNull File projectRootDir) throws Exception {
+        def pluginClasspathResource = getClass().classLoader.getResource("plugin-classpath.txt")
+        if (pluginClasspathResource == null) {
+            throw new IllegalStateException("Did not find plugin classpath resource, run `testClasses` build task.")
+        }
+
+        def pluginClasspath = pluginClasspathResource.readLines().collect { new File(it) }
+
+        try {
+            def buildResult = GradleRunner.create()
+                    .withProjectDir(projectRootDir)
+                    .withPluginClasspath(pluginClasspath)
+                    .withArguments('compileJava')
+                    .withDebug(true)
+                    .build()
+            return buildResult.output
+        } catch (UnexpectedBuildFailure e) {
+            projectRootDir.deleteDir()
+            return e.buildResult.output
         }
     }
 
-    @NotNull
-    private static Collection<ClassFile> findBinaries(@NotNull File projectRoot) {
-        def binariesRoot = new File(projectRoot, 'build/classes/java/main')
-        if (!binariesRoot.isDirectory()) {
-            return []
-        }
-        def result = []
-        binariesRoot.eachFileRecurse(FileType.FILES) {
-            def className = it.absolutePath.substring(binariesRoot.absolutePath.length())
-            className = className[0..-7] // Strip '.class'
-            if (className.startsWith('/')) {
-                className = className.substring(1)
-            }
-            className = className.replace('/', '.')
-            result << new ClassFileImpl(className, it.bytes)
-        }
-        return result
+    @Override
+    protected String getRelativeBinariesPath() {
+        return 'build/classes/java/main'
     }
 
     /**
@@ -251,10 +172,5 @@ class GradleTestCompiler implements TestCompiler {
             result = result[0..-2]
         }
         return result
-    }
-
-    @Override
-    void release(@NotNull CompilationResult result) {
-        projectDirs[result]?.deleteDir()
     }
 }
