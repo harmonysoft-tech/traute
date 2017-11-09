@@ -4,23 +4,21 @@ import org.jetbrains.annotations.NotNull;
 import tech.harmonysoft.oss.traute.common.instrumentation.InstrumentationType;
 import tech.harmonysoft.oss.traute.common.settings.TrautePluginSettings;
 import tech.harmonysoft.oss.traute.common.util.TrauteConstants;
-import tech.harmonysoft.oss.traute.test.api.engine.TestCompiler;
-import tech.harmonysoft.oss.traute.test.api.model.ClassFile;
-import tech.harmonysoft.oss.traute.test.api.model.CompilationResult;
 import tech.harmonysoft.oss.traute.test.api.model.TestSource;
-import tech.harmonysoft.oss.traute.test.impl.model.ClassFileImpl;
-import tech.harmonysoft.oss.traute.test.impl.model.CompilationResultImpl;
+import tech.harmonysoft.oss.traute.test.impl.engine.AbstractExternalSystemTestCompiler;
 
-import java.io.*;
-import java.nio.file.Files;
-import java.util.*;
+import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
 
 import static java.util.stream.Collectors.joining;
 import static tech.harmonysoft.oss.traute.common.settings.TrautePluginSettingsBuilder.DEFAULT_INSTRUMENTATIONS_TO_APPLY;
 import static tech.harmonysoft.oss.traute.common.settings.TrautePluginSettingsBuilder.DEFAULT_NOT_NULL_ANNOTATIONS;
 import static tech.harmonysoft.oss.traute.common.util.TrauteConstants.*;
 
-public class MavenTestCompiler implements TestCompiler {
+public class MavenTestCompiler extends AbstractExternalSystemTestCompiler {
 
     public static final MavenTestCompiler INSTANCE = new MavenTestCompiler();
 
@@ -73,28 +71,25 @@ public class MavenTestCompiler implements TestCompiler {
             "  </build>\n" +
             "</project>";
 
-    private final Map<CompilationResult, File> projectDirs = new WeakHashMap<>();
+    @Override
+    @NotNull
+    protected File createExternalSystemConfig(@NotNull File projectRootDir, @NotNull TestSource testSource)
+            throws IOException
+    {
+        File pom = new File(projectRootDir, "pom.xml");
+        fillPomContent(pom, testSource.getSettings());
+        return pom;
+    }
 
     @Override
     @NotNull
-    public CompilationResult compile(@NotNull TestSource testSource) {
-        try {
-            return doCompile(testSource);
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
+    protected String getRelativeSrcPath() {
+        return "src/main/java";
     }
 
+    @Override
     @NotNull
-    private CompilationResult doCompile(@NotNull TestSource testSource) throws Exception {
-        File projectRootDir = createRootDir();
-        File pom = new File(projectRootDir, "pom.xml");
-        String content = fillPomContent(pom, testSource.getSettings());
-
-        File sourceRoot = createSourceRootDir(projectRootDir);
-        File sourceFile = createFile(testSource.getQualifiedClassName(), sourceRoot);
-        write(sourceFile, testSource.getSourceText());
-
+    protected String compile(@NotNull File projectRootDir) throws Exception {
         File stdOut = new File(projectRootDir, "stdout");
         File stdErr = new File(projectRootDir, "stderr");
         ProcessBuilder processBuilder = new ProcessBuilder("bash", "-c", "mvn compile")
@@ -103,31 +98,16 @@ public class MavenTestCompiler implements TestCompiler {
                 .redirectError(stdErr);
         Process start = processBuilder.start();
         start.waitFor();
-
-        CompilationResultImpl result = new CompilationResultImpl(
-                () -> findBinaries(projectRootDir),
-                new String(read(stdOut)) + "\n" + new String(read(stdErr)),
-                testSource,
-                Collections.singletonMap("pom.xml", content)
-        );
-        projectDirs.put(result, projectRootDir);
-        return result;
+        return new String(read(stdOut)) + "\n" + new String(read(stdErr));
     }
 
+    @Override
     @NotNull
-    private static File createRootDir() throws IOException {
-        File result = Files.createTempDirectory("maven-traute").toFile();
-        if (!result.isDirectory()) {
-            throw new IllegalStateException("Can't create a root directory for a test project at "
-                                            + result.getAbsolutePath());
-        }
-        return result;
+    protected String getRelativeBinariesPath() {
+        return "target/classes";
     }
 
-    @NotNull
-    private static String fillPomContent(@NotNull File pom, @NotNull TrautePluginSettings settings)
-            throws IOException
-    {
+    private static void fillPomContent(@NotNull File pom, @NotNull TrautePluginSettings settings) throws IOException {
         String content = POM_XML_CONTENT;
 
         content = content.replace(MARKER_DEPENDENCIES,
@@ -161,115 +141,5 @@ public class MavenTestCompiler implements TestCompiler {
                                            .collect(joining("\n            ")));
 
         write(pom, content);
-        return content;
-    }
-
-    @NotNull
-    private static File createSourceRootDir(@NotNull File projectRootDir) {
-        File result = new File(projectRootDir, "src/main/java");
-        boolean created = result.mkdirs();
-        if (!created) {
-            throw new IllegalStateException("Can't create a source root directory for a test project at "
-                                            + result.getAbsolutePath());
-        }
-        return result;
-    }
-
-    @NotNull
-    private static File createFile(@NotNull String qualifiedClassName, @NotNull File sourceRootDir) {
-        int i = qualifiedClassName.lastIndexOf('.');
-        if (i <= 0) {
-            return new File(sourceRootDir, qualifiedClassName + ".java");
-        } else {
-            File dir = new File(sourceRootDir, qualifiedClassName.substring(0, i)
-                                                                 .replace('.', '/'));
-            boolean created = dir.mkdirs();
-            if (!created) {
-                throw new IllegalStateException(String.format("Can't create a directory for the source class %s at %s",
-                                                              qualifiedClassName, dir.getAbsolutePath()));
-            }
-            return new File(dir, qualifiedClassName.substring(i + 1) + ".java");
-        }
-    }
-
-    private static void write(@NotNull File file, @NotNull String content) throws IOException {
-        try (BufferedWriter writer = new BufferedWriter(new FileWriter(file))) {
-            writer.write(content);
-        }
-    }
-
-    @NotNull
-    private static byte[] read(@NotNull File file) throws IOException {
-        ByteArrayOutputStream bOut = new ByteArrayOutputStream();
-        byte[] buffer = new byte[1024];
-        int read;
-        try (BufferedInputStream in = new BufferedInputStream(new FileInputStream(file))) {
-            while ((read = in.read(buffer)) >= 0) {
-                bOut.write(buffer, 0, read);
-            }
-        }
-        return bOut.toByteArray();
-    }
-
-    @NotNull
-    private static Collection<ClassFile> findBinaries(@NotNull File projectRoot) {
-        try {
-            return doFindBinaries(projectRoot);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    @NotNull
-    private static Collection<ClassFile> doFindBinaries(@NotNull File projectRoot) throws IOException {
-        File binariesRoot = new File(projectRoot, "target/classes");
-        if (!binariesRoot.isDirectory()) {
-            return Collections.emptyList();
-        }
-        List<ClassFile> result = new ArrayList<>();
-        Stack<File> toProcess = new Stack<>();
-        toProcess.push(binariesRoot);
-        while (!toProcess.isEmpty()) {
-            File file = toProcess.pop();
-            if (file.isDirectory()) {
-                File[] children = file.listFiles();
-                if (children != null) {
-                    for (File child : children) {
-                        toProcess.push(child);
-                    }
-                }
-                continue;
-            }
-
-            String className = file.getAbsolutePath().substring(binariesRoot.getAbsolutePath().length());
-            className = className.substring(0, className.length() - ".class".length());
-            if (className.startsWith("/")) {
-                className = className.substring(1);
-            }
-            className = className.replace('/', '.');
-            result.add(new ClassFileImpl(className, read(file)));
-        }
-        return result;
-    }
-
-    @Override
-    public void release(@NotNull CompilationResult result) {
-        File rootDir = projectDirs.get(result);
-        if (rootDir.isDirectory()) {
-            delete(rootDir);
-        }
-    }
-
-    private void delete(@NotNull File file) {
-        File[] children = file.listFiles();
-        if (children != null) {
-            for (File child : children) {
-                delete(child);
-            }
-        }
-        boolean deleted = file.delete();
-        if (!deleted) {
-            throw new RuntimeException("Can't remove file system entry " + file.getAbsolutePath());
-        }
     }
 }
