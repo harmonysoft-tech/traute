@@ -1,0 +1,40 @@
+<?xml version="1.0"?>
+<project name="traute-ant-sample" default="go" xmlns:ivy="antlib:org.apache.ivy.ant">
+
+    <property name="ivy.install.version" value="2.4.0"/>
+    <property name="ivy.jar.dir" value="${basedir}/ivy"/>
+    <property name="ivy.jar.file" value="${ivy.jar.dir}/ivy.jar"/>
+    <property name="build.dir" value="build"/>
+    <property name="src.dir" value="src"/>
+
+    <target name="download-ivy" unless="skip.download">
+        <mkdir dir="${ivy.jar.dir}"/>
+        <echo message="installing ivy..."/>
+        <get src="http://repo1.maven.org/maven2/org/apache/ivy/ivy/${ivy.install.version}/ivy-${ivy.install.version}.jar" dest="${ivy.jar.file}" usetimestamp="true"/>
+    </target>
+
+    <target name="install-ivy" depends="download-ivy" description="--> install ivy">
+        <path id="ivy.lib.path">
+            <fileset dir="${ivy.jar.dir}" includes="*.jar"/>
+        </path>
+        <taskdef resource="org/apache/ivy/ant/antlib.xml" uri="antlib:org.apache.ivy.ant" classpathref="ivy.lib.path"/>
+    </target>
+
+    <target name="go" depends="install-ivy">
+        <ivy:cachepath pathid="lib.path.id"/>
+        <echo message="compiling..."/>
+        <mkdir dir="${build.dir}"/>
+        <javac srcdir="${src.dir}" destdir="${build.dir}" classpathref="lib.path.id">
+            <compilerarg value="-Xplugin:Traute"/>
+            <compilerarg value="-Atraute.log.verbose=true"/>
+        </javac>
+
+        <java classname="tech.harmonysoft.oss.traute.ant.sample.Test">
+            <classpath>
+                <path refid="lib.path.id"/>
+                <path location="${build.dir}"/>
+            </classpath>
+        </java>
+    </target>
+
+</project>
