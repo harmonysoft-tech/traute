@@ -1,0 +1,24 @@
+dependencies {
+    testCompile project(':core:common')
+    testCompile project(path: ':core:test-common', configuration: 'testCompile')
+    testCompile project(':core:test-common').sourceSets.test.output
+}
+
+tasks.withType(JavaExec) {
+    def testCommonProject = project(':core:test-common')
+    def exclusion = ['junit', 'jdk', 'traute', 'activation', 'hamcrest', 'apiguardian', 'mail', 'opentest4j']
+    def testDependencies = testCommonProject.sourceSets.test.compileClasspath.findAll { file ->
+        file.name.endsWith('.jar') && exclusion.findAll { file.absolutePath.contains(it) }.empty
+    }.collect { it.absolutePath }
+
+    testDependencies = testDependencies << "${testCommonProject.buildDir}/libs/${testCommonProject.name}-${testCommonProject.version}-tests.jar"
+
+    def javacPluginProject = project(':core:javac-plugin')
+    testDependencies = testDependencies << "${javacPluginProject.buildDir}/libs/${javacPluginProject.archivesBaseName}-${javacPluginProject.version}.jar"
+    systemProperties([
+            'trauteTestDependencies': testDependencies.join(':')
+    ])
+}
+
+junitPlatformTest.dependsOn project(':core:javac-plugin').tasks.jar
+junitPlatformTest.dependsOn project(':core:test-common').tasks.testJar

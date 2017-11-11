@@ -47,6 +47,7 @@ class GradleTestCompiler extends AbstractExternalSystemTestCompiler {
               |    compile ${getCommonDependency()}
               |}""".stripMargin()
 
+    @NotNull
     @Override
     protected File createExternalSystemConfig(@NotNull File projectRootDir,
                                               @NotNull TestSource testSource)
@@ -79,11 +80,13 @@ class GradleTestCompiler extends AbstractExternalSystemTestCompiler {
         return file
     }
 
+    @NotNull
     @Override
     protected String getRelativeSrcPath() {
         return 'src/main/java'
     }
 
+    @NotNull
     @Override
     protected String compile(@NotNull File projectRootDir) throws Exception {
         def pluginClasspathResource = getClass().classLoader.getResource("plugin-classpath.txt")
@@ -107,6 +110,7 @@ class GradleTestCompiler extends AbstractExternalSystemTestCompiler {
         }
     }
 
+    @NotNull
     @Override
     protected String getRelativeBinariesPath() {
         return 'build/classes/java/main'

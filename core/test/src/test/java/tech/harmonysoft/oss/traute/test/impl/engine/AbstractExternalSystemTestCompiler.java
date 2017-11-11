@@ -1,6 +1,9 @@
 package tech.harmonysoft.oss.traute.test.impl.engine;
 
 import org.jetbrains.annotations.NotNull;
+import tech.harmonysoft.oss.traute.common.instrumentation.InstrumentationType;
+import tech.harmonysoft.oss.traute.common.settings.TrautePluginSettings;
+import tech.harmonysoft.oss.traute.common.util.TrauteConstants;
 import tech.harmonysoft.oss.traute.test.api.engine.TestCompiler;
 import tech.harmonysoft.oss.traute.test.api.model.ClassFile;
 import tech.harmonysoft.oss.traute.test.api.model.CompilationResult;
@@ -11,6 +14,13 @@ import tech.harmonysoft.oss.traute.test.impl.model.CompilationResultImpl;
 import java.io.*;
 import java.nio.file.Files;
 import java.util.*;
+
+import static java.util.stream.Collectors.joining;
+import static tech.harmonysoft.oss.traute.common.settings.TrautePluginSettingsBuilder.DEFAULT_INSTRUMENTATIONS_TO_APPLY;
+import static tech.harmonysoft.oss.traute.common.settings.TrautePluginSettingsBuilder.DEFAULT_NOT_NULL_ANNOTATIONS;
+import static tech.harmonysoft.oss.traute.common.util.TrauteConstants.OPTION_ANNOTATIONS_NOT_NULL;
+import static tech.harmonysoft.oss.traute.common.util.TrauteConstants.OPTION_INSTRUMENTATIONS_TO_USE;
+import static tech.harmonysoft.oss.traute.common.util.TrauteConstants.OPTION_LOG_VERBOSE;
 
 public abstract class AbstractExternalSystemTestCompiler implements TestCompiler {
 
@@ -177,5 +187,31 @@ public abstract class AbstractExternalSystemTestCompiler implements TestCompiler
         if (!deleted) {
             throw new RuntimeException("Can't remove file system entry " + file.getAbsolutePath());
         }
+    }
+
+    @NotNull
+    protected static Collection<String> getCompilerArgs(@NotNull TrautePluginSettings settings) {
+        List<String> result = new ArrayList<>();
+
+        Set<String> notNullAnnotations = settings.getNotNullAnnotations();
+        if (!notNullAnnotations.isEmpty() && !DEFAULT_NOT_NULL_ANNOTATIONS.equals(notNullAnnotations))
+        {
+            String notNullAnnotationsString = notNullAnnotations.stream().collect(joining(TrauteConstants.SEPARATOR));
+            result.add(String.format("-A%s=%s", OPTION_ANNOTATIONS_NOT_NULL, notNullAnnotationsString));
+        }
+
+        Set<InstrumentationType> instrumentationsToApply = settings.getInstrumentationsToApply();
+        if (!instrumentationsToApply.isEmpty() && !DEFAULT_INSTRUMENTATIONS_TO_APPLY.equals(instrumentationsToApply)) {
+            String instrumentationsString = instrumentationsToApply.stream()
+                                                                   .map(InstrumentationType::getShortName)
+                                                                   .collect(joining(TrauteConstants.SEPARATOR));
+            result.add(String.format("-A%s=%s", OPTION_INSTRUMENTATIONS_TO_USE, instrumentationsString));
+        }
+
+        if (settings.isVerboseMode()) {
+            result.add(String.format("-A%s=true", OPTION_LOG_VERBOSE));
+        }
+
+        return result;
     }
 }

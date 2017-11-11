@@ -1,7 +1,6 @@
 package tech.harmonysoft.oss.traute.maven.test.impl;
 
 import org.jetbrains.annotations.NotNull;
-import tech.harmonysoft.oss.traute.common.instrumentation.InstrumentationType;
 import tech.harmonysoft.oss.traute.common.settings.TrautePluginSettings;
 import tech.harmonysoft.oss.traute.common.util.TrauteConstants;
 import tech.harmonysoft.oss.traute.test.api.model.TestSource;
@@ -9,14 +8,9 @@ import tech.harmonysoft.oss.traute.test.impl.engine.AbstractExternalSystemTestCo
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
+import java.util.Collection;
 
 import static java.util.stream.Collectors.joining;
-import static tech.harmonysoft.oss.traute.common.settings.TrautePluginSettingsBuilder.DEFAULT_INSTRUMENTATIONS_TO_APPLY;
-import static tech.harmonysoft.oss.traute.common.settings.TrautePluginSettingsBuilder.DEFAULT_NOT_NULL_ANNOTATIONS;
-import static tech.harmonysoft.oss.traute.common.util.TrauteConstants.*;
 
 public class MavenTestCompiler extends AbstractExternalSystemTestCompiler {
 
@@ -114,26 +108,7 @@ public class MavenTestCompiler extends AbstractExternalSystemTestCompiler {
                                   "    " + System.getProperty("trauteTestDependencies")
                                                  .replace("\n", "\n    ") + "\n");
 
-        List<String> arguments = new ArrayList<>();
-
-        Set<String> notNullAnnotations = settings.getNotNullAnnotations();
-        if (!notNullAnnotations.isEmpty() && !DEFAULT_NOT_NULL_ANNOTATIONS.equals(notNullAnnotations))
-        {
-            String notNullAnnotationsString = notNullAnnotations.stream().collect(joining(TrauteConstants.SEPARATOR));
-            arguments.add(String.format("-A%s=%s", OPTION_ANNOTATIONS_NOT_NULL, notNullAnnotationsString));
-        }
-
-        Set<InstrumentationType> instrumentationsToApply = settings.getInstrumentationsToApply();
-        if (!instrumentationsToApply.isEmpty() && !DEFAULT_INSTRUMENTATIONS_TO_APPLY.equals(instrumentationsToApply)) {
-            String instrumentationsString = instrumentationsToApply.stream()
-                                                                   .map(InstrumentationType::getShortName)
-                                                                   .collect(joining(TrauteConstants.SEPARATOR));
-            arguments.add(String.format("-A%s=%s", OPTION_INSTRUMENTATIONS_TO_USE, instrumentationsString));
-        }
-
-        if (settings.isVerboseMode()) {
-            arguments.add(String.format("-A%s=true", OPTION_LOG_VERBOSE));
-        }
+        Collection<String> arguments = getCompilerArgs(settings);
 
         content = content.replace(MARKER_COMPILER_ARGS,
                                   arguments.stream()
