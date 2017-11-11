@@ -11,7 +11,7 @@ See the [LICENSE](LICENSE.md) file for license rights and limitations (MIT).
 
 ## 2. Overview
 
-*Traute* can be used in *Ant* by putting its [Javac plugin's](../../core/javac/README.md) *\*.jar* into compiler's classpath and specifying necessary *javac* options
+*Traute* can be used in *Ant* by putting its [Javac plugin's](../../core/javac/README.md) *\*.jar* into compiler's classpath and specifying necessary *javac* options.
 
 ## 3. Sample
 
