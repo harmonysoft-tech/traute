@@ -82,6 +82,8 @@ There is a [Travis](https://travis-ci.org/) Continuous Integration - [![Build St
 * [core *Javac* plugin](core/javac/RELEASE.md)
 * [*Gradle* plugin](facade/gradle/RELEASE.md)
 
+You can also subscribe for the new versions notification through [twitter](https://twitter.com/traute_java) and [facebook](https://www.facebook.com/java.traute/).
+
 ## 8. How to Contribute
 
 * [report a problem/ask for enhancement](https://github.com/denis-zhdanov/traute/issues)
@@ -98,4 +100,7 @@ As the project is basically a [*Javac* plugin](core/javac/README.md) and conveni
 
 ## 11. Feedback
 
-TBD
+Please use any of the channels below to provide your feedback, it's really valuable for me:
+* [email](mailto:traute.java@gmail.com)
+* [twitter](https://twitter.com/traute_java)
+* [facebook](https://www.facebook.com/java.traute/)
