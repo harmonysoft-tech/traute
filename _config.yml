@@ -1,3 +1,4 @@
 theme: jekyll-theme-minimal
 plugins:
   - jemoji
+google_analytics: UA-5489835-4
