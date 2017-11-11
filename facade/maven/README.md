@@ -84,4 +84,4 @@ It's possible to specify additional options [available in the *Javac* plugin](..
 
 ## 4. Sample
 
-A sample *Maven* project is configured to use *Traute* is available [here](https://github.com/denis-zhdanov/traute/tree/master/facade/maven/sample)
+A sample *Traute*-aware *Maven* project can be found [here](https://github.com/denis-zhdanov/traute/tree/master/facade/maven/sample).
