@@ -33,4 +33,16 @@ See the [LICENSE](LICENSE.md) file for license rights and limitations (MIT).
 </target>
 ```
 
-A complete standalone sample project can be found [here](sample)
+A complete standalone sample project can be found [here](https://github.com/denis-zhdanov/traute/blob/master/facade/ant/README.md).
+
+## 4. Options
+
+Any [Traute Javac Plugin setting](../../core/javac/README.md#7-settings) can be provided to the *Ant's* &lt;javac&gt; task through the &lt;compilerarg&gt; element:
+
+```xml
+<javac srcdir="${src.dir}" destdir="${build.dir}" classpathref="lib.path.id" debug="true">
+    <compilerarg value="-Xplugin:Traute"/>
+    <compilerarg value="-Atraute.instrumentations=parameter"/>
+    <compilerarg value="-Atraute.log.verbose=true"/>
+</javac>
+```
