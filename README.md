@@ -64,11 +64,14 @@ I found the only alternative which provides similar functionality - [*Project Lo
 
 I really like German - how it sounds, language rules, everything, so, wanted to use a german word.  
 
-*Traute* sounds nice and has a good [meaning](http://dictionary.reverso.net/german-english/Traute) - *trust*. Our users trust the tool and the tool enforces trust in application :wink:
+*Traute* sounds nice and has a good [meaning](http://dictionary.reverso.net/german-english/Traute) - *Trust*. Users trust the tool and the tool enforces trust in application :wink:
 
 ## 5. Usage
 
-The core functionality is a [*Javac* plugin](core/javac/README.md) which adds *null*-checks into the generated *\*.class* files. Even though it's possible to [use the plugin directly](core/javac/README.md#6-usage) from a command line, there are a number of adapters for popular build systems, namely, [*Gradle*](facade/gradle/README.md), [*Maven*](facade/maven/README.md), [*Ant*](facade/ant/README.md).
+The core functionality is a [*Javac* plugin](core/javac/README.md) which adds *null*-checks into the generated *\*.class* files. Even though it's possible to [use the plugin directly](core/javac/README.md#6-usage) from a command line, there are a number of adapters for popular build systems:
+* [*Gradle* sample](facade/gradle/README.md#3-usage)
+* [*Maven* sample](facade/maven/README.md#3-usage)
+* [*Ant* sample](facade/ant/README.md#3-sample)
 
 ## 6. Build
 
