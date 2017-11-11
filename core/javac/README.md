@@ -90,7 +90,7 @@ Following annotations are checked by default:
 * [org.eclipse.jdt.annotation.NonNull](http://help.eclipse.org/oxygen/index.jsp?topic=%2Forg.eclipse.jdt.doc.user%2Ftasks%2Ftask-using_null_annotations.htm) - Eclipse
 * [lombok.NonNull](https://projectlombok.org/api/lombok/NonNull.html) - Lombok
 
-It's possible to define a custom list of annotations to use through the [traute.annotations.not.null](https://github.com/denis-zhdanov/traute/blob/master/core/javac/src/main/java/tech/harmonysoft/oss/traute/javac/TrauteJavacPlugin.java#L118) option.  
+It's possible to define a custom list of annotations to use through the [traute.annotations.not.null](https://github.com/denis-zhdanov/traute/blob/master/core/common/src/main/java/tech/harmonysoft/oss/traute/common/util/TrauteConstants.java#L38) option.  
 
 Example:
 * single custom annotation:  
