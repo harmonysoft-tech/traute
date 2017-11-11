@@ -75,7 +75,7 @@ The core functionality is a [*Javac* plugin](core/javac/README.md) which adds *n
 
 ## 6. Build
 
-[![Build Status](https://travis-ci.org/denis-zhdanov/traute.svg?branch=master)](https://travis-ci.org/denis-zhdanov/traute)
+There is a [Travis](https://travis-ci.org/) Continuous Integration - [![Build Status](https://travis-ci.org/denis-zhdanov/traute.svg?branch=master)](https://travis-ci.org/denis-zhdanov/traute)
 
 ## 7. Releases
 
