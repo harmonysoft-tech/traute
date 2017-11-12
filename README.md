@@ -18,7 +18,7 @@ See the [LICENSE](LICENSE.md) file for license rights and limitations (MIT).
 
 ## 2. Rationale
 
-Null references are [considered](https://en.wikipedia.org/wiki/Null_pointer#History) to be one of the most expensive mistakes in IT design. It's not surprising that there are numerous efforts to solve it. Here are couple of examples from the *Java* world:
+Null references are [considered](https://en.wikipedia.org/wiki/Null_pointer#History) to be one of the most expensive mistakes in IT design. It's not surprising that there are numerous efforts to solve it. Here are a couple of examples from the *Java* world:
 * [*Kotlin*](https://kotlinlang.org/) fights it at the [language level](https://kotlinlang.org/docs/reference/null-safety.html)
 * many tools try to report it as early as possible, for example, here [*IntelliJ IDEA*](https://www.jetbrains.com/idea/) warns us about a possible *NPE*: 
 
@@ -49,7 +49,7 @@ Null references are [considered](https://en.wikipedia.org/wiki/Null_pointer#Hist
 
 *Kotlin* really solves the problem but *Java* is still a very popular language, so, we have to deal with nullable values. It's not always convenient to use *IntelliJ* build system for compiling sources to get that *null*-checks and the code which explicitly ensures preconditions via *checkNotNull()* or explicit *if (input == null) { throw new NullPointerException("<description>") }* also looks not that appealing.  
 
-More common setup is to configure a build through [*Gradle*](https://gradle.org/)/[*Maven*](http://maven.apache.org/)/[Ant](https://ant.apache.org/). It would not harm to get *IDE* tips on possible *null*-related problems and that auto-generated runtime checks without explicitly putting them into code.  
+More common setup is to configure a build through [*Gradle*](https://gradle.org/)/[*Maven*](http://maven.apache.org/)/[*Ant*](https://ant.apache.org/). It would not harm to get *IDE* tips on possible *null*-related problems and that auto-generated runtime checks without explicitly putting them into code.  
 
 Current tool solves the second problem - it allows to add *null*-checks into *\*.class* files during compilation based on source code annotations.
 
@@ -69,9 +69,9 @@ I really like German - how it sounds, language rules, everything, so, wanted to 
 ## 5. Usage
 
 The core functionality is a [*Javac* plugin](core/javac/README.md) which adds *null*-checks into the generated *\*.class* files. Even though it's possible to [use the plugin directly](core/javac/README.md#6-usage) from a command line, there are a number of adapters for popular build systems:
-* [*Gradle* sample](facade/gradle/README.md#3-usage)
-* [*Maven* sample](facade/maven/README.md#3-usage)
-* [*Ant* sample](facade/ant/README.md#3-sample)
+* [from *Gradle*](facade/gradle/README.md#3-usage)
+* [from *Maven*](facade/maven/README.md#3-usage)
+* [from *Ant*](facade/ant/README.md#3-sample)
 
 ## 6. Build
 
@@ -88,7 +88,7 @@ You can also subscribe for the new versions notification through [twitter](https
 
 * [report a problem/ask for enhancement](https://github.com/denis-zhdanov/traute/issues)
 * [submit a pull request](https://github.com/denis-zhdanov/traute/pulls)
-* help me to make small presents to my wife in order to persuade here that spending time on *OSS* might be not the worst idea :yum: [![paypal](https://www.paypalobjects.com/en_US/i/btn/btn_donateCC_LG.gif)](https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=3GJDPN3TH8T48&lc=RU&item_name=Traute&currency_code=USD&bn=PP%2dDonationsBF%3abtn_donateCC_LG%2egif%3aNonHosted)
+* help me to make small presents to my wife in order to persuade here that spending free time on *OSS* might be not the worst idea :yum: [![paypal](https://www.paypalobjects.com/en_US/i/btn/btn_donateCC_LG.gif)](https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=3GJDPN3TH8T48&lc=RU&item_name=Traute&currency_code=USD&bn=PP%2dDonationsBF%3abtn_donateCC_LG%2egif%3aNonHosted)
 
 ## 9. Contributors
 
