@@ -19,7 +19,7 @@ See the [LICENSE](LICENSE.md) file for license rights and limitations (MIT).
 ## 2. Rationale
 
 Null references are [considered](https://en.wikipedia.org/wiki/Null_pointer#History) to be one of the most expensive mistakes in IT design. It's not surprising that there are numerous efforts to solve it. Here are a couple of examples from the *Java* world:
-* [*Kotlin*](https://kotlinlang.org/) fights it at the [language level](https://kotlinlang.org/docs/reference/null-safety.html)
+* [*Kotlin*](https://kotlinlang.org/) fights them at the [language level](https://kotlinlang.org/docs/reference/null-safety.html)
 * many tools try to report it as early as possible, for example, here [*IntelliJ IDEA*](https://www.jetbrains.com/idea/) warns us about a possible *NPE*: 
 
   ![warning-intellij.png](docs/img/warning-intellij.png)

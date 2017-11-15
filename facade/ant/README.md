@@ -33,7 +33,7 @@ See the [LICENSE](LICENSE.md) file for license rights and limitations (MIT).
 </target>
 ```
 
-A complete standalone sample project can be found [here](https://github.com/denis-zhdanov/traute/blob/master/facade/ant/README.md).
+A complete standalone sample project can be found [here](https://github.com/denis-zhdanov/traute/tree/master/facade/ant/sample).
 
 ## 4. Options
 
