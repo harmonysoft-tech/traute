@@ -16,7 +16,7 @@ apply plugin: 'groovy'
 apply plugin: 'java-gradle-plugin'
 apply plugin: 'com.gradle.plugin-publish'
 
-version = '1.0.2'
+version = '1.0.3'
 archivesBaseName = 'traute-gradle'
 def pluginDisplayName = 'Traute Gradle plugin'
 def pluginDescription = 'A Gradle plugin which eases Traute Javac plugin appliance in Gradle projects'

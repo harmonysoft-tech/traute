@@ -1,3 +1,11 @@
+**v.1.0.6**
+Feature:
+* [Make it possible to print the log into a file](https://github.com/denis-zhdanov/traute/issues/58)
+
+Bugfix:
+* [Correct parameters instrumentation for delegating constructors](https://github.com/denis-zhdanov/traute/issues/57)
+* [Correct notification is incorrect for the situation when there is a nested class](https://github.com/denis-zhdanov/traute/issues/59)
+
 **v.1.0.5**
 Bugfix:
 * [Correct processing for constructors](https://github.com/denis-zhdanov/traute/issues/56)

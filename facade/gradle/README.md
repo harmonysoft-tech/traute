@@ -27,7 +27,7 @@ Add the following to your *build.gradle*:
 
 ```groovy
 plugins {
-  id "tech.harmonysoft.oss.traute" version "1.0.1"
+  id "tech.harmonysoft.oss.traute" version "1.0.2"
 }
 ```
 
@@ -37,7 +37,7 @@ plugins {
 buildscript {
   mavenCentral()
   dependencies {
-    classpath "gradle.plugin.tech.harmonysoft:gradle:1.0.1"
+    classpath "gradle.plugin.tech.harmonysoft:gradle:1.0.2"
   }
 }
 
@@ -50,7 +50,7 @@ apply plugin: "tech.harmonysoft.oss.traute"
 buildscript {
   jcenter()
   dependencies {
-    classpath "gradle.plugin.tech.harmonysoft:gradle:1.0.1"
+    classpath "gradle.plugin.tech.harmonysoft:gradle:1.0.2"
   }
 }
 
@@ -65,7 +65,7 @@ All configuration settings are specified in the `traute` *build.gradle* section.
 
 ```groovy
 traute {
-    javacPluginVersion = '1.0.5'
+    javacPluginVersion = '1.0.6'
 }
 ```
 
@@ -129,7 +129,7 @@ When the activity is resumed, it shows that a *null*-check was inserted into act
 A sample *Java* project which is configured to use the current plugin can be found [here](https://github.com/denis-zhdanov/traute/tree/master/facade/gradle/sample/java):
 
 ```
-radlew build execute
+gradlew build execute
 :compileJava
 [Traute plugin]: 'verbose mode' is on
 [Traute plugin]: added a null-check for 'return' expression in method tech.harmonysoft.oss.traute.Test.getInt()
