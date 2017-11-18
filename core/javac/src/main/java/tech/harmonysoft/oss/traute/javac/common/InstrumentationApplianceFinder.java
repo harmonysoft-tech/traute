@@ -189,7 +189,8 @@ public class InstrumentationApplianceFinder extends TreeScanner<Void, Void> {
 
     private boolean mayBeInstrumentReturnType(@NotNull MethodTree method) {
         Tree returnType = method.getReturnType();
-        if (METHOD_RETURN_TYPES_TO_SKIP.contains(returnType.toString())
+        if (returnType == null
+            || METHOD_RETURN_TYPES_TO_SKIP.contains(returnType.toString())
             || (!(returnType instanceof JCTree.JCExpression)))
         {
             return false;

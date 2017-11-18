@@ -597,4 +597,18 @@ public abstract class MethodReturnTest extends AbstractTrauteTest {
         expectNpeFromReturnCheck(testSource, "return null", expectRunResult);
         doTest(testSource);
     }
+
+    @Test
+    public void constructor() {
+        String testSource = String.format(
+                "package %s;\n" +
+                "\n" +
+                "public class %s {\n" +
+                "\n" +
+                "  public %s(){\n" +
+                "  }\n" +
+                "\n" +
+                "}", PACKAGE, CLASS_NAME, CLASS_NAME);
+        doCompile(testSource);
+    }
 }
