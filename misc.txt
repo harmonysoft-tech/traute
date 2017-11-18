@@ -6,3 +6,5 @@
 ./gradlew :core:javac-plugin:bintrayUpload
 
 ./gradlew :facade:gradle:publishPlugins
+./gradlew :facade:gradle:uploadArchives
+./gradlew :facade:gradle:bintrayUpload
