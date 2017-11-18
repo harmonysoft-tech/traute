@@ -1,7 +1,11 @@
 package tech.harmonysoft.oss.traute.javac.instrumentation.parameter;
 
+import com.sun.source.tree.ExpressionStatementTree;
+import com.sun.source.tree.ExpressionTree;
+import com.sun.source.tree.MethodInvocationTree;
 import com.sun.tools.javac.tree.JCTree;
 import com.sun.tools.javac.tree.TreeMaker;
+import com.sun.tools.javac.util.List;
 import com.sun.tools.javac.util.Names;
 import org.jetbrains.annotations.NotNull;
 import tech.harmonysoft.oss.traute.javac.common.CompilationUnitProcessingContext;
@@ -27,7 +31,18 @@ public class ParameterInstrumentator extends AbstractInstrumentator<ParameterToI
         TreeMaker factory = context.getAstFactory();
         Names symbolsTable = context.getSymbolsTable();
         JCTree.JCBlock body = info.getBody();
-        body.stats = body.stats.prepend(buildVarCheck(factory, symbolsTable, parameterName, errorMessage));
+        JCTree.JCIf varCheck = buildVarCheck(factory, symbolsTable, parameterName, errorMessage);
+        if (info.isConstructor() && isFirstStatementThisOrSuperCall(body)) {
+            List<JCTree.JCStatement> newStatements = List.of(varCheck);
+            List<JCTree.JCStatement> statements = body.getStatements();
+            for (int i = 1; i < statements.size(); i++) {
+                newStatements = newStatements.append(statements.get(i));
+            }
+            newStatements = newStatements.prepend(statements.get(0));
+            body.stats = newStatements;
+        } else {
+            body.stats = body.stats.prepend(varCheck);
+        }
 
         if (context.getPluginSettings().isVerboseMode()) {
             String methodName = info.getQualifiedMethodName();
@@ -38,5 +53,26 @@ public class ParameterInstrumentator extends AbstractInstrumentator<ParameterToI
             ));
         }
         return true;
+    }
+
+    private static boolean isFirstStatementThisOrSuperCall(@NotNull JCTree.JCBlock body) {
+        List<JCTree.JCStatement> statements = body.getStatements();
+        if (statements.isEmpty()) {
+            return false;
+        }
+        JCTree.JCStatement expressionCandidate = statements.get(0);
+        if (expressionCandidate instanceof ExpressionStatementTree) {
+            ExpressionStatementTree expression = (ExpressionStatementTree) expressionCandidate;
+            ExpressionTree methodInvocationCandidate = expression.getExpression();
+            if (methodInvocationCandidate instanceof MethodInvocationTree) {
+                MethodInvocationTree methodInvocation = (MethodInvocationTree) methodInvocationCandidate;
+                ExpressionTree methodSelect = methodInvocation.getMethodSelect();
+                if (methodSelect != null) {
+                    String select = methodSelect.toString();
+                    return "this".equals(select) || "super".equals(select);
+                }
+            }
+        }
+        return false;
     }
 }

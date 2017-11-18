@@ -316,4 +316,50 @@ public abstract class MethodParameterTest extends AbstractTrauteTest {
         expectNpeFromParameterCheck(testSource, "param", expectRunResult);
         doTest(testSource);
     }
+
+    @Test
+    public void constructor_this() {
+        String testSource = String.format(
+                "package %s;\n" +
+                "\n" +
+                "import %s;\n" +
+                "\n" +
+                "public class %s {\n" +
+                "\n" +
+                "  public %s(@NotNull Integer intParam) {\n" +
+                "    this(1.0);\n" +
+                "  }\n" +
+                "\n" +
+                "  public %s(Double numberParam) {\n" +
+                "  }\n" +
+                "\n" +
+                "  public static void main(String[] args) {\n" +
+                "    Integer i = null;\n" +
+                "    new %s(i);\n" +
+                "  }\n" +
+                "}", PACKAGE, NotNull.class.getName(), CLASS_NAME, CLASS_NAME, CLASS_NAME, CLASS_NAME);
+        expectNpeFromParameterCheck(testSource, "intParam", expectRunResult);
+        doTest(testSource);
+    }
+
+    @Test
+    public void constructor_super() {
+        String testSource = String.format(
+                "package %s;\n" +
+                "\n" +
+                "import %s;\n" +
+                "\n" +
+                "public class %s {\n" +
+                "\n" +
+                "  public %s(@NotNull Integer intParam) {\n" +
+                "    super();\n" +
+                "  }\n" +
+                "\n" +
+                "  public static void main(String[] args) {\n" +
+                "    new %s(null);\n" +
+                "  }\n" +
+                "}", PACKAGE, NotNull.class.getName(), CLASS_NAME, CLASS_NAME, CLASS_NAME);
+        expectNpeFromParameterCheck(testSource, "intParam", expectRunResult);
+        doTest(testSource);
+    }
 }

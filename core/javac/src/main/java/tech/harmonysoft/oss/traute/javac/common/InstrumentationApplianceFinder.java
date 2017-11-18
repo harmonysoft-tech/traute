@@ -176,7 +176,8 @@ public class InstrumentationApplianceFinder extends TreeScanner<Void, Void> {
                                                                    bodyBlock,
                                                                    getQualifiedMethodName(),
                                                                    parameterIndex,
-                                                                   parametersNumber));
+                                                                   parametersNumber,
+                                                                   method.getReturnType() == null));
             }
             parameterIndex++;
         }

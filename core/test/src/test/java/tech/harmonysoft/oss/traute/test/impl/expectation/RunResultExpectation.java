@@ -70,6 +70,13 @@ public class RunResultExpectation implements Expectation<RunResult> {
 
         if (exceptionMessageSnippet != null) {
             String message = actual.getMessage();
+            if (message == null) {
+                fail(String.format(
+                        "Expected that running the program below throws %s with a text which contains '%s'. "
+                        + "However, the exception has no text.%n%s",
+                        exceptionDescription, exceptionMessageSnippet, input
+                ));
+            }
             if (!message.contains(exceptionMessageSnippet)) {
                 fail(String.format(
                         "Expected that running the program below throws %s with a text which contains '%s'. "

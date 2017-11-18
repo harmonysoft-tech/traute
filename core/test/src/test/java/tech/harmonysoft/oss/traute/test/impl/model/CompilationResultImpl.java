@@ -59,7 +59,7 @@ public class CompilationResultImpl implements CompilationResult {
     @Override
     public String toString() {
         StringBuilder buffer = new StringBuilder();
-        buffer.append("Test source:\n\n").append(getInput()).append("\n\n");
+        buffer.append("Test source:\n\n").append(getInput().getSourceText()).append("\n\n");
         buffer.append("Compile output:\n").append(getCompilationOutput());
 
         for (Map.Entry<String, String> entry : additionalInfo.entrySet()) {

@@ -20,8 +20,9 @@ public class ParameterToInstrumentInfo implements InstrumentationInfo {
 
     @Nullable private final String qualifiedMethodName;
 
-    private final int methodParameterIndex;
-    private final int methodParametersNumber;
+    private final int     methodParameterIndex;
+    private final int     methodParametersNumber;
+    private final boolean constructor;
 
     public ParameterToInstrumentInfo(@NotNull CompilationUnitProcessingContext compilationUnitProcessingContext,
                                      @NotNull String notNullAnnotation,
@@ -29,7 +30,8 @@ public class ParameterToInstrumentInfo implements InstrumentationInfo {
                                      @NotNull JCTree.JCBlock body,
                                      @Nullable String qualifiedMethodName,
                                      int methodParameterIndex,
-                                     int methodParametersNumber)
+                                     int methodParametersNumber,
+                                     boolean constructor)
     {
         this.compilationUnitProcessingContext = compilationUnitProcessingContext;
         this.notNullAnnotation = notNullAnnotation;
@@ -38,6 +40,7 @@ public class ParameterToInstrumentInfo implements InstrumentationInfo {
         this.qualifiedMethodName = qualifiedMethodName;
         this.methodParameterIndex = methodParameterIndex;
         this.methodParametersNumber = methodParametersNumber;
+        this.constructor = constructor;
     }
 
     @Override
@@ -95,5 +98,12 @@ public class ParameterToInstrumentInfo implements InstrumentationInfo {
      */
     public int getMethodParametersNumber() {
         return methodParametersNumber;
+    }
+
+    /**
+     * @return  {@code true} if target method is a constructor
+     */
+    public boolean isConstructor() {
+        return constructor;
     }
 }
