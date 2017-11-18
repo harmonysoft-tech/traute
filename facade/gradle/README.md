@@ -95,6 +95,14 @@ traute {
 }
 ```
 
+**Log location**
+
+```groovy
+traute {
+    logFile = "$buildDir/traute.log"
+}
+```
+
 ## 5. Samples
 
 **Android**

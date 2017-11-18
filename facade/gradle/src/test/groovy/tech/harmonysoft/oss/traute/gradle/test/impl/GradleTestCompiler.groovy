@@ -17,6 +17,7 @@ class GradleTestCompiler extends AbstractExternalSystemTestCompiler {
     private static final def MARKER_NOT_NULL_ANNOTATION = '<NOT_NULL_ANNOTATIONS>'
     private static final def MARKER_LOGGING = '<LOGGING>'
     private static final def MARKER_INSTRUMENTATIONS = '<INSTRUMENTATIONS>'
+    private static final def MARKER_LOG_FILE = '<LOG_FILE>'
     private static final def BUILD_GRADLE_CONTENT =
             """plugins {
               |    id 'java'
@@ -35,6 +36,7 @@ class GradleTestCompiler extends AbstractExternalSystemTestCompiler {
               |    $MARKER_NOT_NULL_ANNOTATION
               |    $MARKER_LOGGING
               |    $MARKER_INSTRUMENTATIONS
+              |    $MARKER_LOG_FILE
               |}
               |
               |dependencies {
@@ -74,6 +76,11 @@ class GradleTestCompiler extends AbstractExternalSystemTestCompiler {
                 settings.instrumentationsToApply
                         ? "instrumentations = [${settings.instrumentationsToApply.collect{"'${it.shortName}'"}.join(', ')}]"
                         : ''
+        )
+
+        content = content.replace(
+                MARKER_LOG_FILE,
+                settings.logFile.present ? "logFile = '${settings.logFile.get()}'" : ''
         )
 
         file.text = content

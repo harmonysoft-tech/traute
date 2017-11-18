@@ -8,6 +8,11 @@ import tech.harmonysoft.oss.traute.test.fixture.NN;
 
 import javax.tools.JavaFileObject;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static tech.harmonysoft.oss.traute.test.util.TestConstants.CLASS_NAME;
 import static tech.harmonysoft.oss.traute.test.util.TestConstants.PACKAGE;
 import static tech.harmonysoft.oss.traute.test.util.TestUtil.prepareParameterTestSource;
@@ -113,5 +118,18 @@ public abstract class LoggingTest extends AbstractTrauteTest {
         settingsBuilder.withVerboseMode(true);
         expectCompilationResult.withText("added 0 instrumentation", false);
         doCompile(prepareParameterTestSource(null, "public void test() {}", ""));
+    }
+
+    @Test
+    public void logFile() throws IOException {
+        File logFile = Files.createTempFile("", "traute.log").toFile();
+        settingsBuilder.withLogFile(logFile)
+                       .withNotNullAnnotations(NN.class.getName());
+        doCompile(prepareReturnTestSource("return 1;"));
+
+        String logs = new String(Files.readAllBytes(logFile.toPath()));
+        String toContain = String.format("using the following NotNull annotations: [%s]", NN.class.getName());
+        assertTrue(logs.contains(toContain),
+                   String.format("Expected text '%s' to contain '%s'", logs, toContain));
     }
 }

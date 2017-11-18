@@ -147,6 +147,16 @@ Output:
 [Traute plugin]: added 1 instrumentation to the /Users/denis/sample/src/main/java/org/Test2.java - METHOD_PARAMETER: 1
 ```
 
+**Log location**
+
+The plugin logs into compiler's output by default. However, it's possible to configure a custom file to hold that data. Corresponding option is [traute.log.file](https://github.com/denis-zhdanov/traute/blob/master/core/common/src/main/java/tech/harmonysoft/oss/traute/common/util/TrauteConstants.java#L55).  
+
+Example:  
+
+```javac -cp <classpath> -Xplugin:Traute -Atraute.log.file=/home/me/traute.log```
+
+The logs will be written into `/home/me/traute.log`
+
 ## 8. Evolution
 
 Current feature set is a must-have for runtime *null*-checks, however, it's possible to extend it. Here are some ideas on what might be done:

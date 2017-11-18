@@ -49,12 +49,18 @@ public class TrauteConstants {
      */
     public static final String OPTION_LOG_VERBOSE = "traute.log.verbose";
     /**
+     * <p>Compiler's option name for specifying a path to a file to store plugin's logs.</p>
+     * <p>The logs are printed to the standard compiler's output by default.</p>
+     */
+    public static final String OPTION_LOG_FILE = "traute.log.file";
+    /**
      * Compiler's option name to use for specifying instrumentation types to use
      *
      * @see InstrumentationType
      * @see InstrumentationType#getShortName()
      */
     public static final String OPTION_INSTRUMENTATIONS_TO_USE = "traute.instrumentations";
+
     /**
      * Separator to use for composite properties, e.g. when a user want to specify more than one
      * {@code NonNull} annotation.

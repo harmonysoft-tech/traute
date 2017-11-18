@@ -64,7 +64,7 @@ public class JavacTestCompiler implements TestCompiler {
             return compiledJavacClasses.stream().map(c -> {
                 String className = c.getUri()
                                     .getSchemeSpecificPart()
-                                    .replaceAll("\\/", "");
+                                    .replaceAll("/", "");
                 return new ClassFileImpl(className, c.getCompiledBinaries());
             }).collect(toList());
         };
@@ -90,6 +90,10 @@ public class JavacTestCompiler implements TestCompiler {
                                                      .collect(joining(TrauteConstants.SEPARATOR));
             result.add(String.format("-A%s=%s", TrauteConstants.OPTION_INSTRUMENTATIONS_TO_USE, optionValue));
         }
+
+        settings.getLogFile().ifPresent(file -> result.add(
+                String.format("-A%s=%s", TrauteConstants.OPTION_LOG_FILE, file.getAbsolutePath())
+        ));
 
         boolean verboseLog = settings.isVerboseMode();
         if (verboseLog != DEFAULT_VERBOSE_MODE) {

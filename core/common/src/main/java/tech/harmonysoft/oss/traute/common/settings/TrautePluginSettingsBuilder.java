@@ -4,6 +4,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import tech.harmonysoft.oss.traute.common.instrumentation.InstrumentationType;
 
+import java.io.File;
 import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.HashSet;
@@ -45,6 +46,7 @@ public class TrautePluginSettingsBuilder {
     private final Set<String>              notNullAnnotations      = new HashSet<>();
     private final Set<InstrumentationType> instrumentationsToApply = EnumSet.noneOf(InstrumentationType.class);
 
+    @Nullable private File    logFile;
     @Nullable private Boolean verbose;
 
     @NotNull
@@ -61,6 +63,12 @@ public class TrautePluginSettingsBuilder {
     @NotNull
     public TrautePluginSettingsBuilder withInstrumentationToApply(@NotNull InstrumentationType type) {
         instrumentationsToApply.add(type);
+        return this;
+    }
+
+    @NotNull
+    public TrautePluginSettingsBuilder withLogFile(@NotNull File file) {
+        logFile = file;
         return this;
     }
 
@@ -86,6 +94,6 @@ public class TrautePluginSettingsBuilder {
         if (verbose == null) {
             verbose = DEFAULT_VERBOSE_MODE;
         }
-        return new TrautePluginSettings(notNullAnnotations, instrumentationsToApply, verbose);
+        return new TrautePluginSettings(notNullAnnotations, instrumentationsToApply, logFile, verbose);
     }
 }

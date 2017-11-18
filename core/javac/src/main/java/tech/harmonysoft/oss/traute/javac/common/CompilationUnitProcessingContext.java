@@ -6,6 +6,7 @@ import com.sun.tools.javac.util.Names;
 import org.jetbrains.annotations.NotNull;
 import tech.harmonysoft.oss.traute.common.stats.StatsCollector;
 import tech.harmonysoft.oss.traute.common.settings.TrautePluginSettings;
+import tech.harmonysoft.oss.traute.javac.log.TrautePluginLogger;
 
 import java.util.HashSet;
 import java.util.Set;

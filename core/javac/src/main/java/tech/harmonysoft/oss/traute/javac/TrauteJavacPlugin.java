@@ -12,6 +12,7 @@ import com.sun.tools.javac.util.Context;
 import com.sun.tools.javac.util.Log;
 import com.sun.tools.javac.util.Names;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import tech.harmonysoft.oss.traute.common.instrumentation.InstrumentationType;
 import tech.harmonysoft.oss.traute.common.settings.TrautePluginSettings;
 import tech.harmonysoft.oss.traute.common.settings.TrautePluginSettingsBuilder;
@@ -19,14 +20,18 @@ import tech.harmonysoft.oss.traute.common.stats.StatsCollector;
 import tech.harmonysoft.oss.traute.common.util.TrauteConstants;
 import tech.harmonysoft.oss.traute.javac.common.CompilationUnitProcessingContext;
 import tech.harmonysoft.oss.traute.javac.common.InstrumentationApplianceFinder;
-import tech.harmonysoft.oss.traute.javac.common.TrautePluginLogger;
 import tech.harmonysoft.oss.traute.javac.instrumentation.Instrumentator;
 import tech.harmonysoft.oss.traute.javac.instrumentation.method.MethodReturnInstrumentator;
 import tech.harmonysoft.oss.traute.javac.instrumentation.method.ReturnToInstrumentInfo;
 import tech.harmonysoft.oss.traute.javac.instrumentation.parameter.ParameterInstrumentator;
 import tech.harmonysoft.oss.traute.javac.instrumentation.parameter.ParameterToInstrumentInfo;
+import tech.harmonysoft.oss.traute.javac.log.AbstractLogger;
+import tech.harmonysoft.oss.traute.javac.log.CompilerOutputLogger;
+import tech.harmonysoft.oss.traute.javac.log.FileLogger;
+import tech.harmonysoft.oss.traute.javac.log.TrautePluginLogger;
 
 import javax.tools.JavaFileObject;
+import java.io.File;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.lang.ref.WeakReference;
@@ -37,7 +42,7 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import static java.util.stream.Collectors.joining;
 import static tech.harmonysoft.oss.traute.common.settings.TrautePluginSettingsBuilder.settingsBuilder;
-import static tech.harmonysoft.oss.traute.javac.common.TrautePluginLogger.getProblemMessageSuffix;
+import static tech.harmonysoft.oss.traute.javac.log.AbstractLogger.getProblemMessageSuffix;
 
 /**
  * <p>A {@code javac} plugin which inserts {@code null}-checks for target method arguments and returns from method.</p>
@@ -87,8 +92,8 @@ import static tech.harmonysoft.oss.traute.javac.common.TrautePluginLogger.getPro
  */
 public class TrauteJavacPlugin implements Plugin {
 
-    private final AtomicReference<WeakReference<TrautePluginLogger>> loggerRef         = new AtomicReference<>();
-    private final AtomicReference<TrautePluginSettings>              pluginSettingsRef = new AtomicReference<>();
+    private final AtomicReference<WeakReference<AbstractLogger>> loggerRef         = new AtomicReference<>();
+    private final AtomicReference<TrautePluginSettings>          pluginSettingsRef = new AtomicReference<>();
 
     private final Instrumentator<ParameterToInstrumentInfo> parameterInstrumentator = new ParameterInstrumentator();
     private final Instrumentator<ReturnToInstrumentInfo>    methodInstrumentator    = new MethodReturnInstrumentator();
@@ -101,13 +106,14 @@ public class TrauteJavacPlugin implements Plugin {
     @Override
     public void init(JavacTask task, String... args) {
         if (!(task instanceof BasicJavacTask)) {
-            throw new RuntimeException(TrautePluginLogger.getProblemMessage(String.format(
+            throw new RuntimeException(AbstractLogger.getProblemMessage(String.format(
                     "get an instance of type %s in init() method but got %s (%s)",
                     BasicJavacTask.class.getName(), task.getClass().getName(), task
             )));
         }
         Context context = ((BasicJavacTask) task).getContext();
-        pluginSettingsRef.set(getPluginSettings(context));
+        TrautePluginSettings settings = getPluginSettings(context);
+        pluginSettingsRef.set(settings);
         task.addTaskListener(new TaskListener() {
             @Override
             public void started(TaskEvent e) {
@@ -123,11 +129,11 @@ public class TrauteJavacPlugin implements Plugin {
 
                 Log log = Log.instance(context);
                 if (log == null) {
-                    throw new RuntimeException(TrautePluginLogger.getProblemMessage(
+                    throw new RuntimeException(AbstractLogger.getProblemMessage(
                             "get a javac logger from the current javac context but got <null>"
                     ));
                 }
-                TrautePluginLogger logger = getPluginLogger(log);
+                TrautePluginLogger logger = getPluginLogger(settings.getLogFile().orElse(null), log);
 
                 CompilationUnitTree compilationUnit = event.getCompilationUnit();
                 if (compilationUnit == null) {
@@ -171,17 +177,27 @@ public class TrauteJavacPlugin implements Plugin {
     }
 
     @NotNull
-    private TrautePluginLogger getPluginLogger(@NotNull Log log) {
-        WeakReference<TrautePluginLogger> reporterRef = loggerRef.get();
-        if (reporterRef != null) {
-            TrautePluginLogger logger = reporterRef.get();
-            if (logger != null && logger.getLog() == log) {
-                return logger;
+    private TrautePluginLogger getPluginLogger(@Nullable File logFile, @Nullable Log log) {
+        WeakReference<AbstractLogger> ref = loggerRef.get();
+        AbstractLogger logger = null;
+        if (logFile != null) {
+            logger = new FileLogger(logFile);
+        } else if (log != null) {
+            logger = new CompilerOutputLogger(log);
+        }
+        if (ref != null) {
+            AbstractLogger cached = ref.get();
+            if (cached != null && logger != null && cached.getKey() == logger.getKey()) {
+                return cached;
             }
         }
-        TrautePluginLogger result = new TrautePluginLogger(log);
-        loggerRef.set(new WeakReference<>(result));
-        return result;
+        if (logger == null) {
+            throw new IllegalStateException(
+                    "Can't create a logger instance - neither log file nor javac logger are specified"
+            );
+        }
+        loggerRef.set(new WeakReference<>(logger));
+        return logger;
     }
 
     @NotNull
@@ -189,7 +205,7 @@ public class TrauteJavacPlugin implements Plugin {
         Log log = Log.instance(context);
         TrautePluginLogger logger = null;
         if (log != null) {
-            logger = getPluginLogger(log);
+            logger = getPluginLogger(null, log);
         }
 
         TrautePluginSettingsBuilder builder = settingsBuilder();
@@ -216,24 +232,24 @@ public class TrauteJavacPlugin implements Plugin {
             return builder.build();
         }
 
-        boolean verbose = "true".equalsIgnoreCase(options.get(TrauteConstants.OPTION_LOG_VERBOSE));
-        if (verbose && logger != null) {
-            logger.info("'verbose mode' is on");
-        }
-        builder.withVerboseMode(verbose);
-
-        String notNullAnnotationsString = options.get(TrauteConstants.OPTION_ANNOTATIONS_NOT_NULL);
-        if (notNullAnnotationsString != null) {
-            notNullAnnotationsString = notNullAnnotationsString.trim();
-            String[] notNullAnnotations = notNullAnnotationsString.split(TrauteConstants.SEPARATOR);
-            if (notNullAnnotations.length > 0) {
-                builder.withNotNullAnnotations(notNullAnnotations);
-                if (logger != null) {
-                    logger.info("using the following NotNull annotations: " + Arrays.toString(notNullAnnotations));
-                }
-            }
+        String logFilePath = options.get(TrauteConstants.OPTION_LOG_FILE);
+        if (logFilePath != null) {
+            File file = new File(logFilePath);
+            logger = new FileLogger(file);
+            builder.withLogFile(file);
         }
 
+        applyVerboseMode(logger, builder, options);
+        applyNotNullAnnotations(logger, builder, options);
+        applyInstrumentations(logger, builder, options);
+
+        return builder.build();
+    }
+
+    private void applyInstrumentations(@Nullable TrautePluginLogger logger,
+                                       @NotNull TrautePluginSettingsBuilder builder,
+                                       @NotNull Map<String, String> options)
+    {
         String instrumentationsString = options.get(TrauteConstants.OPTION_INSTRUMENTATIONS_TO_USE);
         if (instrumentationsString != null) {
             instrumentationsString = instrumentationsString.trim();
@@ -259,8 +275,34 @@ public class TrauteJavacPlugin implements Plugin {
                 }
             }
         }
+    }
 
-        return builder.build();
+    private void applyNotNullAnnotations(@Nullable TrautePluginLogger logger,
+                                         @NotNull TrautePluginSettingsBuilder builder,
+                                         @NotNull Map<String, String> options)
+    {
+        String notNullAnnotationsString = options.get(TrauteConstants.OPTION_ANNOTATIONS_NOT_NULL);
+        if (notNullAnnotationsString != null) {
+            notNullAnnotationsString = notNullAnnotationsString.trim();
+            String[] notNullAnnotations = notNullAnnotationsString.split(TrauteConstants.SEPARATOR);
+            if (notNullAnnotations.length > 0) {
+                builder.withNotNullAnnotations(notNullAnnotations);
+                if (logger != null) {
+                    logger.info("using the following NotNull annotations: " + Arrays.toString(notNullAnnotations));
+                }
+            }
+        }
+    }
+
+    private void applyVerboseMode(@Nullable TrautePluginLogger logger,
+                                  @NotNull TrautePluginSettingsBuilder builder,
+                                  @NotNull Map<String, String> options)
+    {
+        boolean verbose = "true".equalsIgnoreCase(options.get(TrauteConstants.OPTION_LOG_VERBOSE));
+        if (verbose && logger != null) {
+            logger.info("'verbose mode' is on");
+        }
+        builder.withVerboseMode(verbose);
     }
 
     private void printInstrumentationResults(@NotNull JavaFileObject file,

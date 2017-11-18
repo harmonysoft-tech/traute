@@ -1,19 +1,9 @@
-package tech.harmonysoft.oss.traute.javac.common;
+package tech.harmonysoft.oss.traute.javac.log;
 
-import com.sun.tools.javac.util.Log;
 import org.jetbrains.annotations.NotNull;
 import tech.harmonysoft.oss.traute.common.util.TrauteConstants;
 
-import javax.tools.JavaCompiler;
-
-/**
- * Custom wrapper around standard {@link JavaCompiler javac} {@link Log logger}.
- */
-public class TrautePluginLogger {
-
-    private static final String NOTICE_PREFIX = String.format("[%s plugin]: ", TrauteConstants.PLUGIN_NAME);
-
-    @NotNull private final Log log;
+public abstract class AbstractLogger implements TrautePluginLogger {
 
     /**
      * <p>
@@ -30,24 +20,12 @@ public class TrautePluginLogger {
      */
     private boolean problemReported;
 
-    public TrautePluginLogger(@NotNull Log log) {
-        this.log = log;
-    }
-
-    @NotNull
-    public Log getLog() {
-        return log;
-    }
-
-    public void info(@NotNull String message) {
-        log.printRawLines(Log.WriterKind.NOTICE, NOTICE_PREFIX + message);
-    }
-
     /**
      * Delegates to the {@link #report(String)} but adds more generic info to the given problem details
      *
      * @param problemDetails details of the problem to report
      */
+    @Override
     public void reportDetails(@NotNull String problemDetails) {
         report(getProblemMessage(problemDetails));
     }
@@ -57,13 +35,19 @@ public class TrautePluginLogger {
      *
      * @param message   a problem message to show
      */
+    @Override
     public void report(@NotNull String message) {
         // Do not report a problem more than once
         if (!problemReported) {
-            log.rawWarning(-1, message);
+            warn(message);
             problemReported = true;
         }
     }
+
+    protected abstract void warn(@NotNull String message);
+
+    @NotNull
+    public abstract Object getKey();
 
     /**
      * Prepares a problem message to show end-user in case the plugin can't do the job during compilation.

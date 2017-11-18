@@ -16,6 +16,7 @@ class TrautePluginExtension {
     // Optional
     def notNullAnnotations
     def instrumentations
+    def logFile
     boolean verbose
 }
 
@@ -54,6 +55,7 @@ class TrauteGradlePlugin implements Plugin<Project> {
         compilerArgs << "-Xplugin:${PLUGIN_NAME}"
         mayBeApplyNotNullAnnotations(compilerArgs, extension)
         mayBeApplyLoggingSettings(compilerArgs, extension)
+        mayBeApplyLogFile(compilerArgs, extension)
         mayBeApplyInstrumentations(compilerArgs, extension)
     }
 
@@ -61,6 +63,12 @@ class TrauteGradlePlugin implements Plugin<Project> {
         def notNullAnnotations = getList(extension, 'notNullAnnotations')
         if (notNullAnnotations) {
             compilerArgs << "-A${OPTION_ANNOTATIONS_NOT_NULL}=${notNullAnnotations.join(SEPARATOR)}"
+        }
+    }
+
+    private static void mayBeApplyLogFile(compilerArgs, extension) {
+        if (extension.logFile) {
+            compilerArgs << "-A${OPTION_LOG_FILE}=${extension.logFile}"
         }
     }
 

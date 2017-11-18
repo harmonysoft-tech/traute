@@ -18,9 +18,7 @@ import java.util.*;
 import static java.util.stream.Collectors.joining;
 import static tech.harmonysoft.oss.traute.common.settings.TrautePluginSettingsBuilder.DEFAULT_INSTRUMENTATIONS_TO_APPLY;
 import static tech.harmonysoft.oss.traute.common.settings.TrautePluginSettingsBuilder.DEFAULT_NOT_NULL_ANNOTATIONS;
-import static tech.harmonysoft.oss.traute.common.util.TrauteConstants.OPTION_ANNOTATIONS_NOT_NULL;
-import static tech.harmonysoft.oss.traute.common.util.TrauteConstants.OPTION_INSTRUMENTATIONS_TO_USE;
-import static tech.harmonysoft.oss.traute.common.util.TrauteConstants.OPTION_LOG_VERBOSE;
+import static tech.harmonysoft.oss.traute.common.util.TrauteConstants.*;
 
 public abstract class AbstractExternalSystemTestCompiler implements TestCompiler {
 
@@ -211,6 +209,10 @@ public abstract class AbstractExternalSystemTestCompiler implements TestCompiler
         if (settings.isVerboseMode()) {
             result.add(String.format("-A%s=true", OPTION_LOG_VERBOSE));
         }
+
+        settings.getLogFile().ifPresent(
+                file -> result.add(String.format("-A%s=%s", OPTION_LOG_FILE, file.getAbsolutePath()))
+        );
 
         return result;
     }
