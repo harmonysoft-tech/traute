@@ -179,4 +179,30 @@ public abstract class LoggingTest extends AbstractTrauteTest {
         ));
         doCompile(testSource);
     }
+
+    @Test
+    public void anonymousClass() {
+        settingsBuilder.withVerboseMode(true);
+        String testSource = String.format(
+                "package %s;\n" +
+                "\n" +
+                "import %s;\n" +
+                "\n" +
+                "public class %s {\n" +
+                "\n" +
+                "  public void test() {\n" +
+                "    new Object() {\n" +
+                "      public boolean equals(@NotNull Object o) {\n" +
+                "        return false;\n" +
+                "      }\n" +
+                "    };\n" +
+                "  }\n" +
+                "}", PACKAGE, NotNull.class.getName(), CLASS_NAME);
+
+        expectCompilationResult.withText(String.format(
+                "added a null-check for argument 'o' in the method %s.%s\\$1.equals()",
+                PACKAGE, CLASS_NAME
+        ));
+        doCompile(testSource);
+    }
 }
