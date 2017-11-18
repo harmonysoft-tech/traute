@@ -132,4 +132,51 @@ public abstract class LoggingTest extends AbstractTrauteTest {
         assertTrue(logs.contains(toContain),
                    String.format("Expected text '%s' to contain '%s'", logs, toContain));
     }
+
+    @Test
+    public void innerClass() {
+        settingsBuilder.withVerboseMode(true);
+        String testSource = String.format(
+                "package %s;\n" +
+                "\n" +
+                "import %s;\n" +
+                "\n" +
+                "public class %s {\n" +
+                "\n" +
+                "  class Inner {\n" +
+                "    public void test(@NotNull Integer i) {\n" +
+                "    }\n" +
+                "  }\n" +
+                "}", PACKAGE, NotNull.class.getName(), CLASS_NAME);
+
+        expectCompilationResult.withText(String.format(
+                "added a null-check for argument 'i' in the method %s.%s.Inner.test()",
+                PACKAGE, CLASS_NAME
+        ));
+        doCompile(testSource);
+    }
+
+    @Test
+    public void afterInnerClass() {
+        settingsBuilder.withVerboseMode(true);
+        String testSource = String.format(
+                "package %s;\n" +
+                "\n" +
+                "import %s;\n" +
+                "\n" +
+                "public class %s {\n" +
+                "\n" +
+                "  class Inner {\n" +
+                "  }\n" +
+                "\n" +
+                "  public void test(@NotNull Integer i) {\n" +
+                "  }\n" +
+                "}", PACKAGE, NotNull.class.getName(), CLASS_NAME);
+
+        expectCompilationResult.withText(String.format(
+                "added a null-check for argument 'i' in the method %s.%s.test()",
+                PACKAGE, CLASS_NAME
+        ));
+        doCompile(testSource);
+    }
 }

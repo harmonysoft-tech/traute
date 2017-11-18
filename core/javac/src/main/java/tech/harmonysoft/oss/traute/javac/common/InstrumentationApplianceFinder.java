@@ -27,19 +27,20 @@ import static tech.harmonysoft.oss.traute.common.util.TrauteConstants.PRIMITIVE_
  */
 public class InstrumentationApplianceFinder extends TreeScanner<Void, Void> {
 
-    private Stack<Tree> parents = new Stack<>();
+    private final Stack<Tree>    parents             = new Stack<>();
+    private final Stack<String>  classNames          = new Stack<>();
+    private final Stack<Boolean> processingInterface = new Stack<>();
 
     @NotNull private final CompilationUnitProcessingContext          context;
     @NotNull private final Instrumentator<ParameterToInstrumentInfo> parameterInstrumenter;
     @NotNull private final Instrumentator<ReturnToInstrumentInfo>          returnInstrumenter;
 
     private String              packageName;
-    private String              className;
     private String              methodName;
     private JCTree.JCExpression methodReturnType;
     private String              methodNotNullAnnotation;
     private int                 tmpVariableCounter;
-    private boolean             processingInterface;
+    private int                 anonymousClassCounter;
     private boolean             instrumentReturnExpression;
 
     public InstrumentationApplianceFinder(@NotNull CompilationUnitProcessingContext context,
@@ -59,19 +60,26 @@ public class InstrumentationApplianceFinder extends TreeScanner<Void, Void> {
 
     @Override
     public Void visitClass(ClassTree node, Void aVoid) {
-        className = node.getSimpleName().toString();
+        String className = node.getSimpleName().toString();
+        if (className.isEmpty()) {
+            className = "$" + ++anonymousClassCounter;
+        }
 
         ModifiersTree modifiers = node.getModifiers();
+        final boolean processingInterface;
         if (modifiers instanceof JCTree.JCModifiers) {
             processingInterface = (((JCTree.JCModifiers) modifiers).flags & Flags.INTERFACE) != 0;
         } else {
             processingInterface = modifiers.toString().contains("interface");
         }
+        classNames.push(className);
+        this.processingInterface.push(processingInterface);
 
         try {
             return super.visitClass(node, aVoid);
         } finally {
-            processingInterface = false;
+            classNames.pop();
+            this.processingInterface.pop();
         }
     }
 
@@ -106,7 +114,10 @@ public class InstrumentationApplianceFinder extends TreeScanner<Void, Void> {
 
     @SuppressWarnings("SimplifiableIfStatement")
     private boolean shouldInstrumentReturnExpression(@NotNull MethodTree method) {
-        if (processingInterface && !hasFlag(method.getModifiers(), Modifier.DEFAULT)) {
+        if (!processingInterface.isEmpty()
+            && processingInterface.peek()
+            && !hasFlag(method.getModifiers(), Modifier.DEFAULT))
+        {
             return false;
         }
         return context.getPluginSettings().isEnabled(METHOD_RETURN) && mayBeInstrumentReturnType(method);
@@ -114,7 +125,9 @@ public class InstrumentationApplianceFinder extends TreeScanner<Void, Void> {
 
     @SuppressWarnings("SimplifiableIfStatement")
     private boolean shouldInstrumentMethodParameters(@NotNull MethodTree method) {
-        if (processingInterface && !hasFlag(method.getModifiers(), Modifier.DEFAULT)) {
+        if (!processingInterface.isEmpty()
+            && processingInterface.peek()
+            && !hasFlag(method.getModifiers(), Modifier.DEFAULT)) {
             return false;
         }
         return context.getPluginSettings().isEnabled(METHOD_PARAMETER);
@@ -304,12 +317,15 @@ public class InstrumentationApplianceFinder extends TreeScanner<Void, Void> {
         if (packageName != null) {
             buffer.append(packageName).append(".");
         }
-        if (className == null) {
-            if (packageName != null) {
-                return null;
+        if (!classNames.isEmpty()) {
+            List<String> list = new ArrayList<>(classNames);
+            for (String className : list) {
+                if (className.startsWith("$")) {
+                    // We want to show class name like 'MyCLass$1' instead of 'MyClass$1'
+                    buffer.setLength(buffer.length() - 1);
+                }
+                buffer.append(className).append(".");
             }
-        } else {
-            buffer.append(className).append(".");
         }
         if (methodName == null || buffer.length() == 0) {
             return null;
