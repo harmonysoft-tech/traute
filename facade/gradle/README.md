@@ -27,7 +27,7 @@ Add the following to your *build.gradle*:
 
 ```groovy
 plugins {
-  id "tech.harmonysoft.oss.traute" version "1.0.2"
+  id "tech.harmonysoft.oss.traute" version "1.0.3"
 }
 ```
 
@@ -37,7 +37,7 @@ plugins {
 buildscript {
   mavenCentral()
   dependencies {
-    classpath "gradle.plugin.tech.harmonysoft:gradle:1.0.2"
+    classpath "gradle.plugin.tech.harmonysoft:gradle:1.0.3"
   }
 }
 
@@ -50,7 +50,7 @@ apply plugin: "tech.harmonysoft.oss.traute"
 buildscript {
   jcenter()
   dependencies {
-    classpath "gradle.plugin.tech.harmonysoft:gradle:1.0.2"
+    classpath "gradle.plugin.tech.harmonysoft:gradle:1.0.3"
   }
 }
 

@@ -1,3 +1,7 @@
+**v.1.0.3**
+
+* supported [ability to log to file](https://github.com/denis-zhdanov/traute/issues/58)
+
 **v.1.0.1**
 
 The first stable version.
