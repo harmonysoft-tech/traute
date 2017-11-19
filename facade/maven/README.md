@@ -31,7 +31,7 @@ It's necessary to do two things:
       <groupId>tech.harmonysoft</groupId>
       <artifactId>traute-javac</artifactId>
       <version>1.0.6</version> <!-- use the latest available version here -->
-      <scope>compile</scope>
+      <scope>provided</scope><!-- make the jar eligible for compilation only -->
     </dependency>
   </dependencies>
   
