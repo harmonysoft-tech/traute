@@ -3,13 +3,13 @@ package tech.harmonysoft.oss.traute.test.suite;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import tech.harmonysoft.oss.traute.common.instrumentation.InstrumentationType;
 import tech.harmonysoft.oss.traute.common.util.TrauteConstants;
 import tech.harmonysoft.oss.traute.test.util.TestUtil;
 
 import static tech.harmonysoft.oss.traute.test.util.TestConstants.CLASS_NAME;
 import static tech.harmonysoft.oss.traute.test.util.TestConstants.PACKAGE;
-import static tech.harmonysoft.oss.traute.test.util.TestUtil.expectNpeFromReturnCheck;
-import static tech.harmonysoft.oss.traute.test.util.TestUtil.prepareReturnTestSource;
+import static tech.harmonysoft.oss.traute.test.util.TestUtil.*;
 
 public abstract class MethodReturnTest extends AbstractTrauteTest {
 
@@ -610,5 +610,29 @@ public abstract class MethodReturnTest extends AbstractTrauteTest {
                 "\n" +
                 "}", PACKAGE, CLASS_NAME, CLASS_NAME);
         doCompile(testSource);
+    }
+
+    @Test
+    public void nonDefaultExceptionToThrow() {
+        settingsBuilder.withExceptionToThrow(InstrumentationType.METHOD_RETURN,
+                                             IllegalStateException.class.getSimpleName());
+        String testSource = String.format(
+                "package %s;\n" +
+                "\n" +
+                "public class %s {\n" +
+                "\n" +
+                "  @%s\n" +
+                "  public Object test(){\n" +
+                "    return null;\n" +
+                "  }\n" +
+                "\n" +
+                "  public static void main(String[] args) {\n" +
+                "    new %s().test();\n" +
+                "  }\n" +
+                "}", PACKAGE, CLASS_NAME, NotNull.class.getName(), CLASS_NAME);
+        expectRunResult.withExceptionClass(IllegalStateException.class)
+                       .withExceptionMessageSnippet("Detected an attempt to return null from a method")
+                       .atLine(findLineNumber(testSource, "return null"));
+        doTest(testSource);
     }
 }

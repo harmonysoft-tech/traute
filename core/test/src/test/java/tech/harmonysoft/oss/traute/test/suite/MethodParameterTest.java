@@ -11,9 +11,7 @@ import tech.harmonysoft.oss.traute.common.instrumentation.InstrumentationType;
 import javax.annotation.Nonnull;
 
 import static tech.harmonysoft.oss.traute.common.util.TrauteConstants.PRIMITIVE_TYPES;
-import static tech.harmonysoft.oss.traute.test.util.TestConstants.CLASS_NAME;
-import static tech.harmonysoft.oss.traute.test.util.TestConstants.METHOD_NAME;
-import static tech.harmonysoft.oss.traute.test.util.TestConstants.PACKAGE;
+import static tech.harmonysoft.oss.traute.test.util.TestConstants.*;
 import static tech.harmonysoft.oss.traute.test.util.TestUtil.*;
 
 /**
@@ -360,6 +358,22 @@ public abstract class MethodParameterTest extends AbstractTrauteTest {
                 "  }\n" +
                 "}", PACKAGE, NotNull.class.getName(), CLASS_NAME, CLASS_NAME, CLASS_NAME);
         expectNpeFromParameterCheck(testSource, "intParam", expectRunResult);
+        doTest(testSource);
+    }
+
+    @Test
+    public void nonDefaultExceptionToThrow() {
+        settingsBuilder.withExceptionToThrow(InstrumentationType.METHOD_PARAMETER,
+                                             IllegalArgumentException.class.getSimpleName());
+        String testSource = prepareParameterTestSource(
+                NotNull.class.getName(),
+                String.format("public void %s(@NotNull Integer i1) {}", METHOD_NAME),
+                "null"
+        );
+        String parameterName = "i1";
+        expectRunResult.withExceptionClass(IllegalArgumentException.class)
+                       .withExceptionMessageSnippet(parameterName)
+                       .atLine(findLineNumber(testSource, parameterName));
         doTest(testSource);
     }
 }

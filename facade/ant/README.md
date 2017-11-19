@@ -18,7 +18,7 @@ See the [LICENSE](LICENSE.md) file for license rights and limitations (MIT).
 *ivy.xml*
 ```xml
 <dependencies>
-    <dependency org="tech.harmonysoft" name="traute-javac" rev="1.0.6"/>
+    <dependency org="tech.harmonysoft" name="traute-javac" rev="1.0.7"/>
     <!-- ... -->
 </dependencies>
 ```

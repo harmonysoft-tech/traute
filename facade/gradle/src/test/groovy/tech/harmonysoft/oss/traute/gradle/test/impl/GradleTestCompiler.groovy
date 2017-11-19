@@ -18,6 +18,7 @@ class GradleTestCompiler extends AbstractExternalSystemTestCompiler {
     private static final def MARKER_LOGGING = '<LOGGING>'
     private static final def MARKER_INSTRUMENTATIONS = '<INSTRUMENTATIONS>'
     private static final def MARKER_LOG_FILE = '<LOG_FILE>'
+    private static final def MARKER_EXCEPTIONS_TO_THROW = '<EXCEPTIONS_TO_THROW>'
     private static final def BUILD_GRADLE_CONTENT =
             """plugins {
               |    id 'java'
@@ -37,6 +38,7 @@ class GradleTestCompiler extends AbstractExternalSystemTestCompiler {
               |    $MARKER_LOGGING
               |    $MARKER_INSTRUMENTATIONS
               |    $MARKER_LOG_FILE
+              |    $MARKER_EXCEPTIONS_TO_THROW
               |}
               |
               |dependencies {
@@ -81,6 +83,13 @@ class GradleTestCompiler extends AbstractExternalSystemTestCompiler {
         content = content.replace(
                 MARKER_LOG_FILE,
                 settings.logFile.present ? "logFile = '${settings.logFile.get()}'" : ''
+        )
+
+        content = content.replace(
+                MARKER_EXCEPTIONS_TO_THROW,
+                settings.exceptionsToThrow
+                        ? "exceptionsToThrow = ${settings.exceptionsToThrow.collect { "'${it.key.shortName}' : '${it.value}'" }}"
+                        : ''
         )
 
         file.text = content

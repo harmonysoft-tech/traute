@@ -5,10 +5,7 @@ import org.jetbrains.annotations.Nullable;
 import tech.harmonysoft.oss.traute.common.instrumentation.InstrumentationType;
 
 import java.io.File;
-import java.util.Arrays;
-import java.util.EnumSet;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
 
 import static java.util.Arrays.asList;
 
@@ -43,8 +40,9 @@ public class TrautePluginSettingsBuilder {
 
     public static final boolean DEFAULT_VERBOSE_MODE = false;
 
-    private final Set<String>              notNullAnnotations      = new HashSet<>();
-    private final Set<InstrumentationType> instrumentationsToApply = EnumSet.noneOf(InstrumentationType.class);
+    private final Set<String>                      notNullAnnotations      = new HashSet<>();
+    private final Set<InstrumentationType>         instrumentationsToApply = EnumSet.noneOf(InstrumentationType.class);
+    private final Map<InstrumentationType, String> exceptionsToThrow       = new HashMap<>();
 
     @Nullable private File    logFile;
     @Nullable private Boolean verbose;
@@ -63,6 +61,13 @@ public class TrautePluginSettingsBuilder {
     @NotNull
     public TrautePluginSettingsBuilder withInstrumentationToApply(@NotNull InstrumentationType type) {
         instrumentationsToApply.add(type);
+        return this;
+    }
+
+    public TrautePluginSettingsBuilder withExceptionToThrow(@NotNull InstrumentationType type,
+                                                            @NotNull String exceptionToThrow)
+    {
+        exceptionsToThrow.put(type, exceptionToThrow);
         return this;
     }
 
@@ -94,6 +99,10 @@ public class TrautePluginSettingsBuilder {
         if (verbose == null) {
             verbose = DEFAULT_VERBOSE_MODE;
         }
-        return new TrautePluginSettings(notNullAnnotations, instrumentationsToApply, logFile, verbose);
+        return new TrautePluginSettings(notNullAnnotations,
+                                        instrumentationsToApply,
+                                        exceptionsToThrow,
+                                        logFile,
+                                        verbose);
     }
 }

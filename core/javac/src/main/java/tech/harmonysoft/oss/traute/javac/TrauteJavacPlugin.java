@@ -242,6 +242,7 @@ public class TrauteJavacPlugin implements Plugin {
         applyVerboseMode(logger, builder, options);
         applyNotNullAnnotations(logger, builder, options);
         applyInstrumentations(logger, builder, options);
+        applyExceptionsThThrow(logger, builder, options);
 
         return builder.build();
     }
@@ -251,28 +252,29 @@ public class TrauteJavacPlugin implements Plugin {
                                        @NotNull Map<String, String> options)
     {
         String instrumentationsString = options.get(TrauteConstants.OPTION_INSTRUMENTATIONS_TO_USE);
-        if (instrumentationsString != null) {
-            instrumentationsString = instrumentationsString.trim();
-            String[] instrumentationNamesArray = instrumentationsString.split(TrauteConstants.SEPARATOR);
-            for (String instrumentationShortName : instrumentationNamesArray) {
-                InstrumentationType type = InstrumentationType.byShortName(instrumentationShortName.trim());
-                if (type == null) {
-                    if (logger != null) {
-                        String knownTypes = Arrays.stream(InstrumentationType.values())
-                                                  .map(InstrumentationType::getShortName)
-                                                  .collect(joining(", "));
-                        logger.report(String.format(
-                                "Unknown instrumentation type is defined through the '%s' option - '%s'. "
-                                + "Known types: %s",
-                                TrauteConstants.OPTION_INSTRUMENTATIONS_TO_USE, instrumentationShortName, knownTypes
-                        ));
-                    }
-                } else {
-                    builder.withInstrumentationToApply(type);
-                }
+        if (instrumentationsString == null) {
+            return;
+        }
+        instrumentationsString = instrumentationsString.trim();
+        String[] instrumentationNamesArray = instrumentationsString.split(TrauteConstants.SEPARATOR);
+        for (String instrumentationShortName : instrumentationNamesArray) {
+            InstrumentationType type = InstrumentationType.byShortName(instrumentationShortName.trim());
+            if (type == null) {
                 if (logger != null) {
-                    logger.info("using the following instrumentations: " + Arrays.toString(instrumentationNamesArray));
+                    String knownTypes = Arrays.stream(InstrumentationType.values())
+                                              .map(InstrumentationType::getShortName)
+                                              .collect(joining(", "));
+                    logger.report(String.format(
+                            "Unknown instrumentation type is defined through the '%s' option - '%s'. "
+                            + "Known types: %s",
+                            TrauteConstants.OPTION_INSTRUMENTATIONS_TO_USE, instrumentationShortName, knownTypes
+                    ));
                 }
+            } else {
+                builder.withInstrumentationToApply(type);
+            }
+            if (logger != null) {
+                logger.info("using the following instrumentations: " + Arrays.toString(instrumentationNamesArray));
             }
         }
     }
@@ -282,13 +284,34 @@ public class TrauteJavacPlugin implements Plugin {
                                          @NotNull Map<String, String> options)
     {
         String notNullAnnotationsString = options.get(TrauteConstants.OPTION_ANNOTATIONS_NOT_NULL);
-        if (notNullAnnotationsString != null) {
-            notNullAnnotationsString = notNullAnnotationsString.trim();
-            String[] notNullAnnotations = notNullAnnotationsString.split(TrauteConstants.SEPARATOR);
-            if (notNullAnnotations.length > 0) {
-                builder.withNotNullAnnotations(notNullAnnotations);
+        if (notNullAnnotationsString == null) {
+            return;
+        }
+        notNullAnnotationsString = notNullAnnotationsString.trim();
+        String[] notNullAnnotations = notNullAnnotationsString.split(TrauteConstants.SEPARATOR);
+        if (notNullAnnotations.length > 0) {
+            builder.withNotNullAnnotations(notNullAnnotations);
+            if (logger != null) {
+                logger.info("using the following NotNull annotations: " + Arrays.toString(notNullAnnotations));
+            }
+        }
+    }
+
+    private void applyExceptionsThThrow(@Nullable TrautePluginLogger logger,
+                                        @NotNull TrautePluginSettingsBuilder builder,
+                                        @NotNull Map<String, String> options)
+    {
+        for (Map.Entry<String, String> entry : options.entrySet()) {
+            String key = entry.getKey();
+            if (!key.startsWith(TrauteConstants.OPTION_PREFIX_EXCEPTION_TO_THROW)) {
+                continue;
+            }
+            String instrumentationString = key.substring(TrauteConstants.OPTION_PREFIX_EXCEPTION_TO_THROW.length());
+            InstrumentationType type = InstrumentationType.byShortName(instrumentationString);
+            if (type != null) {
+                builder.withExceptionToThrow(type, entry.getValue());
                 if (logger != null) {
-                    logger.info("using the following NotNull annotations: " + Arrays.toString(notNullAnnotations));
+                    logger.info(String.format("using %s in '%s' checks", entry.getValue(), instrumentationString));
                 }
             }
         }

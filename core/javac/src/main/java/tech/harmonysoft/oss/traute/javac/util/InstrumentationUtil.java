@@ -18,21 +18,23 @@ public class InstrumentationUtil {
      * Builds an {@code AST 'if'} element which looks as below:
      * <pre>
      *     if ([given-variable-name] == null) {
-     *         throw new NullPointerException([given-error-message]);
+     *         throw new [given-exception]([given-error-message]);
      *     }
      * </pre>
      *
-     * @param factory       an {@code AST} factory to use
-     * @param symbolsTable  a symbols table to use
-     * @param variableName  a variable name to use
-     * @param errorMessage  an error message to use
-     * @return              an {@code AST 'if'} for the parameters above
+     * @param factory           an {@code AST} factory to use
+     * @param symbolsTable      a symbols table to use
+     * @param variableName      a variable name to use
+     * @param errorMessage      an error message to use
+     * @param exceptionToThrow  an exception to throw in case of failed check
+     * @return                  an {@code AST 'if'} for the parameters above
      */
     @NotNull
     public static JCTree.JCIf buildVarCheck(@NotNull TreeMaker factory,
                                             @NotNull Names symbolsTable,
                                             @NotNull String variableName,
-                                            @NotNull String errorMessage)
+                                            @NotNull String errorMessage,
+                                            @NotNull String exceptionToThrow)
     {
         return factory.If(
                 factory.Parens(
@@ -49,7 +51,7 @@ public class InstrumentationUtil {
                                         null,
                                         nil(),
                                         factory.Ident(
-                                                symbolsTable.fromString("NullPointerException")
+                                                symbolsTable.fromString(exceptionToThrow)
                                         ),
                                         List.of(factory.Literal(TypeTag.CLASS, errorMessage)),
                                         null

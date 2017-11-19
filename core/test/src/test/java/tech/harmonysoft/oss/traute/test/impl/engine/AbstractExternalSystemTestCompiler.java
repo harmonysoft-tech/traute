@@ -214,6 +214,11 @@ public abstract class AbstractExternalSystemTestCompiler implements TestCompiler
                 file -> result.add(String.format("-A%s=%s", OPTION_LOG_FILE, file.getAbsolutePath()))
         );
 
+        settings.getExceptionsToThrow()
+                .forEach((key, value) -> result.add(String.format("-A%s%s=%s",
+                                                                  OPTION_PREFIX_EXCEPTION_TO_THROW,
+                                                                  key.getShortName(),
+                                                                  value)));
         return result;
     }
 }

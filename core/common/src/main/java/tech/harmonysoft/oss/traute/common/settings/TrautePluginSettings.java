@@ -5,14 +5,15 @@ import org.jetbrains.annotations.Nullable;
 import tech.harmonysoft.oss.traute.common.instrumentation.InstrumentationType;
 
 import java.io.File;
-import java.util.HashSet;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 
 public class TrautePluginSettings {
 
-    private final Set<String>              notNullAnnotations      = new HashSet<>();
-    private final Set<InstrumentationType> instrumentationsToApply = new HashSet<>();
+    public static final String DEFAULT_EXCEPTION_TO_THROW = NullPointerException.class.getSimpleName();
+
+    private final Set<String>                      notNullAnnotations      = new HashSet<>();
+    private final Set<InstrumentationType>         instrumentationsToApply = new HashSet<>();
+    private final Map<InstrumentationType, String> exceptionsToThrow       = new HashMap<>();
 
     @Nullable private final File logFile;
 
@@ -20,12 +21,14 @@ public class TrautePluginSettings {
 
     public TrautePluginSettings(@NotNull Set<String> notNullAnnotations,
                                 @NotNull Set<InstrumentationType> instrumentationsToApply,
+                                @NotNull Map<InstrumentationType, String> exceptionsToThrow,
                                 @Nullable File logFile,
                                 boolean verboseMode)
     {
         this.logFile = logFile;
         this.notNullAnnotations.addAll(notNullAnnotations);
         this.instrumentationsToApply.addAll(instrumentationsToApply);
+        this.exceptionsToThrow.putAll(exceptionsToThrow);
         this.verboseMode = verboseMode;
     }
 
@@ -41,6 +44,16 @@ public class TrautePluginSettings {
     @NotNull
     public Set<InstrumentationType> getInstrumentationsToApply() {
         return instrumentationsToApply;
+    }
+
+    @NotNull
+    public String getExceptionToThrow(@NotNull InstrumentationType type) {
+        return exceptionsToThrow.getOrDefault(type, DEFAULT_EXCEPTION_TO_THROW);
+    }
+
+    @NotNull
+    public Map<InstrumentationType, String> getExceptionsToThrow() {
+        return exceptionsToThrow;
     }
 
     @NotNull

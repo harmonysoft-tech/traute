@@ -95,6 +95,16 @@ public class JavacTestCompiler implements TestCompiler {
                 String.format("-A%s=%s", TrauteConstants.OPTION_LOG_FILE, file.getAbsolutePath())
         ));
 
+        for (InstrumentationType instrumentationType : instrumentationTypes) {
+            String exceptionToThrow = settings.getExceptionToThrow(instrumentationType);
+            if (!TrautePluginSettings.DEFAULT_EXCEPTION_TO_THROW.equals(exceptionToThrow)) {
+                result.add(String.format("-A%s%s=%s",
+                                         TrauteConstants.OPTION_PREFIX_EXCEPTION_TO_THROW,
+                                         instrumentationType.getShortName(),
+                                         exceptionToThrow));
+            }
+        }
+
         boolean verboseLog = settings.isVerboseMode();
         if (verboseLog != DEFAULT_VERBOSE_MODE) {
             result.add(String.format("-A%s=true", TrauteConstants.OPTION_LOG_VERBOSE));

@@ -60,6 +60,19 @@ public class TrauteConstants {
      * @see InstrumentationType#getShortName()
      */
     public static final String OPTION_INSTRUMENTATIONS_TO_USE = "traute.instrumentations";
+    /**
+     * <p>
+     *     Prefix for compiler's option prefix for specifying an exception to throw on failed
+     *     {@code null}-check. Resulting option is constructed from the current prefix and
+     *     {@link InstrumentationType#getShortName()}.
+     * </p>
+     * <p>
+     *     E.g. {@code -Atraute.exception.parameter=IllegalArgumentException} instructs the plugin
+     *     to generated a parameter check where an {@link IllegalArgumentException} is thrown in case
+     *     of failure.
+     * </p>
+     */
+    public static final String OPTION_PREFIX_EXCEPTION_TO_THROW = "traute.exception.";
 
     /**
      * Separator to use for composite properties, e.g. when a user want to specify more than one

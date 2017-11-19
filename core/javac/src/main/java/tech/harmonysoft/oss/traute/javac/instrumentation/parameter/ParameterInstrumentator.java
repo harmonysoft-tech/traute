@@ -11,6 +11,7 @@ import org.jetbrains.annotations.NotNull;
 import tech.harmonysoft.oss.traute.javac.common.CompilationUnitProcessingContext;
 import tech.harmonysoft.oss.traute.javac.instrumentation.AbstractInstrumentator;
 
+import static tech.harmonysoft.oss.traute.common.instrumentation.InstrumentationType.METHOD_PARAMETER;
 import static tech.harmonysoft.oss.traute.javac.util.InstrumentationUtil.buildVarCheck;
 
 /**
@@ -31,7 +32,8 @@ public class ParameterInstrumentator extends AbstractInstrumentator<ParameterToI
         TreeMaker factory = context.getAstFactory();
         Names symbolsTable = context.getSymbolsTable();
         JCTree.JCBlock body = info.getBody();
-        JCTree.JCIf varCheck = buildVarCheck(factory, symbolsTable, parameterName, errorMessage);
+        String exceptionToThrow = info.getContext().getPluginSettings().getExceptionToThrow(METHOD_PARAMETER);
+        JCTree.JCIf varCheck = buildVarCheck(factory, symbolsTable, parameterName, errorMessage, exceptionToThrow);
         if (info.isConstructor() && isFirstStatementThisOrSuperCall(body)) {
             List<JCTree.JCStatement> newStatements = List.of(varCheck);
             List<JCTree.JCStatement> statements = body.getStatements();

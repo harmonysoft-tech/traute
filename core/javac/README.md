@@ -118,6 +118,16 @@ Example:
 
 This effectively disables *return* instrumentation.
 
+**Exception to Throw**
+
+*NullPointerException* is thrown in case of failed check by default. However, it's possible to specify another exceptions to be thrown. It's defined through the [traute.exception.](https://github.com/denis-zhdanov/traute/blob/master/core/common/src/main/java/tech/harmonysoft/oss/traute/common/util/TrauteConstants.java#L75) prefix followed by the [instrumentation type](https://github.com/denis-zhdanov/traute/blob/master/core/common/src/main/java/tech/harmonysoft/oss/traute/common/instrumentation/InstrumentationType.java#L69).  
+
+Example:  
+
+```javac -cp <classpath> -Xplugin:Traute -Atraute.exception.parameter=IllegalArgumentException -Atraute.exception.return=IllegalStateException```
+
+This specifies an *IllegalArgumentException* to be thrown when a *null* is received for a *@NotNull* method parameter and *IllegalStateException* to be thrown when a method marked by *@NotNull* tries to return *null*.
+
 **Logging**
 
 The plugin logs only custom options by default:  

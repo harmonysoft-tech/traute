@@ -1,3 +1,9 @@
+**v.1.0.7**
+Feature:
+* [Configurable exceptions](https://github.com/denis-zhdanov/traute/issues/60)
+* [Maven Central](https://repo1.maven.org/maven2/tech/harmonysoft/traute-javac/1.0.7/)
+* [JCenter](https://repo.jfrog.org/artifactory/libs-release-bintray/tech/harmonysoft/traute-javac/1.0.7/)
+
 **v.1.0.6**
 Feature:
 * [Make it possible to print the log into a file](https://github.com/denis-zhdanov/traute/issues/58)

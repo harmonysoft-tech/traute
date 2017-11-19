@@ -27,7 +27,7 @@ Add the following to your *build.gradle*:
 
 ```groovy
 plugins {
-  id "tech.harmonysoft.oss.traute" version "1.0.3"
+  id "tech.harmonysoft.oss.traute" version "1.0.4"
 }
 ```
 
@@ -37,7 +37,7 @@ plugins {
 buildscript {
   mavenCentral()
   dependencies {
-    classpath "gradle.plugin.tech.harmonysoft:gradle:1.0.3"
+    classpath "gradle.plugin.tech.harmonysoft:gradle:1.0.4"
   }
 }
 
@@ -50,7 +50,7 @@ apply plugin: "tech.harmonysoft.oss.traute"
 buildscript {
   jcenter()
   dependencies {
-    classpath "gradle.plugin.tech.harmonysoft:gradle:1.0.3"
+    classpath "gradle.plugin.tech.harmonysoft:gradle:1.0.4"
   }
 }
 
@@ -65,7 +65,7 @@ All configuration settings are specified in the `traute` *build.gradle* section.
 
 ```groovy
 traute {
-    javacPluginVersion = '1.0.6'
+    javacPluginVersion = '1.0.7'
 }
 ```
 
@@ -100,6 +100,17 @@ traute {
 ```groovy
 traute {
     logFile = "$buildDir/traute.log"
+}
+```
+
+**Exceptions to throw**
+
+```groovy
+traute {
+    exceptionsToThrow = [
+                          'parameter' : 'IllegalArgumentException',
+                          'return'    : 'IllegalStateException'
+                        ]
 }
 ```
 

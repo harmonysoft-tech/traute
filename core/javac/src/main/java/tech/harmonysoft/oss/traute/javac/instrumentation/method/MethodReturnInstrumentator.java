@@ -12,6 +12,8 @@ import tech.harmonysoft.oss.traute.javac.util.InstrumentationUtil;
 
 import java.util.Optional;
 
+import static tech.harmonysoft.oss.traute.common.instrumentation.InstrumentationType.METHOD_RETURN;
+
 /**
  * <p>
  *     Enhances target method annotated by {@code NotNull} in a way to insert {@code null}-checks for
@@ -101,10 +103,12 @@ public class MethodReturnInstrumentator extends AbstractInstrumentator<ReturnToI
                         returnJcExpression
                 )
         );
+        String exceptionToThrow = info.getContext().getPluginSettings().getExceptionToThrow(METHOD_RETURN);
         result = result.append(InstrumentationUtil.buildVarCheck(factory,
                                                                  symbolsTable,
                                                                  info.getTmpVariableName(),
-                                                                 errorMessage));
+                                                                 errorMessage,
+                                                                 exceptionToThrow));
         result = result.append(
                 factory.Return(
                         factory.Ident(symbolsTable.fromString(info.getTmpVariableName()))));
