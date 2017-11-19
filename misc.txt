@@ -8,3 +8,15 @@
 ./gradlew :facade:gradle:publishPlugins
 ./gradlew :facade:gradle:uploadArchives
 ./gradlew :facade:gradle:bintrayUpload
+
+
+traute-javac v.1.0.7 is released.
+Changes - http://traute.oss.harmonysoft.tech/core/javac/RELEASE.html
+Maven Central - https://repo1.maven.org/maven2/tech/harmonysoft/traute-javac/1.0.7/
+jCenter - https://repo.jfrog.org/artifactory/libs-release-bintray/tech/harmonysoft/traute-javac/1.0.7/
+
+traute-gradle v.1.0.4 is released.
+Changes - http://traute.oss.harmonysoft.tech/facade/gradle/RELEASE.html
+Gradle Plugins Registry - https://plugins.gradle.org/plugin/tech.harmonysoft.oss.traute/1.0.4
+Maven Central - https://repo1.maven.org/maven2/tech/harmonysoft/traute-gradle/1.0.4/
+jCenter - https://repo.jfrog.org/artifactory/libs-release-bintray/tech/harmonysoft/traute-gradle/1.0.4/
