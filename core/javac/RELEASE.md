@@ -6,23 +6,28 @@ Binaries:
 * [Maven Central](https://repo1.maven.org/maven2/tech/harmonysoft/traute-javac/1.0.7/)
 * [JCenter](https://repo.jfrog.org/artifactory/libs-release-bintray/tech/harmonysoft/traute-javac/1.0.7/)
 
-**v.1.0.6**
-Feature:
+**v.1.0.6**  
+Tickets:
 * [Make it possible to print the log into a file](https://github.com/denis-zhdanov/traute/issues/58)
-
-Bugfix:
 * [Correct parameters instrumentation for delegating constructors](https://github.com/denis-zhdanov/traute/issues/57)
-* [Correct notification is incorrect for the situation when there is a nested class](https://github.com/denis-zhdanov/traute/issues/59)
+* [Correct notification is incorrect for the situation when there is a nested class](https://github.com/denis-zhdanov/traute/issues/59)  
 
-**v.1.0.5**
-Bugfix:
-* [Correct processing for constructors](https://github.com/denis-zhdanov/traute/issues/56)
+Binaries:
+* [Maven Central](https://repo1.maven.org/maven2/tech/harmonysoft/traute-javac/1.0.6/)
+* [JCenter](https://repo.jfrog.org/artifactory/libs-release-bintray/tech/harmonysoft/traute-javac/1.0.6/)
+
+**v.1.0.5**  
+Tickets:
+* [Correct processing for constructors](https://github.com/denis-zhdanov/traute/issues/56)  
+
+Binaries:
 * [Maven Central](https://repo1.maven.org/maven2/tech/harmonysoft/traute-javac/1.0.5/)
 * [JCenter](https://repo.jfrog.org/artifactory/libs-release-bintray/tech/harmonysoft/traute-javac/1.0.5/)
 
 **v.1.0.4**
 
-The first stable version.
+The first stable version.  
 
+Binaries:
 * [Maven Central](https://repo1.maven.org/maven2/tech/harmonysoft/traute-javac/1.0.4/)
 * [JCenter](https://repo.jfrog.org/artifactory/libs-release-bintray/tech/harmonysoft/traute-javac/1.0.4/) 
