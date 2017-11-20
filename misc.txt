@@ -1,14 +1,14 @@
 ./gradlew :core:javac-plugin:uploadArchives
 ./gradlew closeAndReleaseRepository
-./gradlew closeRepository
-./gradlew releaseRepository
-
 ./gradlew :core:javac-plugin:bintrayUpload
 
 ./gradlew :facade:gradle:publishPlugins
 ./gradlew :facade:gradle:uploadArchives
+./gradlew closeAndReleaseRepository
 ./gradlew :facade:gradle:bintrayUpload
 
+./gradlew closeRepository
+./gradlew releaseRepository
 
 traute-javac v.1.0.8 is released.
 Changes - http://traute.oss.harmonysoft.tech/core/javac/RELEASE.html
