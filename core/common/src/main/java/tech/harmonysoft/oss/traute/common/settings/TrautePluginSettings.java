@@ -14,6 +14,7 @@ public class TrautePluginSettings {
     private final Set<String>                      notNullAnnotations      = new HashSet<>();
     private final Set<InstrumentationType>         instrumentationsToApply = new HashSet<>();
     private final Map<InstrumentationType, String> exceptionsToThrow       = new HashMap<>();
+    private final Map<InstrumentationType, String> exceptionTextPatterns   = new HashMap<>();
 
     @Nullable private final File logFile;
 
@@ -22,6 +23,7 @@ public class TrautePluginSettings {
     public TrautePluginSettings(@NotNull Set<String> notNullAnnotations,
                                 @NotNull Set<InstrumentationType> instrumentationsToApply,
                                 @NotNull Map<InstrumentationType, String> exceptionsToThrow,
+                                @NotNull Map<InstrumentationType, String> exceptionTextPatterns,
                                 @Nullable File logFile,
                                 boolean verboseMode)
     {
@@ -29,6 +31,7 @@ public class TrautePluginSettings {
         this.notNullAnnotations.addAll(notNullAnnotations);
         this.instrumentationsToApply.addAll(instrumentationsToApply);
         this.exceptionsToThrow.putAll(exceptionsToThrow);
+        this.exceptionTextPatterns.putAll(exceptionTextPatterns);
         this.verboseMode = verboseMode;
     }
 
@@ -54,6 +57,16 @@ public class TrautePluginSettings {
     @NotNull
     public Map<InstrumentationType, String> getExceptionsToThrow() {
         return exceptionsToThrow;
+    }
+
+    @Nullable
+    public String getExceptionTextPattern(@NotNull InstrumentationType type) {
+        return exceptionTextPatterns.get(type);
+    }
+
+    @NotNull
+    public Map<InstrumentationType, String> getExceptionTextPatterns() {
+        return exceptionTextPatterns;
     }
 
     @NotNull

@@ -49,7 +49,7 @@ public class AntTestCompiler extends AbstractExternalSystemTestCompiler {
 
         String compilerArguments = getCompilerArgs(testSource.getSettings())
                 .stream()
-                .map(a -> String.format("        <compilerarg value=\"%s\" />", a))
+                .map(a -> String.format("      <compilerarg value=\"%s\" />", a))
                 .collect(Collectors.joining("\n"));
         content = content.replace(MARKER_COMPILER_ARGS, compilerArguments);
         write(buildXml, content);

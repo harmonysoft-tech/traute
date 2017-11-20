@@ -1,5 +1,5 @@
 plugins {
-    id "tech.harmonysoft.oss.traute" version "1.0.1"
+    id "tech.harmonysoft.oss.traute" version "1.0.5"
 }
 
 group 'tech.harmonysoft.oss.traute'
@@ -14,7 +14,7 @@ repositories {
 }
 
 traute {
-    javacPluginVersion = '1.0.7'
+    javacPluginVersion = '1.0.8'
     verbose = true
 }
 

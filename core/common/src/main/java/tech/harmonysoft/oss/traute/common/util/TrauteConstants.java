@@ -73,6 +73,31 @@ public class TrauteConstants {
      * </p>
      */
     public static final String OPTION_PREFIX_EXCEPTION_TO_THROW = "traute.exception.";
+    /**
+     * <p>
+     *     Prefix for compiler's option prefix for specifying a text to use in an exception thrown from
+     *     a failed {@code null}-check. Resulting option is constructed from the current prefix and
+     *     {@link InstrumentationType#getShortName()}.
+     * </p>
+     * <p>
+     *     E.g. {@code "-Atraute.failure.text.parameter=${PARAMETER_NAME} must not be null"} instructs the plugin
+     *     to generated a check for a parameter named, say, {@code 'arg'} with exception text
+     *     {@code "arg must not be null"}.
+     * </p>
+     */
+    public static final String OPTION_PREFIX_EXCEPTION_TEXT = "traute.failure.text.";
+
+    /**
+     * This text is replaced by the actual parameter name in the
+     * {@link InstrumentationType#METHOD_PARAMETER parametere check}.
+     */
+    public static final String VARIABLE_PARAMETER_NAME = "PARAMETER_NAME";
+
+    /**
+     * This function capitalizes the variable inside it, e.g. {@code ${capitalize(PARAMETER_NAME)}} for
+     * parameter {@code 'arg'} produced {@code 'Arg'}.
+     */
+    public static final String FUNCTION_CAPITALIZE = "capitalize";
 
     /**
      * Separator to use for composite properties, e.g. when a user want to specify more than one

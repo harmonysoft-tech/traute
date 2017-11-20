@@ -40,9 +40,11 @@ public class TrautePluginSettingsBuilder {
 
     public static final boolean DEFAULT_VERBOSE_MODE = false;
 
-    private final Set<String>                      notNullAnnotations      = new HashSet<>();
-    private final Set<InstrumentationType>         instrumentationsToApply = EnumSet.noneOf(InstrumentationType.class);
-    private final Map<InstrumentationType, String> exceptionsToThrow       = new HashMap<>();
+    private final Set<String>              notNullAnnotations      = new HashSet<>();
+    private final Set<InstrumentationType> instrumentationsToApply = EnumSet.noneOf(InstrumentationType.class);
+
+    private final Map<InstrumentationType, String> exceptionsToThrow     = new HashMap<>();
+    private final Map<InstrumentationType, String> exceptionTextPatterns = new HashMap<>();
 
     @Nullable private File    logFile;
     @Nullable private Boolean verbose;
@@ -64,10 +66,19 @@ public class TrautePluginSettingsBuilder {
         return this;
     }
 
+    @NotNull
     public TrautePluginSettingsBuilder withExceptionToThrow(@NotNull InstrumentationType type,
                                                             @NotNull String exceptionToThrow)
     {
         exceptionsToThrow.put(type, exceptionToThrow);
+        return this;
+    }
+
+    @NotNull
+    public TrautePluginSettingsBuilder withExceptionTextPattern(@NotNull InstrumentationType type,
+                                                                @NotNull String pattern)
+    {
+        exceptionTextPatterns.put(type, pattern);
         return this;
     }
 
@@ -102,6 +113,7 @@ public class TrautePluginSettingsBuilder {
         return new TrautePluginSettings(notNullAnnotations,
                                         instrumentationsToApply,
                                         exceptionsToThrow,
+                                        exceptionTextPatterns,
                                         logFile,
                                         verbose);
     }

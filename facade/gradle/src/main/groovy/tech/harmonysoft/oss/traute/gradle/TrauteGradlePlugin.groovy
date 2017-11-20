@@ -17,6 +17,7 @@ class TrautePluginExtension {
     def notNullAnnotations
     def instrumentations
     def exceptionsToThrow
+    def exceptionTexts
     def logFile
     boolean verbose
 }
@@ -59,6 +60,7 @@ class TrauteGradlePlugin implements Plugin<Project> {
         mayBeApplyLogFile(compilerArgs, extension)
         mayBeApplyInstrumentations(compilerArgs, extension)
         mayBeApplyExceptionsToThrow(compilerArgs, extension)
+        mayBeApplyExceptionTexts(compilerArgs, extension)
     }
 
     private static void mayBeApplyNotNullAnnotations(compilerArgs, extension) {
@@ -113,6 +115,22 @@ class TrauteGradlePlugin implements Plugin<Project> {
         }
         extension.exceptionsToThrow.each { k, v ->
             compilerArgs << "-A${OPTION_PREFIX_EXCEPTION_TO_THROW}${k}=${v}"
+        }
+    }
+
+    private static void mayBeApplyExceptionTexts(compilerArgs, extension) {
+        if (!extension.exceptionTexts) {
+            return
+        }
+        if (!(extension.exceptionTexts instanceof Map)) {
+            throw new PluginInstantiationException(
+                    "Error on ${PLUGIN_NAME} plugin initialization - expected to find a Map "
+                            + "of strings at the 'exceptionTexts' property but found "
+                            + "a ${extension.exceptionTexts.class.name} "
+            )
+        }
+        extension.exceptionTexts.each { k, v ->
+            compilerArgs << "-A${OPTION_PREFIX_EXCEPTION_TEXT}${k}=${v}"
         }
     }
 

@@ -1,3 +1,11 @@
+**v.1.0.8**  
+Tickets:
+* [Configurable exception text](https://github.com/denis-zhdanov/traute/issues/61)  
+
+Binaries:
+* [Maven Central](https://repo1.maven.org/maven2/tech/harmonysoft/traute-javac/1.0.8/)
+* [JCenter](https://repo.jfrog.org/artifactory/libs-release-bintray/tech/harmonysoft/traute-javac/1.0.8/)
+
 **v.1.0.7**  
 Tickets:
 * [Configurable exceptions](https://github.com/denis-zhdanov/traute/issues/60)  

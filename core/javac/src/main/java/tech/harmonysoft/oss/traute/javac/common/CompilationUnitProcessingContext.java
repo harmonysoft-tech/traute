@@ -7,6 +7,7 @@ import org.jetbrains.annotations.NotNull;
 import tech.harmonysoft.oss.traute.common.stats.StatsCollector;
 import tech.harmonysoft.oss.traute.common.settings.TrautePluginSettings;
 import tech.harmonysoft.oss.traute.javac.log.TrautePluginLogger;
+import tech.harmonysoft.oss.traute.javac.text.ExceptionTextGeneratorManager;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -18,23 +19,26 @@ public class CompilationUnitProcessingContext {
 
     private final Set<String> imports = new HashSet<>();
 
-    @NotNull private final TrautePluginSettings pluginSettings;
-    @NotNull private final TreeMaker            astFactory;
-    @NotNull private final Names                symbolsTable;
-    @NotNull private final TrautePluginLogger   logger;
-    @NotNull private final StatsCollector       statsCollector;
+    @NotNull private final TrautePluginSettings          pluginSettings;
+    @NotNull private final TreeMaker                     astFactory;
+    @NotNull private final Names                         symbolsTable;
+    @NotNull private final TrautePluginLogger            logger;
+    @NotNull private final StatsCollector                statsCollector;
+    @NotNull private final ExceptionTextGeneratorManager exceptionTextGeneratorManager;
 
     public CompilationUnitProcessingContext(@NotNull TrautePluginSettings pluginSettings,
                                             @NotNull TreeMaker astFactory,
                                             @NotNull Names symbolsTable,
                                             @NotNull TrautePluginLogger logger,
-                                            @NotNull StatsCollector statsCollector)
+                                            @NotNull StatsCollector statsCollector,
+                                            @NotNull ExceptionTextGeneratorManager exceptionTextGeneratorManager)
     {
         this.pluginSettings = pluginSettings;
         this.statsCollector = statsCollector;
         this.astFactory = astFactory;
         this.symbolsTable = symbolsTable;
         this.logger = logger;
+        this.exceptionTextGeneratorManager = exceptionTextGeneratorManager;
     }
 
     public void addImport(@NotNull String importText) {
@@ -69,5 +73,10 @@ public class CompilationUnitProcessingContext {
     @NotNull
     public StatsCollector getStatsCollector() {
         return statsCollector;
+    }
+
+    @NotNull
+    public ExceptionTextGeneratorManager getExceptionTextGeneratorManager() {
+        return exceptionTextGeneratorManager;
     }
 }

@@ -8,6 +8,7 @@ import com.sun.tools.javac.tree.TreeMaker;
 import com.sun.tools.javac.util.List;
 import com.sun.tools.javac.util.Names;
 import org.jetbrains.annotations.NotNull;
+import tech.harmonysoft.oss.traute.javac.text.ExceptionTextGenerator;
 import tech.harmonysoft.oss.traute.javac.common.CompilationUnitProcessingContext;
 import tech.harmonysoft.oss.traute.javac.instrumentation.AbstractInstrumentator;
 
@@ -23,12 +24,10 @@ public class ParameterInstrumentator extends AbstractInstrumentator<ParameterToI
     @Override
     protected boolean mayBeInstrument(@NotNull ParameterToInstrumentInfo info) {
         String parameterName = info.getMethodParameter().getName().toString();
-        String errorMessage = String.format(
-                "Argument '%s' of type %s (#%d out of %d, zero-based) is marked by @%s but got null for it",
-                parameterName, info.getMethodParameter().getType(),
-                info.getMethodParameterIndex(), info.getMethodParametersNumber(), info.getNotNullAnnotation()
-        );
         CompilationUnitProcessingContext context = info.getContext();
+        ExceptionTextGenerator<ParameterToInstrumentInfo> generator =
+                context.getExceptionTextGeneratorManager().getGenerator(METHOD_PARAMETER, context.getPluginSettings());
+        String errorMessage = generator.generate(info);
         TreeMaker factory = context.getAstFactory();
         Names symbolsTable = context.getSymbolsTable();
         JCTree.JCBlock body = info.getBody();

@@ -219,6 +219,11 @@ public abstract class AbstractExternalSystemTestCompiler implements TestCompiler
                                                                   OPTION_PREFIX_EXCEPTION_TO_THROW,
                                                                   key.getShortName(),
                                                                   value)));
+        settings.getExceptionTextPatterns()
+                .forEach((key, value) -> result.add(String.format("-A%s%s=%s",
+                                                                  OPTION_PREFIX_EXCEPTION_TEXT,
+                                                                  key.getShortName(),
+                                                                  value)));
         return result;
     }
 }

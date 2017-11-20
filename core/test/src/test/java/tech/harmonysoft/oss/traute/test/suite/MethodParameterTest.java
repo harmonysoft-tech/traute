@@ -376,4 +376,36 @@ public abstract class MethodParameterTest extends AbstractTrauteTest {
                        .atLine(findLineNumber(testSource, parameterName));
         doTest(testSource);
     }
+
+    @Test
+    public void customExceptionText() {
+        settingsBuilder.withExceptionTextPattern(InstrumentationType.METHOD_PARAMETER,
+                                                 "${capitalize(PARAMETER_NAME)} must not be null");
+        String testSource = prepareParameterTestSource(
+                NotNull.class.getName(),
+                String.format("public void %s(@NotNull Integer arg) {}", METHOD_NAME),
+                "null"
+        );
+        expectRunResult.withExceptionClass(NullPointerException.class)
+                       .withExceptionMessageSnippet("Arg must not be null")
+                       .atLine(findLineNumber(testSource, "arg"));
+        doTest(testSource);
+    }
+
+    @Test
+    public void springBoot() {
+        settingsBuilder.withExceptionToThrow(InstrumentationType.METHOD_PARAMETER,
+                                             IllegalArgumentException.class.getSimpleName())
+                       .withExceptionTextPattern(InstrumentationType.METHOD_PARAMETER,
+                                                 "${capitalize(PARAMETER_NAME)} must not be null");
+        String testSource = prepareParameterTestSource(
+                NotNull.class.getName(),
+                String.format("public void %s(@NotNull Integer myArg) {}", METHOD_NAME),
+                "null"
+        );
+        expectRunResult.withExceptionClass(IllegalArgumentException.class)
+                       .withExceptionMessageSnippet("MyArg must not be null")
+                       .atLine(findLineNumber(testSource, "myArg"));
+        doTest(testSource);
+    }
 }

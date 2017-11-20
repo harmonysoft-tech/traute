@@ -67,7 +67,7 @@ The plugin works with *JDK8* or later - [Compiler Plugin API](https://docs.oracl
 Example:
 ```
 javac -cp src/main/java\
-:~/.gradle/caches/modules-2/files-2.1/tech.harmonysoft:traute-javac-plugin/1.0.0/7a00452c350de0fb80ecbcecfb8ce0145c46141e/traute-javac-plugin-1.0.0.jar \
+:~/.gradle/caches/modules-2/files-2.1/tech.harmonysoft:traute-javac-plugin/1.0.7/7a00452c350de0fb80ecbcecfb8ce0145c46141e/traute-javac-plugin-1.0.0.jar \
 -Xplugin:Traute \
 org/MyClass.java
 ```
@@ -127,6 +127,30 @@ Example:
 ```javac -cp <classpath> -Xplugin:Traute -Atraute.exception.parameter=IllegalArgumentException -Atraute.exception.return=IllegalStateException```
 
 This specifies an *IllegalArgumentException* to be thrown when a *null* is received for a *@NotNull* method parameter and *IllegalStateException* to be thrown when a method marked by *@NotNull* tries to return *null*.
+
+**Exception Text**
+
+The plugin uses pre-defined error text in *null*-checks, however, it's possible to customize that. It's defined through the [traute.failure.text.](https://github.com/denis-zhdanov/traute/blob/master/core/common/src/main/java/tech/harmonysoft/oss/traute/common/util/TrauteConstants.java#L88) prefix followed by the [instrumentation type](https://github.com/denis-zhdanov/traute/blob/master/core/common/src/main/java/tech/harmonysoft/oss/traute/common/instrumentation/InstrumentationType.java#L69).  
+
+It's possible to use substitutions in the custom text value. They are defined through the `${VAR_NAME}` syntax. Following variables are supported now:  
+* *PARAMETER_NAME* - expands to the name of the method parameter marked by *@NotNull* where *null* is received (available in *parameter* checks only)  
+
+It's also possible to apply functions to the substituted variables:  
+* *capitalize* - capitalizes variable name
+
+Example:
+
+```javac -cp <classpath> -Xplugin:Traute '-Atraute.failure.text.parameter=${capitalize(PARAMETER_NAME)} must not be null'```  
+
+Here the plugin generates a check like below:  
+
+```java
+public void test(@NotNull Object myArg) {
+    if (myArg == null) {
+        throw new NullPointerException("MyArg must not be null");
+    }
+}
+```
 
 **Logging**
 

@@ -6,6 +6,7 @@ import com.sun.tools.javac.tree.TreeMaker;
 import com.sun.tools.javac.util.List;
 import com.sun.tools.javac.util.Names;
 import org.jetbrains.annotations.NotNull;
+import tech.harmonysoft.oss.traute.javac.text.ExceptionTextGenerator;
 import tech.harmonysoft.oss.traute.javac.common.CompilationUnitProcessingContext;
 import tech.harmonysoft.oss.traute.javac.instrumentation.AbstractInstrumentator;
 import tech.harmonysoft.oss.traute.javac.util.InstrumentationUtil;
@@ -91,9 +92,9 @@ public class MethodReturnInstrumentator extends AbstractInstrumentator<ReturnToI
 
         TreeMaker factory = context.getAstFactory();
         Names symbolsTable = context.getSymbolsTable();
-        String errorMessage = String.format("Detected an attempt to return null from a method marked by %s",
-                                            info.getNotNullAnnotation()
-        );
+        ExceptionTextGenerator<ReturnToInstrumentInfo> generator =
+                context.getExceptionTextGeneratorManager().getGenerator(METHOD_RETURN, context.getPluginSettings());
+        String errorMessage = generator.generate(info);
 
         List<JCTree.JCStatement> result = List.of(
                 factory.VarDef(

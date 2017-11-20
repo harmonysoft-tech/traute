@@ -14,10 +14,7 @@ import tech.harmonysoft.oss.traute.test.impl.model.CompilationResultImpl;
 import javax.tools.JavaCompiler;
 import javax.tools.ToolProvider;
 import java.io.StringWriter;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.function.Supplier;
 
 import static java.util.Arrays.asList;
@@ -103,6 +100,13 @@ public class JavacTestCompiler implements TestCompiler {
                                          instrumentationType.getShortName(),
                                          exceptionToThrow));
             }
+        }
+
+        for (Map.Entry<InstrumentationType, String> entry : settings.getExceptionTextPatterns().entrySet()) {
+            result.add(String.format("-A%s%s=%s",
+                                     TrauteConstants.OPTION_PREFIX_EXCEPTION_TEXT,
+                                     entry.getKey().getShortName(),
+                                     entry.getValue()));
         }
 
         boolean verboseLog = settings.isVerboseMode();

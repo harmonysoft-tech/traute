@@ -29,6 +29,7 @@ import tech.harmonysoft.oss.traute.javac.log.AbstractLogger;
 import tech.harmonysoft.oss.traute.javac.log.CompilerOutputLogger;
 import tech.harmonysoft.oss.traute.javac.log.FileLogger;
 import tech.harmonysoft.oss.traute.javac.log.TrautePluginLogger;
+import tech.harmonysoft.oss.traute.javac.text.ExceptionTextGeneratorManager;
 
 import javax.tools.JavaFileObject;
 import java.io.File;
@@ -158,7 +159,8 @@ public class TrauteJavacPlugin implements Plugin {
                                                                  treeMaker,
                                                                  names,
                                                                  logger,
-                                                                 statsCollector),
+                                                                 statsCollector,
+                                                                 new ExceptionTextGeneratorManager(logger)),
                             parameterInstrumentator,
                             methodInstrumentator),null);
                     if (pluginSettings.isVerboseMode()) {
@@ -242,7 +244,8 @@ public class TrauteJavacPlugin implements Plugin {
         applyVerboseMode(logger, builder, options);
         applyNotNullAnnotations(logger, builder, options);
         applyInstrumentations(logger, builder, options);
-        applyExceptionsThThrow(logger, builder, options);
+        applyExceptionsToThrow(logger, builder, options);
+        applyExceptionTextPatterns(logger, builder, options);
 
         return builder.build();
     }
@@ -297,7 +300,7 @@ public class TrauteJavacPlugin implements Plugin {
         }
     }
 
-    private void applyExceptionsThThrow(@Nullable TrautePluginLogger logger,
+    private void applyExceptionsToThrow(@Nullable TrautePluginLogger logger,
                                         @NotNull TrautePluginSettingsBuilder builder,
                                         @NotNull Map<String, String> options)
     {
@@ -312,6 +315,27 @@ public class TrauteJavacPlugin implements Plugin {
                 builder.withExceptionToThrow(type, entry.getValue());
                 if (logger != null) {
                     logger.info(String.format("using %s in '%s' checks", entry.getValue(), instrumentationString));
+                }
+            }
+        }
+    }
+
+    private void applyExceptionTextPatterns(@Nullable TrautePluginLogger logger,
+                                            @NotNull TrautePluginSettingsBuilder builder,
+                                            @NotNull Map<String, String> options)
+    {
+        for (Map.Entry<String, String> entry : options.entrySet()) {
+            String key = entry.getKey();
+            if (!key.startsWith(TrauteConstants.OPTION_PREFIX_EXCEPTION_TEXT)) {
+                continue;
+            }
+            String instrumentationString = key.substring(TrauteConstants.OPTION_PREFIX_EXCEPTION_TEXT.length());
+            InstrumentationType type = InstrumentationType.byShortName(instrumentationString);
+            if (type != null) {
+                builder.withExceptionTextPattern(type, entry.getValue());
+                if (logger != null) {
+                    logger.info(String.format("Using custom exception text generator with pattern '%s' "
+                                              + "in '%s' checks", entry.getValue(), instrumentationString));
                 }
             }
         }
