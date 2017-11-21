@@ -11,7 +11,7 @@ import javax.tools.JavaCompiler;
  */
 public class CompilerOutputLogger extends AbstractLogger {
 
-    private static final String NOTICE_PREFIX = String.format("[%s plugin]: ", TrauteConstants.PLUGIN_NAME);
+    private static final String NOTICE_PREFIX = String.format("[%s javac plugin]: ", TrauteConstants.PLUGIN_NAME);
 
     @NotNull private final Log log;
 
