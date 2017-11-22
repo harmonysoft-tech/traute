@@ -116,7 +116,7 @@ public class InstrumentationApplianceFinder extends TreeScanner<Void, Void> {
     private boolean shouldInstrumentReturnExpression(@NotNull MethodTree method) {
         if (!processingInterface.isEmpty()
             && processingInterface.peek()
-            && !hasFlag(method.getModifiers(), Modifier.DEFAULT))
+            && !hasFlag(method.getModifiers(), Modifier.DEFAULT, Modifier.STATIC))
         {
             return false;
         }
@@ -127,14 +127,14 @@ public class InstrumentationApplianceFinder extends TreeScanner<Void, Void> {
     private boolean shouldInstrumentMethodParameters(@NotNull MethodTree method) {
         if (!processingInterface.isEmpty()
             && processingInterface.peek()
-            && !hasFlag(method.getModifiers(), Modifier.DEFAULT)) {
+            && !hasFlag(method.getModifiers(), Modifier.DEFAULT, Modifier.STATIC)) {
             return false;
         }
         return context.getPluginSettings().isEnabled(METHOD_PARAMETER);
     }
 
     @SuppressWarnings("SimplifiableIfStatement")
-    private static boolean hasFlag(@Nullable ModifiersTree modifiers, @NotNull Modifier modifier) {
+    private static boolean hasFlag(@Nullable ModifiersTree modifiers, @NotNull Modifier ... targetModifiers) {
         if (modifiers == null) {
             return false;
         }
@@ -142,7 +142,12 @@ public class InstrumentationApplianceFinder extends TreeScanner<Void, Void> {
         if (flags == null) {
             return false;
         }
-        return flags.contains(modifier);
+        for (Modifier targetModifier : targetModifiers) {
+            if (flags.contains(targetModifier)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     @Nullable

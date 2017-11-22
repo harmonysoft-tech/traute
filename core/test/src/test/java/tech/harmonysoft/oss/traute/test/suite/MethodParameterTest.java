@@ -246,6 +246,26 @@ public abstract class MethodParameterTest extends AbstractTrauteTest {
     }
 
     @Test
+    public void staticInterfaceMethod() {
+        String testSource = String.format(
+                "package %s;\n" +
+                "\n" +
+                "import %s;\n" +
+                "\n" +
+                "public interface %s {\n" +
+                "\n" +
+                "  static void test(@NotNull String param) {\n" +
+                "  }\n" +
+                "\n" +
+                "  public static void main(String[] args) {\n" +
+                "    %s.test(null);\n" +
+                "  }\n" +
+                "}", PACKAGE, NotNull.class.getName(), CLASS_NAME, CLASS_NAME);
+        expectNpeFromParameterCheck(testSource, "param", expectRunResult);
+        doTest(testSource);
+    }
+
+    @Test
     public void innerClass() {
         String testSource = String.format(
                 "package %s;\n" +
