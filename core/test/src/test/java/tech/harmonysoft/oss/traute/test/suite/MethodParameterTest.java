@@ -49,6 +49,11 @@ public abstract class MethodParameterTest extends AbstractTrauteTest {
         doTestAnnotationWithDifferentDeclarationTypes(org.eclipse.jdt.annotation.NonNull.class);
     }
 
+    @Test
+    public void default_spring() {
+        doTestAnnotationWithDifferentDeclarationTypes(org.springframework.lang.NonNull.class);
+    }
+
     private void doTestAnnotationWithDifferentDeclarationTypes(@NotNull Class<?> notNullAnnotationClass) {
         doTestAnnotation_singleImport(notNullAnnotationClass);
         doTestAnnotation_wildcardImport(notNullAnnotationClass);

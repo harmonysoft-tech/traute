@@ -32,7 +32,10 @@ public class TrautePluginSettingsBuilder {
             "org.eclipse.jdt.annotation.NonNull",
 
             // Lombok - https://projectlombok.org/api/lombok/NonNull.html
-            "lombok.NonNull"
+            "lombok.NonNull",
+
+            // Spring - https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/lang/NonNull.html
+            "org.springframework.lang.NonNull"
     ));
 
     public static final Set<InstrumentationType> DEFAULT_INSTRUMENTATIONS_TO_APPLY =
