@@ -12,7 +12,7 @@
         <dependency>
             <groupId>tech.harmonysoft</groupId>
             <artifactId>traute-javac</artifactId>
-            <version>1.0.9</version> <!-- use the latest available version here -->
+            <version>1.0.10</version> <!-- use the latest available version here -->
             <scope>provided</scope>
         </dependency>
         <dependency>

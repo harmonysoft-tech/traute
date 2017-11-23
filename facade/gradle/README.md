@@ -65,7 +65,7 @@ All configuration settings are specified in the `traute` *build.gradle* section.
 
 ```groovy
 traute {
-    javacPluginVersion = '1.0.9'
+    javacPluginVersion = '1.0.10'
 }
 ```
 

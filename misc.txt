@@ -10,10 +10,10 @@
 ./gradlew closeRepository
 ./gradlew releaseRepository
 
-traute-javac v.1.0.9 is released.
+traute-javac v.1.0.10 is released.
 Changes - http://traute.oss.harmonysoft.tech/core/javac/RELEASE.html
-Maven Central - https://repo1.maven.org/maven2/tech/harmonysoft/traute-javac/1.0.9/
-jCenter - https://repo.jfrog.org/artifactory/libs-release-bintray/tech/harmonysoft/traute-javac/1.0.9/
+Maven Central - https://repo1.maven.org/maven2/tech/harmonysoft/traute-javac/1.0.10/
+jCenter - https://repo.jfrog.org/artifactory/libs-release-bintray/tech/harmonysoft/traute-javac/1.0.10/
 
 traute-gradle v.1.0.5 is released.
 Changes - http://traute.oss.harmonysoft.tech/facade/gradle/RELEASE.html

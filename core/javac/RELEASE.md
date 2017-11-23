@@ -1,3 +1,11 @@
+**v.1.0.10**  
+Tickets:
+* [Support default package](https://github.com/denis-zhdanov/traute/issues/66)    
+
+Binaries:
+* [Maven Central](https://repo1.maven.org/maven2/tech/harmonysoft/traute-javac/1.0.10/)
+* [JCenter](https://repo.jfrog.org/artifactory/libs-release-bintray/tech/harmonysoft/traute-javac/1.0.10/)
+
 **v.1.0.9**  
 Tickets:
 * [Report mistyped properties](https://github.com/denis-zhdanov/traute/issues/62)  
