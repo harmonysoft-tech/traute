@@ -433,4 +433,23 @@ public abstract class MethodParameterTest extends AbstractTrauteTest {
                        .atLine(findLineNumber(testSource, "myArg"));
         doTest(testSource);
     }
+
+    @Test
+    public void defaultPackage() {
+        String testSource = String.format(
+                "import %s;\n" +
+                "\n" +
+                "public class %s {\n" +
+                "\n" +
+                "  public %s(@NotNull Integer intParam) {\n" +
+                "    super();\n" +
+                "  }\n" +
+                "\n" +
+                "  public static void main(String[] args) {\n" +
+                "    new %s(null);\n" +
+                "  }\n" +
+                "}", NotNull.class.getName(), CLASS_NAME, CLASS_NAME, CLASS_NAME);
+        expectNpeFromParameterCheck(testSource, "intParam", expectRunResult);
+        doTest(CLASS_NAME, testSource);
+    }
 }

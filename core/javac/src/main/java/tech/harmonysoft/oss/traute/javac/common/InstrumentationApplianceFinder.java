@@ -54,7 +54,8 @@ public class InstrumentationApplianceFinder extends TreeScanner<Void, Void> {
 
     @Override
     public Void visitCompilationUnit(CompilationUnitTree node, Void aVoid) {
-        packageName = node.getPackageName().toString();
+        ExpressionTree packageName = node.getPackageName();
+        this.packageName = packageName == null ? "" : packageName.toString();
         return super.visitCompilationUnit(node, aVoid);
     }
 

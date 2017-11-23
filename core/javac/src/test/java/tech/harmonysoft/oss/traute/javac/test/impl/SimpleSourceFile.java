@@ -27,4 +27,9 @@ public class SimpleSourceFile extends SimpleJavaFileObject {
     public CharSequence getCharContent(boolean ignoreEncodingErrors) {
         return content;
     }
+
+    @Override
+    public boolean isNameCompatible(String simpleName, Kind kind) {
+        return toUri().toString().endsWith(simpleName + kind.extension);
+    }
 }
