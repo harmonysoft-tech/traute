@@ -36,11 +36,15 @@ import java.io.File;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.lang.ref.WeakReference;
+import java.lang.reflect.Field;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicReference;
 
+import static java.lang.reflect.Modifier.*;
 import static java.util.stream.Collectors.joining;
 import static tech.harmonysoft.oss.traute.common.settings.TrautePluginSettingsBuilder.settingsBuilder;
 import static tech.harmonysoft.oss.traute.javac.log.AbstractLogger.getProblemMessageSuffix;
@@ -98,6 +102,11 @@ public class TrauteJavacPlugin implements Plugin {
 
     private final Instrumentator<ParameterToInstrumentInfo> parameterInstrumentator = new ParameterInstrumentator();
     private final Instrumentator<ReturnToInstrumentInfo>    methodInstrumentator    = new MethodReturnInstrumentator();
+    private final Set<String>                               pluginOptionKeys        = new HashSet<>();
+
+    public TrauteJavacPlugin() {
+        pluginOptionKeys.addAll(collectPluginOptionKeys());
+    }
 
     @Override
     public String getName() {
@@ -232,6 +241,20 @@ public class TrauteJavacPlugin implements Plugin {
             }
             // Use default settings
             return builder.build();
+        }
+
+        for (Map.Entry<String, String> entry : options.entrySet()) {
+            if (entry.getKey().contains("traute") && !pluginOptionKeys.contains(entry.getKey())) {
+                String error = String.format(
+                        "Found an unknown setting '%s' with value '%s'. Probably a typo? Known settings: %s",
+                        entry.getKey(), entry.getValue(), pluginOptionKeys
+                );
+                if (log == null) {
+                    throw new RuntimeException(error);
+                } else {
+                    log.printRawLines(Log.WriterKind.ERROR, error);
+                }
+            }
         }
 
         String logFilePath = options.get(TrauteConstants.OPTION_LOG_FILE);
@@ -382,5 +405,37 @@ public class TrauteJavacPlugin implements Plugin {
                 "added %d instrumentation%s to the %s - %s",
                 totalInstrumentationsNumber, totalInstrumentationsNumber > 1 ? "s" : "", fileName, details)
         );
+    }
+
+    @NotNull
+    private static Set<String> collectPluginOptionKeys() {
+        Set<String> result = new HashSet<>();
+        for (Field field : TrauteConstants.class.getFields()) {
+            int modifiers = field.getModifiers();
+            if ((modifiers & PUBLIC) == 0 || (modifiers & STATIC) == 0 || (modifiers & FINAL) == 0
+                || field.getType() != String.class)
+            {
+                continue;
+            }
+            try {
+                String value = field.get(null).toString();
+                if (!value.contains("traute")) {
+                    continue;
+                }
+                if (field.getName().contains("PREFIX")) {
+                    for (InstrumentationType type : InstrumentationType.values()) {
+                        result.add(value + type.getShortName());
+                    }
+                } else {
+                    result.add(value);
+                }
+            } catch (IllegalAccessException e) {
+                throw new RuntimeException(String.format(
+                        "Unexpected exception on attempt to collect plugin option keys for %s.%s",
+                        TrauteConstants.class.getName(), field.getName()
+                ), e);
+            }
+        }
+        return result;
     }
 }

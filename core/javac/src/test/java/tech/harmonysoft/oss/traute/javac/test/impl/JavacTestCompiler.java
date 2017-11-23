@@ -21,7 +21,6 @@ import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
-import static org.junit.jupiter.api.Assertions.fail;
 import static tech.harmonysoft.oss.traute.common.settings.TrautePluginSettingsBuilder.*;
 
 public class JavacTestCompiler implements TestCompiler {
@@ -52,8 +51,11 @@ public class JavacTestCompiler implements TestCompiler {
         Boolean successfulCompilation = task.call();
         output.flush();
         if (!successfulCompilation) {
-            fail(String.format("Failed to compile test class source below:%n%n%s%nCompiler output: %s",
-                               testSource.getSourceText(), output));
+            return new CompilationResultImpl(() -> {
+                throw new IllegalStateException(String.format(
+                    "Failed to compile test class source below:%n%n%s%nCompiler output: %s",
+                    testSource.getSourceText(), output));
+                }, output.toString(), testSource);
         }
 
         Supplier<Collection<ClassFile>> compiledClassesSupplier = () -> {
@@ -70,7 +72,7 @@ public class JavacTestCompiler implements TestCompiler {
     }
 
     @NotNull
-    private List<String> getAdditionalCompilerArgs(@NotNull TrautePluginSettings settings) {
+    protected List<String> getAdditionalCompilerArgs(@NotNull TrautePluginSettings settings) {
         List<String> result = new ArrayList<>();
         result.add("-Xplugin:" + TrauteConstants.PLUGIN_NAME);
 
