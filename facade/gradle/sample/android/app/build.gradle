@@ -22,7 +22,7 @@ android {
 }
 
 traute {
-    javacPluginVersion = '1.0.8'
+    javacPluginVersion = '1.0.9'
     notNullAnnotations = [ 'org.myapplication.NN' ]
     verbose = true
 }

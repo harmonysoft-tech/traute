@@ -4,7 +4,7 @@ plugins {
     id "com.jfrog.bintray" version '1.7.3'
 }
 
-version = '1.0.9'
+version = '1.0.10'
 archivesBaseName = 'traute-javac'
 
 dependencies {

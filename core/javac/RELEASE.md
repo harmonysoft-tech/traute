@@ -1,3 +1,14 @@
+**v.1.0.9**  
+Tickets:
+* [Report mistyped properties](https://github.com/denis-zhdanov/traute/issues/62)  
+* [Change javac logger prefix](https://github.com/denis-zhdanov/traute/issues/63)  
+* [Spring's @NonNull annotation is supported by default](https://github.com/denis-zhdanov/traute/issues/64)  
+* [Supported static interface methods](https://github.com/denis-zhdanov/traute/issues/65)  
+
+Binaries:
+* [Maven Central](https://repo1.maven.org/maven2/tech/harmonysoft/traute-javac/1.0.9/)
+* [JCenter](https://repo.jfrog.org/artifactory/libs-release-bintray/tech/harmonysoft/traute-javac/1.0.9/)
+
 **v.1.0.8**  
 Tickets:
 * [Configurable exception text](https://github.com/denis-zhdanov/traute/issues/61)  
