@@ -4,11 +4,14 @@ import org.gradle.testkit.runner.GradleRunner
 import org.gradle.testkit.runner.UnexpectedBuildFailure
 import org.jetbrains.annotations.NotNull
 import org.junit.Test
+import tech.harmonysoft.oss.traute.common.instrumentation.InstrumentationType
 import tech.harmonysoft.oss.traute.common.settings.TrautePluginSettingsBuilder
 import tech.harmonysoft.oss.traute.javac.TrauteJavacPlugin
 import tech.harmonysoft.oss.traute.test.api.model.TestSource
 import tech.harmonysoft.oss.traute.test.fixture.NN
 import tech.harmonysoft.oss.traute.test.impl.engine.AbstractExternalSystemTestCompiler
+
+import static tech.harmonysoft.oss.traute.common.settings.TrautePluginSettingsBuilder.DEFAULT_NOT_NULL_ANNOTATIONS
 
 class GradleTestCompiler extends AbstractExternalSystemTestCompiler {
 
@@ -50,6 +53,8 @@ class GradleTestCompiler extends AbstractExternalSystemTestCompiler {
               |    compile 'findbugs:annotations:1.0.0'
               |    compile 'com.android.support:support-core-utils:26.1.0'
               |    compile 'org.eclipse.jdt:org.eclipse.jdt.annotation:2.1.0'
+              |    compile 'org.eclipse.jdt:org.eclipse.jdt.annotation:2.1.0'
+              |    compile 'org.springframework:spring-core:5.0.1.RELEASE'
               |    compile ${getCommonDependency()}
               |}""".stripMargin()
 
@@ -65,7 +70,8 @@ class GradleTestCompiler extends AbstractExternalSystemTestCompiler {
 
         content = content.replace(
                 MARKER_NOT_NULL_ANNOTATION,
-                settings.notNullAnnotations
+                (settings.notNullAnnotations
+                        && settings.notNullAnnotations.size() < DEFAULT_NOT_NULL_ANNOTATIONS.size())
                         ? "notNullAnnotations = [${settings.notNullAnnotations.collect{"'$it'"}.join(', ')}]"
                         : ''
         )
@@ -77,7 +83,8 @@ class GradleTestCompiler extends AbstractExternalSystemTestCompiler {
 
         content = content.replace(
                 MARKER_INSTRUMENTATIONS,
-                settings.instrumentationsToApply
+                (settings.instrumentationsToApply
+                        && settings.instrumentationsToApply.size() < InstrumentationType.values().length)
                         ? "instrumentations = [${settings.instrumentationsToApply.collect{"'${it.shortName}'"}.join(', ')}]"
                         : ''
         )
