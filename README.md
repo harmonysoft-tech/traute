@@ -88,7 +88,7 @@ You can also subscribe for the new versions notification through [twitter](https
 
 * [report a problem/ask for enhancement](https://github.com/denis-zhdanov/traute/issues)
 * [submit a pull request](https://github.com/denis-zhdanov/traute/pulls)
-* help me to make small presents to my wife in order to persuade here that spending free time on *OSS* might be not the worst idea :yum: [![paypal](https://www.paypalobjects.com/en_US/i/btn/btn_donateCC_LG.gif)](https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=3GJDPN3TH8T48&lc=RU&item_name=Traute&currency_code=USD&bn=PP%2dDonationsBF%3abtn_donateCC_LG%2egif%3aNonHosted)
+* help me to make small presents to my wife in order to persuade her that spending free time on *OSS* might be not the worst idea :yum: [![paypal](https://www.paypalobjects.com/en_US/i/btn/btn_donateCC_LG.gif)](https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=3GJDPN3TH8T48&lc=RU&item_name=Traute&currency_code=USD&bn=PP%2dDonationsBF%3abtn_donateCC_LG%2egif%3aNonHosted)
 
 ## 9. Contributors
 
