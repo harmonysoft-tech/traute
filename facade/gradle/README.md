@@ -118,7 +118,7 @@ traute {
 
 ```groovy
 traute {
-    exceptionTexts = [ 'parameter' : '${capitalize(PARAMETER_NAME) must not be null}' ]
+    exceptionTexts = [ 'parameter' : '${capitalize(PARAMETER_NAME)} must not be null' ]
 }
 ```
 
