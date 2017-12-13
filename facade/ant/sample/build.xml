@@ -21,7 +21,7 @@
     </target>
 
     <target name="go" depends="install-ivy">
-        <ivy:cachepath pathid="lib.path.id"/>
+        <ivy:cachepath pathid="lib.path.id" conf="compile,compileOnly"/>
         <echo message="compiling..."/>
         <mkdir dir="${build.dir}"/>
         <javac srcdir="${src.dir}" destdir="${build.dir}" classpathref="lib.path.id" debug="true">
