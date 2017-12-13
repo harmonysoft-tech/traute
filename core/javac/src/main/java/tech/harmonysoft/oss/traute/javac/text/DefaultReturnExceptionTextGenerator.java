@@ -8,8 +8,7 @@ public class DefaultReturnExceptionTextGenerator implements ExceptionTextGenerat
     @NotNull
     @Override
     public String generate(@NotNull ReturnToInstrumentInfo context) {
-        return String.format("Detected an attempt to return null from a method marked by %s",
-                             context.getNotNullAnnotation()
-        );
+        return String.format("Detected an attempt to return null from a method marked by %s (%s())",
+                             context.getNotNullAnnotation(), context.getQualifiedMethodName());
     }
 }
