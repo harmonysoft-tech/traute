@@ -108,8 +108,7 @@ Please use any of the channels below to provide your feedback, it's really valua
 
 ## 12. Acknowledgments
 
-
-![intellij](docs/img/intellij.png  =100x100)  
+<img src="/docs/img/intellij.png" height="70px">
 
 [JetBrains](https://www.jetbrains.com/) helps open source projects by offering free licenses to their awesome products. 
 
