@@ -109,9 +109,9 @@ Please use any of the channels below to provide your feedback, it's really valua
 ## 12. Acknowledgments
 
 
-![intellij](docs/img/intellij.png)  
+![intellij](docs/img/intellij.png  =100x100)  
 
-[JetBrains](https://www.jetbrains.com/ =100x100) helps open source projects by offering free licenses to their awesome products. 
+[JetBrains](https://www.jetbrains.com/) helps open source projects by offering free licenses to their awesome products. 
 
 ![yourkit](https://www.yourkit.com/images/yklogo.png) 
 
