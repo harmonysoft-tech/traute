@@ -108,6 +108,11 @@ Please use any of the channels below to provide your feedback, it's really valua
 
 ## 12. Acknowledgments
 
+
+![intellij](docs/img/intellij.png)  
+
+[JetBrains](https://www.jetbrains.com/ =100x100) helps open source projects by offering free licenses to their awesome products. 
+
 ![yourkit](https://www.yourkit.com/images/yklogo.png) 
 
 YourKit supports open source projects with its full-featured Java Profiler.
