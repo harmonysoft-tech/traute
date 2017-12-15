@@ -11,6 +11,7 @@
 * [9. Contributors](#9-contributors)
 * [10. Evolution](#10-evolution)
 * [11. Feedback](#11-feedback)
+* [12. Acknowledgments](#12-acknowledgments)
 
 ## 1. License
 
@@ -104,3 +105,12 @@ Please use any of the channels below to provide your feedback, it's really valua
 * [email](mailto:traute.java@gmail.com)
 * [twitter](https://twitter.com/traute_java)
 * [facebook](https://www.facebook.com/java.traute/)
+
+## 12. Acknowledgments
+
+![yourkit](https://www.yourkit.com/images/yklogo.png) 
+
+YourKit supports open source projects with its full-featured Java Profiler.
+YourKit, LLC is the creator of <a href="https://www.yourkit.com/java/profiler/">YourKit Java Profiler</a>
+and <a href="https://www.yourkit.com/.net/profiler/">YourKit .NET Profiler</a>,
+innovative and intelligent tools for profiling Java and .NET applications.
