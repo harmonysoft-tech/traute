@@ -77,6 +77,7 @@ class ExceptionTextGeneratorFactoryTest {
         when(nameMock.toString()).thenReturn(argumentName);
         return new ParameterToInstrumentInfo(mock(CompilationUnitProcessingContext.class),
                                              NotNull.class.getName(),
+                                             null,
                                              variableMock,
                                              mock(JCTree.JCBlock.class),
                                              "test",

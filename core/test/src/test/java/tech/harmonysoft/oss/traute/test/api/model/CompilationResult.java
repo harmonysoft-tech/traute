@@ -5,7 +5,7 @@ import org.jetbrains.annotations.NotNull;
 import java.util.Collection;
 import java.util.function.Supplier;
 
-public interface CompilationResult extends Result<TestSource> {
+public interface CompilationResult extends Result<Collection<TestSource>> {
 
     /**
      * @return      compiled classes. We use a {@link Supplier} here because there is a possible case that

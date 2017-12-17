@@ -3,10 +3,15 @@ package tech.harmonysoft.oss.traute.test.suite;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import tech.harmonysoft.oss.traute.common.instrumentation.InstrumentationType;
+import org.springframework.lang.NonNullApi;
 import tech.harmonysoft.oss.traute.common.util.TrauteConstants;
+import tech.harmonysoft.oss.traute.test.fixture.NN;
+import tech.harmonysoft.oss.traute.test.impl.model.TestSourceImpl;
 import tech.harmonysoft.oss.traute.test.util.TestUtil;
 
+import static java.util.Collections.singleton;
+import static tech.harmonysoft.oss.traute.common.instrumentation.InstrumentationType.METHOD_RETURN;
+import static tech.harmonysoft.oss.traute.common.util.TrauteConstants.PACKAGE_INFO;
 import static tech.harmonysoft.oss.traute.test.util.TestConstants.CLASS_NAME;
 import static tech.harmonysoft.oss.traute.test.util.TestConstants.PACKAGE;
 import static tech.harmonysoft.oss.traute.test.util.TestUtil.*;
@@ -636,7 +641,7 @@ public abstract class MethodReturnTest extends AbstractTrauteTest {
 
     @Test
     public void nonDefaultExceptionToThrow() {
-        settingsBuilder.withExceptionToThrow(InstrumentationType.METHOD_RETURN,
+        settingsBuilder.withExceptionToThrow(METHOD_RETURN,
                                              IllegalStateException.class.getSimpleName());
         String testSource = String.format(
                 "package %s;\n" +
@@ -655,6 +660,53 @@ public abstract class MethodReturnTest extends AbstractTrauteTest {
         expectRunResult.withExceptionClass(IllegalStateException.class)
                        .withExceptionMessageSnippet("Detected an attempt to return null from a method")
                        .atLine(findLineNumber(testSource, "return null"));
+        doTest(testSource);
+    }
+
+    @Test
+    public void notNullByDefault_defaultAnnotation() {
+        String packageInfoSource = String.format(
+                "@%s\n" +
+                "package %s;\n" +
+                "\n" +
+                "import %s;",
+                NonNullApi.class.getSimpleName(), PACKAGE, NonNullApi.class.getName());
+        String testSource = String.format(
+                "package %s;\n" +
+                "\n" +
+                "public class %s {\n" +
+                "\n" +
+                "  public static Integer test() {\n" +
+                "      return null;\n" +
+                "  }\n" +
+                "\n" +
+                "  public static void main(String[] args) {\n" +
+                "    test();\n" +
+                "  }\n" +
+                "}", PACKAGE, CLASS_NAME);
+        expectNpeFromReturnCheck(testSource, "return null", expectRunResult);
+        doTest(new TestSourceImpl(testSource, PACKAGE + "." + CLASS_NAME),
+               new TestSourceImpl(packageInfoSource, PACKAGE + "." + PACKAGE_INFO));
+    }
+
+    @Test
+    public void notNullByDefault_customAnnotation() {
+        String testSource = String.format(
+                "package %s;\n" +
+                "\n" +
+                "@%s\n" +
+                "public class %s {\n" +
+                "\n" +
+                "  public static Integer test() {\n" +
+                "      return null;\n" +
+                "  }\n" +
+                "\n" +
+                "  public static void main(String[] args) {\n" +
+                "    test();\n" +
+                "  }\n" +
+                "}", PACKAGE, NN.class.getName(), CLASS_NAME);
+        settingsBuilder.withNotNullByDefaultAnnotations(METHOD_RETURN, singleton(NN.class.getName()));
+        expectNpeFromReturnCheck(testSource, "return null", expectRunResult);
         doTest(testSource);
     }
 }

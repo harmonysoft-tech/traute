@@ -2,14 +2,20 @@ package tech.harmonysoft.oss.traute.test.suite;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import tech.harmonysoft.oss.traute.common.instrumentation.InstrumentationType;
+import tech.harmonysoft.oss.traute.test.fixture.NN;
+import tech.harmonysoft.oss.traute.test.impl.model.TestSourceImpl;
 
 import javax.annotation.Nonnull;
+import javax.annotation.ParametersAreNonnullByDefault;
 
+import static java.util.Collections.singleton;
+import static tech.harmonysoft.oss.traute.common.util.TrauteConstants.PACKAGE_INFO;
 import static tech.harmonysoft.oss.traute.common.util.TrauteConstants.PRIMITIVE_TYPES;
 import static tech.harmonysoft.oss.traute.test.util.TestConstants.*;
 import static tech.harmonysoft.oss.traute.test.util.TestUtil.*;
@@ -450,6 +456,119 @@ public abstract class MethodParameterTest extends AbstractTrauteTest {
                 "  }\n" +
                 "}", NotNull.class.getName(), CLASS_NAME, CLASS_NAME, CLASS_NAME);
         expectNpeFromParameterCheck(testSource, "intParam", expectRunResult);
+        doTest(CLASS_NAME, testSource);
+    }
+
+    @Test
+    public void notNullByDefault_package() {
+        String packageInfoSource = String.format(
+                "@ParametersAreNonnullByDefault\n" +
+                "package %s;\n" +
+                "\n" +
+                "import javax.annotation.ParametersAreNonnullByDefault;",
+                PACKAGE);
+        String testSource = String.format(
+                "package %s;\n" +
+                "" +
+                "public class %s {\n" +
+                "\n" +
+                "  public %s(Integer intParam) {\n" +
+                "  }\n" +
+                "\n" +
+                "  public static void main(String[] args) {\n" +
+                "    new %s(null);\n" +
+                "  }\n" +
+                "}", PACKAGE, CLASS_NAME, CLASS_NAME, CLASS_NAME);
+        expectNpeFromParameterCheck(testSource, "intParam", expectRunResult);
+        doTest(new TestSourceImpl(testSource, PACKAGE + "." + CLASS_NAME),
+               new TestSourceImpl(packageInfoSource, PACKAGE + "." + PACKAGE_INFO));
+    }
+
+    @Test
+    public void notNullByDefault_class() {
+        String testSource = String.format(
+                "@%s\n" +
+                "public class %s {\n" +
+                "\n" +
+                "  public %s(Integer intParam) {\n" +
+                "  }\n" +
+                "\n" +
+                "  public static void main(String[] args) {\n" +
+                "    new %s(null);\n" +
+                "  }\n" +
+                "}", ParametersAreNonnullByDefault.class.getName(), CLASS_NAME, CLASS_NAME, CLASS_NAME);
+        expectNpeFromParameterCheck(testSource, "intParam", expectRunResult);
+        doTest(CLASS_NAME, testSource);
+    }
+
+    @Test
+    public void notNullByDefault_method() {
+        String testSource = String.format(
+                "public class %s {\n" +
+                "\n" +
+                "  @%s\n" +
+                "  public %s(Integer intParam) {\n" +
+                "  }\n" +
+                "\n" +
+                "  public static void main(String[] args) {\n" +
+                "    new %s(null);\n" +
+                "  }\n" +
+                "}", CLASS_NAME, ParametersAreNonnullByDefault.class.getName(), CLASS_NAME, CLASS_NAME);
+        expectNpeFromParameterCheck(testSource, "intParam", expectRunResult);
+        doTest(CLASS_NAME, testSource);
+    }
+
+    @Test
+    public void notNullByDefault_custom() {
+        String testSource = String.format(
+                "@%s\n" +
+                "public class %s {\n" +
+                "\n" +
+                "  public %s(Integer intParam) {\n" +
+                "  }\n" +
+                "\n" +
+                "  public static void main(String[] args) {\n" +
+                "    new %s(null);\n" +
+                "  }\n" +
+                "}", NN.class.getName(), CLASS_NAME, CLASS_NAME, CLASS_NAME);
+        settingsBuilder.withNotNullByDefaultAnnotations(InstrumentationType.METHOD_PARAMETER,
+                                                        singleton(NN.class.getName()));
+        expectNpeFromParameterCheck(testSource, "intParam", expectRunResult);
+        doTest(CLASS_NAME, testSource);
+    }
+
+    @Test
+    public void notNullByDefault_nullableArgument() {
+        String testSource = String.format(
+                "@%s\n" +
+                "public class %s {\n" +
+                "\n" +
+                "  public %s(@%s Integer intParam) {\n" +
+                "  }\n" +
+                "\n" +
+                "  public static void main(String[] args) {\n" +
+                "    new %s(null);\n" +
+                "  }\n" +
+                "}", ParametersAreNonnullByDefault.class.getName(), CLASS_NAME, CLASS_NAME, Nullable.class.getName(),
+                CLASS_NAME);
+        doTest(CLASS_NAME, testSource);
+    }
+
+    @Test
+    public void notNullByDefault_customNullableAnnotation() {
+        String testSource = String.format(
+                "@%s\n" +
+                "public class %s {\n" +
+                "\n" +
+                "  public %s(@%s Integer intParam) {\n" +
+                "  }\n" +
+                "\n" +
+                "  public static void main(String[] args) {\n" +
+                "    new %s(null);\n" +
+                "  }\n" +
+                "}", ParametersAreNonnullByDefault.class.getName(), CLASS_NAME, CLASS_NAME, NN.class.getName(),
+                CLASS_NAME);
+        settingsBuilder.withNullableAnnotations(NN.class.getName());
         doTest(CLASS_NAME, testSource);
     }
 }

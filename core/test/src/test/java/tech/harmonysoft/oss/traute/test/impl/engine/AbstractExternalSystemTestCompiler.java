@@ -3,7 +3,6 @@ package tech.harmonysoft.oss.traute.test.impl.engine;
 import org.jetbrains.annotations.NotNull;
 import tech.harmonysoft.oss.traute.common.instrumentation.InstrumentationType;
 import tech.harmonysoft.oss.traute.common.settings.TrautePluginSettings;
-import tech.harmonysoft.oss.traute.common.util.TrauteConstants;
 import tech.harmonysoft.oss.traute.test.api.engine.TestCompiler;
 import tech.harmonysoft.oss.traute.test.api.model.ClassFile;
 import tech.harmonysoft.oss.traute.test.api.model.CompilationResult;
@@ -16,8 +15,9 @@ import java.nio.file.Files;
 import java.util.*;
 
 import static java.util.stream.Collectors.joining;
-import static tech.harmonysoft.oss.traute.common.settings.TrautePluginSettingsBuilder.DEFAULT_INSTRUMENTATIONS_TO_APPLY;
-import static tech.harmonysoft.oss.traute.common.settings.TrautePluginSettingsBuilder.DEFAULT_NOT_NULL_ANNOTATIONS;
+import static tech.harmonysoft.oss.traute.common.instrumentation.InstrumentationType.METHOD_PARAMETER;
+import static tech.harmonysoft.oss.traute.common.instrumentation.InstrumentationType.METHOD_RETURN;
+import static tech.harmonysoft.oss.traute.common.settings.TrautePluginSettingsBuilder.*;
 import static tech.harmonysoft.oss.traute.common.util.TrauteConstants.*;
 
 public abstract class AbstractExternalSystemTestCompiler implements TestCompiler {
@@ -26,27 +26,34 @@ public abstract class AbstractExternalSystemTestCompiler implements TestCompiler
 
     @Override
     @NotNull
-    public CompilationResult compile(@NotNull TestSource testSource) {
+    public CompilationResult compile(@NotNull Collection<TestSource> testSources,
+                                     @NotNull TrautePluginSettings settings)
+    {
         try {
-            return doCompile(testSource);
+            return doCompile(testSources, settings);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
     }
 
     @NotNull
-    private CompilationResult doCompile(@NotNull TestSource testSource) throws Exception {
+    private CompilationResult doCompile(@NotNull Collection<TestSource> testSources,
+                                        @NotNull TrautePluginSettings settings)
+            throws Exception
+    {
         File projectRootDir = createRootDir();
-        File externalSystemConfig = createExternalSystemConfig(projectRootDir, testSource);
+        File externalSystemConfig = createExternalSystemConfig(projectRootDir, settings);
         File sourceRoot = createSourceRootDir(projectRootDir, getRelativeSrcPath());
-        File sourceFile = createFile(testSource.getQualifiedClassName(), sourceRoot);
-        write(sourceFile, testSource.getSourceText());
+        for (TestSource testSource : testSources) {
+            File sourceFile = createFile(testSource.getQualifiedClassName(), sourceRoot);
+            write(sourceFile, testSource.getSourceText());
+        }
 
         String output = compile(projectRootDir);
         CompilationResultImpl result = new CompilationResultImpl(
                 () -> findBinaries(projectRootDir, getRelativeBinariesPath()),
                 output,
-                testSource,
+                testSources,
                 Collections.singletonMap(externalSystemConfig.getName(), new String(read(externalSystemConfig)))
         );
         projectDirs.put(result, projectRootDir);
@@ -54,7 +61,8 @@ public abstract class AbstractExternalSystemTestCompiler implements TestCompiler
     }
 
     @NotNull
-    protected abstract File createExternalSystemConfig(@NotNull File projectRootDir, @NotNull TestSource testSource)
+    protected abstract File createExternalSystemConfig(@NotNull File projectRootDir,
+                                                       @NotNull TrautePluginSettings settings)
             throws IOException;
 
     @NotNull
@@ -103,10 +111,12 @@ public abstract class AbstractExternalSystemTestCompiler implements TestCompiler
         } else {
             File dir = new File(sourceRootDir, qualifiedClassName.substring(0, i)
                                                                  .replace('.', '/'));
-            boolean created = dir.mkdirs();
-            if (!created) {
-                throw new IllegalStateException(String.format("Can't create a directory for the source class %s at %s",
-                                                              qualifiedClassName, dir.getAbsolutePath()));
+            if (!dir.exists()) {
+                boolean created = dir.mkdirs();
+                if (!created) {
+                    throw new IllegalStateException(String.format("Can't create a directory for the source class %s at %s",
+                                                                  qualifiedClassName, dir.getAbsolutePath()));
+                }
             }
             return new File(dir, qualifiedClassName.substring(i + 1) + ".java");
         }
@@ -194,16 +204,46 @@ public abstract class AbstractExternalSystemTestCompiler implements TestCompiler
         Set<String> notNullAnnotations = settings.getNotNullAnnotations();
         if (!notNullAnnotations.isEmpty() && !DEFAULT_NOT_NULL_ANNOTATIONS.equals(notNullAnnotations))
         {
-            String notNullAnnotationsString = notNullAnnotations.stream().collect(joining(TrauteConstants.SEPARATOR));
+            String notNullAnnotationsString = notNullAnnotations.stream().collect(joining(SEPARATOR));
             result.add(String.format("-A%s=%s", OPTION_ANNOTATIONS_NOT_NULL, notNullAnnotationsString));
+        }
+
+        Set<String> nullableAnnotations = settings.getNullableAnnotations();
+        if (!nullableAnnotations.isEmpty() && !DEFAULT_NULLABLE_ANNOTATIONS.equals(nullableAnnotations))
+        {
+            String annotationsString = nullableAnnotations.stream().collect(joining(SEPARATOR));
+            result.add(String.format("-A%s=%s", OPTION_ANNOTATIONS_NULLABLE, annotationsString));
         }
 
         Set<InstrumentationType> instrumentationsToApply = settings.getInstrumentationsToApply();
         if (!instrumentationsToApply.isEmpty() && !DEFAULT_INSTRUMENTATIONS_TO_APPLY.equals(instrumentationsToApply)) {
             String instrumentationsString = instrumentationsToApply.stream()
                                                                    .map(InstrumentationType::getShortName)
-                                                                   .collect(joining(TrauteConstants.SEPARATOR));
+                                                                   .collect(joining(SEPARATOR));
             result.add(String.format("-A%s=%s", OPTION_INSTRUMENTATIONS_TO_USE, instrumentationsString));
+        }
+
+        Set<String> parametersNotNullByDefaultAnnotations = settings.getNotNullByDefaultAnnotations(METHOD_PARAMETER);
+        if (!parametersNotNullByDefaultAnnotations.isEmpty()
+            && !DEFAULT_PARAMETERS_NOT_NULL_BY_DEFAULT_ANNOTATIONS.equals(parametersNotNullByDefaultAnnotations))
+        {
+            String annotationsString = parametersNotNullByDefaultAnnotations.stream()
+                                                                            .collect(joining(SEPARATOR));
+            result.add(String.format("-A%s%s=%s",
+                                     OPTION_PREFIX_ANNOTATIONS_NOT_NULL_BY_DEFAULT,
+                                     METHOD_PARAMETER.getShortName(),
+                                     annotationsString));
+        }
+
+        Set<String> returnNotNullByDefaultAnnotations = settings.getNotNullByDefaultAnnotations(METHOD_RETURN);
+        if (!returnNotNullByDefaultAnnotations.isEmpty()
+            && !DEFAULT_RETURN_NOT_NULL_BY_DEFAULT_ANNOTATIONS.equals(returnNotNullByDefaultAnnotations))
+        {
+            String annotationsString = returnNotNullByDefaultAnnotations.stream().collect(joining(SEPARATOR));
+            result.add(String.format("-A%s%s=%s",
+                                     OPTION_PREFIX_ANNOTATIONS_NOT_NULL_BY_DEFAULT,
+                                     METHOD_RETURN.getShortName(),
+                                     annotationsString));
         }
 
         if (settings.isVerboseMode()) {

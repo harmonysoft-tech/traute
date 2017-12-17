@@ -2,8 +2,12 @@ package tech.harmonysoft.oss.traute.test.util;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import tech.harmonysoft.oss.traute.test.api.model.TestSource;
 import tech.harmonysoft.oss.traute.test.impl.expectation.RunResultExpectationBuilder;
 
+import java.util.Collection;
+
+import static java.util.stream.Collectors.joining;
 import static org.junit.jupiter.api.Assertions.fail;
 import static tech.harmonysoft.oss.traute.test.util.TestConstants.CLASS_NAME;
 import static tech.harmonysoft.oss.traute.test.util.TestConstants.METHOD_NAME;
@@ -153,5 +157,12 @@ public class TestUtil {
         expectRunResult.withExceptionClass(NullPointerException.class)
                        .withExceptionMessageSnippet("Detected an attempt to return null from a method")
                        .atLine(findLineNumber(testSource, returnExpression));
+    }
+
+    @NotNull
+    public static String getSources(@NotNull Collection<TestSource> sources) {
+        return sources.stream()
+                      .map(s -> s.getQualifiedClassName() + ".java:\n\n" + s.getSourceText())
+                      .collect(joining("\n\n"));
     }
 }

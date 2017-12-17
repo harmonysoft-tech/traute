@@ -10,6 +10,7 @@ import tech.harmonysoft.oss.traute.test.api.model.CompilationResult;
 import tech.harmonysoft.oss.traute.test.api.model.TestSource;
 import tech.harmonysoft.oss.traute.test.impl.model.ClassFileImpl;
 import tech.harmonysoft.oss.traute.test.impl.model.CompilationResultImpl;
+import tech.harmonysoft.oss.traute.test.util.TestUtil;
 
 import javax.tools.JavaCompiler;
 import javax.tools.ToolProvider;
@@ -18,9 +19,10 @@ import java.util.*;
 import java.util.function.Supplier;
 
 import static java.util.Arrays.asList;
-import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
+import static tech.harmonysoft.oss.traute.common.instrumentation.InstrumentationType.METHOD_PARAMETER;
+import static tech.harmonysoft.oss.traute.common.instrumentation.InstrumentationType.METHOD_RETURN;
 import static tech.harmonysoft.oss.traute.common.settings.TrautePluginSettingsBuilder.*;
 
 public class JavacTestCompiler implements TestCompiler {
@@ -29,7 +31,9 @@ public class JavacTestCompiler implements TestCompiler {
 
     @Override
     @NotNull
-    public CompilationResult compile(@NotNull TestSource testSource) {
+    public CompilationResult compile(@NotNull Collection<TestSource> testSources,
+                                     @NotNull TrautePluginSettings settings)
+    {
         StringWriter output = new StringWriter();
 
         JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
@@ -38,10 +42,10 @@ public class JavacTestCompiler implements TestCompiler {
                 null,
                 null
         ));
-        List<SimpleSourceFile> compilationUnits = singletonList(new SimpleSourceFile(testSource));
+        List<SimpleSourceFile> compilationUnits = testSources.stream().map(SimpleSourceFile::new).collect(toList());
         List<String> arguments = new ArrayList<>();
         arguments.addAll(asList("-classpath", System.getProperty("java.class.path")));
-        arguments.addAll(getAdditionalCompilerArgs(testSource.getSettings()));
+        arguments.addAll(getAdditionalCompilerArgs(settings));
         JavaCompiler.CompilationTask task = compiler.getTask(output,
                                                              fileManager,
                                                              null,
@@ -53,9 +57,9 @@ public class JavacTestCompiler implements TestCompiler {
         if (!successfulCompilation) {
             return new CompilationResultImpl(() -> {
                 throw new IllegalStateException(String.format(
-                    "Failed to compile test class source below:%n%n%s%nCompiler output: %s",
-                    testSource.getSourceText(), output));
-                }, output.toString(), testSource);
+                        "Failed to compile test class sources below:%n%n%s%nCompiler output: %s",
+                        TestUtil.getSources(testSources), output));
+                }, output.toString(), testSources);
         }
 
         Supplier<Collection<ClassFile>> compiledClassesSupplier = () -> {
@@ -68,7 +72,7 @@ public class JavacTestCompiler implements TestCompiler {
             }).collect(toList());
         };
 
-        return new CompilationResultImpl(compiledClassesSupplier, output.toString(), testSource);
+        return new CompilationResultImpl(compiledClassesSupplier, output.toString(), testSources);
     }
 
     @NotNull
@@ -80,6 +84,12 @@ public class JavacTestCompiler implements TestCompiler {
         if (!notNullAnnotations.equals(DEFAULT_NOT_NULL_ANNOTATIONS)) {
             String optionValue = notNullAnnotations.stream().collect(joining(TrauteConstants.SEPARATOR));
             result.add(String.format("-A%s=%s", TrauteConstants.OPTION_ANNOTATIONS_NOT_NULL, optionValue));
+        }
+
+        Set<String> nullableAnnotations = settings.getNullableAnnotations();
+        if (!nullableAnnotations.equals(DEFAULT_NULLABLE_ANNOTATIONS)) {
+            String optionValue = nullableAnnotations.stream().collect(joining(TrauteConstants.SEPARATOR));
+            result.add(String.format("-A%s=%s", TrauteConstants.OPTION_ANNOTATIONS_NULLABLE, optionValue));
         }
 
         Set<InstrumentationType> instrumentationTypes = settings.getInstrumentationsToApply();
@@ -109,6 +119,28 @@ public class JavacTestCompiler implements TestCompiler {
                                      TrauteConstants.OPTION_PREFIX_EXCEPTION_TEXT,
                                      entry.getKey().getShortName(),
                                      entry.getValue()));
+        }
+
+        Map<InstrumentationType, Set<String>> notNullByDefaultAnnotations = settings.getNotNullByDefaultAnnotations();
+        Set<String> parametersNotNullByDefaultAnnotations = notNullByDefaultAnnotations.get(METHOD_PARAMETER);
+        if (!parametersNotNullByDefaultAnnotations.isEmpty()
+            && !DEFAULT_PARAMETERS_NOT_NULL_BY_DEFAULT_ANNOTATIONS.equals(parametersNotNullByDefaultAnnotations))
+        {
+            String optionValue = parametersNotNullByDefaultAnnotations.stream().collect(joining(TrauteConstants.SEPARATOR));
+            result.add(String.format("-A%s%s=%s",
+                                     TrauteConstants.OPTION_PREFIX_ANNOTATIONS_NOT_NULL_BY_DEFAULT,
+                                     METHOD_PARAMETER.getShortName(),
+                                     optionValue));
+        }
+        Set<String> returnNotNullByDefaultAnnotations = notNullByDefaultAnnotations.get(METHOD_RETURN);
+        if (!returnNotNullByDefaultAnnotations.isEmpty()
+            && !DEFAULT_RETURN_NOT_NULL_BY_DEFAULT_ANNOTATIONS.equals(returnNotNullByDefaultAnnotations))
+        {
+            String optionValue = returnNotNullByDefaultAnnotations.stream().collect(joining(TrauteConstants.SEPARATOR));
+            result.add(String.format("-A%s%s=%s",
+                                     TrauteConstants.OPTION_PREFIX_ANNOTATIONS_NOT_NULL_BY_DEFAULT,
+                                     METHOD_RETURN.getShortName(),
+                                     optionValue));
         }
 
         boolean verboseLog = settings.isVerboseMode();

@@ -5,19 +5,26 @@ import org.gradle.testkit.runner.UnexpectedBuildFailure
 import org.jetbrains.annotations.NotNull
 import org.junit.Test
 import tech.harmonysoft.oss.traute.common.instrumentation.InstrumentationType
+import tech.harmonysoft.oss.traute.common.settings.TrautePluginSettings
 import tech.harmonysoft.oss.traute.common.settings.TrautePluginSettingsBuilder
 import tech.harmonysoft.oss.traute.javac.TrauteJavacPlugin
-import tech.harmonysoft.oss.traute.test.api.model.TestSource
 import tech.harmonysoft.oss.traute.test.fixture.NN
 import tech.harmonysoft.oss.traute.test.impl.engine.AbstractExternalSystemTestCompiler
 
+import static tech.harmonysoft.oss.traute.common.instrumentation.InstrumentationType.METHOD_PARAMETER
+import static tech.harmonysoft.oss.traute.common.instrumentation.InstrumentationType.METHOD_RETURN
 import static tech.harmonysoft.oss.traute.common.settings.TrautePluginSettingsBuilder.DEFAULT_NOT_NULL_ANNOTATIONS
+import static tech.harmonysoft.oss.traute.common.settings.TrautePluginSettingsBuilder.DEFAULT_NULLABLE_ANNOTATIONS
+import static tech.harmonysoft.oss.traute.common.settings.TrautePluginSettingsBuilder.DEFAULT_PARAMETERS_NOT_NULL_BY_DEFAULT_ANNOTATIONS
+import static tech.harmonysoft.oss.traute.common.settings.TrautePluginSettingsBuilder.DEFAULT_RETURN_NOT_NULL_BY_DEFAULT_ANNOTATIONS
 
 class GradleTestCompiler extends AbstractExternalSystemTestCompiler {
 
     static final def INSTANCE = new GradleTestCompiler()
 
     private static final def MARKER_NOT_NULL_ANNOTATION = '<NOT_NULL_ANNOTATIONS>'
+    private static final def MARKER_NULLABLE_ANNOTATION = '<NULLABLE_ANNOTATIONS>'
+    private static final def MARKER_NOT_NULL_BY_DEFAULT_ANNOTATION = '<MARKER_NOT_NULL_BY_DEFAULT_ANNOTATION>'
     private static final def MARKER_LOGGING = '<LOGGING>'
     private static final def MARKER_INSTRUMENTATIONS = '<INSTRUMENTATIONS>'
     private static final def MARKER_LOG_FILE = '<LOG_FILE>'
@@ -39,6 +46,8 @@ class GradleTestCompiler extends AbstractExternalSystemTestCompiler {
               |traute {
               |    javacPluginSpec = ${getTrauteJavacDependencySpec()}
               |    $MARKER_NOT_NULL_ANNOTATION
+              |    $MARKER_NULLABLE_ANNOTATION
+              |    $MARKER_NOT_NULL_BY_DEFAULT_ANNOTATION
               |    $MARKER_LOGGING
               |    $MARKER_INSTRUMENTATIONS
               |    $MARKER_LOG_FILE
@@ -61,12 +70,11 @@ class GradleTestCompiler extends AbstractExternalSystemTestCompiler {
     @NotNull
     @Override
     protected File createExternalSystemConfig(@NotNull File projectRootDir,
-                                              @NotNull TestSource testSource)
+                                              @NotNull TrautePluginSettings settings)
             throws IOException
     {
         def file = new File(projectRootDir, 'build.gradle')
         def content = BUILD_GRADLE_CONTENT
-        def settings = testSource.settings
 
         content = content.replace(
                 MARKER_NOT_NULL_ANNOTATION,
@@ -75,6 +83,41 @@ class GradleTestCompiler extends AbstractExternalSystemTestCompiler {
                         ? "notNullAnnotations = [${settings.notNullAnnotations.collect{"'$it'"}.join(', ')}]"
                         : ''
         )
+
+        content = content.replace(
+                MARKER_NULLABLE_ANNOTATION,
+                (settings.nullableAnnotations
+                        && settings.nullableAnnotations.size() < DEFAULT_NULLABLE_ANNOTATIONS.size())
+                        ? "nullableAnnotations = [${settings.nullableAnnotations.collect{"'$it'"}.join(', ')}]"
+                        : ''
+        )
+
+        def notNullByDefaultAnnotations = [:]
+        if (settings.notNullByDefaultAnnotations) {
+            def parameterNotNullByDefaultAnnotations = settings.notNullByDefaultAnnotations.get(METHOD_PARAMETER)
+            if (parameterNotNullByDefaultAnnotations
+                    && DEFAULT_PARAMETERS_NOT_NULL_BY_DEFAULT_ANNOTATIONS != parameterNotNullByDefaultAnnotations)
+            {
+                notNullByDefaultAnnotations.put(METHOD_PARAMETER.shortName, parameterNotNullByDefaultAnnotations)
+            }
+            def returnNotNullByDefaultAnnotations = settings.notNullByDefaultAnnotations.get(METHOD_RETURN)
+            if (returnNotNullByDefaultAnnotations
+                    && DEFAULT_RETURN_NOT_NULL_BY_DEFAULT_ANNOTATIONS != returnNotNullByDefaultAnnotations)
+            {
+                notNullByDefaultAnnotations.put(METHOD_RETURN.shortName, returnNotNullByDefaultAnnotations)
+            }
+        }
+        def notNullByDefaultAnnotationsString = ''
+        if (notNullByDefaultAnnotations) {
+            notNullByDefaultAnnotationsString = 'notNullByDefaultAnnotations = ['
+            notNullByDefaultAnnotations.each { key, value ->
+                notNullByDefaultAnnotationsString += "\n'$key' : [${value.collect {"'$it'"}.join(', ')}]"
+            }
+            notNullByDefaultAnnotationsString =
+                    notNullByDefaultAnnotationsString.replace("\n", "\n        ")
+            notNullByDefaultAnnotationsString += '\n    ]'
+        }
+        content = content.replace(MARKER_NOT_NULL_BY_DEFAULT_ANNOTATION, notNullByDefaultAnnotationsString)
 
         content = content.replace(
                 MARKER_LOGGING,

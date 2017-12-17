@@ -22,8 +22,12 @@ public interface InstrumentationInfo {
     CompilationUnitProcessingContext getContext();
 
     /**
-     * @return {@code NotNull} annotation for which an instrumentation should happen
+     * @return {@code NotNull} annotation for which an instrumentation should happen (if any)
      */
-    @NotNull
     String getNotNullAnnotation();
+
+    /**
+     * @return {@code NotNullByDefault} annotation description which implies the instrumentation (if any)
+     */
+    String getNotNullByDefaultAnnotationDescription();
 }

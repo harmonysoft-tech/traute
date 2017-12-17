@@ -5,13 +5,16 @@ import tech.harmonysoft.oss.traute.test.api.engine.TestRunner;
 import tech.harmonysoft.oss.traute.test.api.model.ClassFile;
 import tech.harmonysoft.oss.traute.test.api.model.CompilationResult;
 import tech.harmonysoft.oss.traute.test.api.model.RunResult;
+import tech.harmonysoft.oss.traute.test.api.model.TestSource;
 import tech.harmonysoft.oss.traute.test.impl.model.RunResultImpl;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.Collection;
 import java.util.Map;
 
 import static java.util.stream.Collectors.toMap;
+import static tech.harmonysoft.oss.traute.common.util.TrauteConstants.PACKAGE_INFO;
 
 public class TrauteInMemoryTestRunner implements TestRunner {
 
@@ -42,7 +45,7 @@ public class TrauteInMemoryTestRunner implements TestRunner {
         };
         Class<?> clazz;
         try {
-            clazz = classLoader.loadClass(compilationResult.getInput().getQualifiedClassName());
+            clazz = classLoader.loadClass(getStartClass(compilationResult.getInput()));
         } catch (ClassNotFoundException e) {
             throw new RuntimeException("Can't load compiled test class", e);
         }
@@ -62,5 +65,17 @@ public class TrauteInMemoryTestRunner implements TestRunner {
         } catch (InvocationTargetException e) {
             return new RunResultImpl(compilationResult, e.getCause());
         }
+    }
+
+    @NotNull
+    private static String getStartClass(@NotNull Collection<TestSource> testSources) {
+        for (TestSource testSource : testSources) {
+            String candidate = testSource.getQualifiedClassName();
+            if (!PACKAGE_INFO.equals(candidate)) {
+                return candidate;
+            }
+        }
+        throw new IllegalArgumentException(String.format("Can't find a start class to run in test sources: %s",
+                                                         testSources));
     }
 }

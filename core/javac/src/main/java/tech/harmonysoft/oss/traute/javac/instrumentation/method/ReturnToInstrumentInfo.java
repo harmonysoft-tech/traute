@@ -15,7 +15,6 @@ import tech.harmonysoft.oss.traute.javac.common.CompilationUnitProcessingContext
 public class ReturnToInstrumentInfo implements InstrumentationInfo {
 
     @NotNull private final CompilationUnitProcessingContext context;
-    @NotNull private final String                           notNullAnnotation;
     @NotNull private final ReturnTree                       returnExpression;
     @NotNull private final JCTree.JCExpression              returnType;
     @NotNull private final String                           tmpVariableName;
@@ -23,16 +22,26 @@ public class ReturnToInstrumentInfo implements InstrumentationInfo {
 
     @Nullable private final String qualifiedMethodName;
 
+    private final String notNullAnnotation;
+    private final String notNullByDefaultAnnotationDescription;
+
     public ReturnToInstrumentInfo(@NotNull CompilationUnitProcessingContext context,
-                                  @NotNull String notNullAnnotation,
+                                  @Nullable String notNullAnnotation,
+                                  @Nullable String notNullByDefaultAnnotationDescription,
                                   @NotNull ReturnTree returnExpression,
                                   @NotNull JCTree.JCExpression returnType,
                                   @NotNull String tmpVariableName,
                                   @NotNull Tree parent,
                                   @Nullable String qualifiedMethodName)
     {
+        if (notNullAnnotation == null && notNullByDefaultAnnotationDescription == null) {
+            throw new IllegalArgumentException(String.format(
+                    "Detected an invalid attempt to instrument a method return - either NotNull annotation or "
+                    + "NotNullByDefault annotations are undefined. Method: %s()", qualifiedMethodName));
+        }
         this.context = context;
         this.notNullAnnotation = notNullAnnotation;
+        this.notNullByDefaultAnnotationDescription = notNullByDefaultAnnotationDescription;
         this.returnExpression = returnExpression;
         this.returnType = returnType;
         this.tmpVariableName = tmpVariableName;
@@ -53,9 +62,13 @@ public class ReturnToInstrumentInfo implements InstrumentationInfo {
     }
 
     @Override
-    @NotNull
     public String getNotNullAnnotation() {
         return notNullAnnotation;
+    }
+
+    @Override
+    public String getNotNullByDefaultAnnotationDescription() {
+        return notNullByDefaultAnnotationDescription;
     }
 
     /**

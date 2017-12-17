@@ -20,6 +20,7 @@ import tech.harmonysoft.oss.traute.common.stats.StatsCollector;
 import tech.harmonysoft.oss.traute.common.util.TrauteConstants;
 import tech.harmonysoft.oss.traute.javac.common.CompilationUnitProcessingContext;
 import tech.harmonysoft.oss.traute.javac.common.InstrumentationApplianceFinder;
+import tech.harmonysoft.oss.traute.javac.common.PackageInfoManager;
 import tech.harmonysoft.oss.traute.javac.instrumentation.Instrumentator;
 import tech.harmonysoft.oss.traute.javac.instrumentation.method.MethodReturnInstrumentator;
 import tech.harmonysoft.oss.traute.javac.instrumentation.method.ReturnToInstrumentInfo;
@@ -37,16 +38,17 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.lang.ref.WeakReference;
 import java.lang.reflect.Field;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static java.lang.reflect.Modifier.*;
 import static java.util.stream.Collectors.joining;
+import static java.util.stream.Collectors.toList;
 import static tech.harmonysoft.oss.traute.common.settings.TrautePluginSettingsBuilder.settingsBuilder;
+import static tech.harmonysoft.oss.traute.common.util.TrauteConstants.OPTION_LOG_VERBOSE;
+import static tech.harmonysoft.oss.traute.common.util.TrauteConstants.OPTION_PREFIX_ANNOTATIONS_NOT_NULL_BY_DEFAULT;
+import static tech.harmonysoft.oss.traute.common.util.TrauteConstants.SEPARATOR;
 import static tech.harmonysoft.oss.traute.javac.log.AbstractLogger.getProblemMessageSuffix;
 
 /**
@@ -97,12 +99,13 @@ import static tech.harmonysoft.oss.traute.javac.log.AbstractLogger.getProblemMes
  */
 public class TrauteJavacPlugin implements Plugin {
 
-    private final AtomicReference<WeakReference<AbstractLogger>> loggerRef         = new AtomicReference<>();
-    private final AtomicReference<TrautePluginSettings>          pluginSettingsRef = new AtomicReference<>();
+    private final AtomicReference<WeakReference<AbstractLogger>> loggerRef             = new AtomicReference<>();
+    private final AtomicReference<TrautePluginSettings>          pluginSettingsRef     = new AtomicReference<>();
 
     private final Instrumentator<ParameterToInstrumentInfo> parameterInstrumentator = new ParameterInstrumentator();
     private final Instrumentator<ReturnToInstrumentInfo>    methodInstrumentator    = new MethodReturnInstrumentator();
     private final Set<String>                               pluginOptionKeys        = new HashSet<>();
+    private final PackageInfoManager                        packageInfoManager      = new PackageInfoManager();
 
     public TrauteJavacPlugin() {
         pluginOptionKeys.addAll(collectPluginOptionKeys());
@@ -126,14 +129,14 @@ public class TrauteJavacPlugin implements Plugin {
         pluginSettingsRef.set(settings);
         task.addTaskListener(new TaskListener() {
             @Override
-            public void started(TaskEvent e) {
-            }
-
-            @Override
-            public void finished(TaskEvent event) {
-                if (event.getKind() != TaskEvent.Kind.PARSE) {
-                    // The idea is to add our checks just after the parser builds an AST. Further on checks code
+            public void started(TaskEvent event) {
+                if (event.getKind() != TaskEvent.Kind.ENTER) {
+                    // The idea is to add our checks just after the parser builds an AST. Further on the code
                     // will also be analyzed for errors and included into resulting binary.
+                    // We don't apply the instrumentations after TaskEvent.Kind.PARSE event because there is
+                    // a possible case that there are package-level annotations like
+                    // javax.annotation.ParametersAreNonnullByDefault in package-info.java. So, we need to build
+                    // AST for all input files first and instrument only after that.
                     return;
                 }
 
@@ -144,12 +147,12 @@ public class TrauteJavacPlugin implements Plugin {
                     ));
                 }
                 TrautePluginLogger logger = getPluginLogger(settings.getLogFile().orElse(null), log);
-
                 CompilationUnitTree compilationUnit = event.getCompilationUnit();
                 if (compilationUnit == null) {
                     logger.reportDetails("get a prepared compilation unit object but got <null>");
                     return;
                 }
+
                 TreeMaker treeMaker = TreeMaker.instance(context);
                 if (treeMaker == null) {
                     logger.reportDetails("get an AST factory from the current javac context but got <null>");
@@ -169,7 +172,8 @@ public class TrauteJavacPlugin implements Plugin {
                                                                  names,
                                                                  logger,
                                                                  statsCollector,
-                                                                 new ExceptionTextGeneratorManager(logger)),
+                                                                 new ExceptionTextGeneratorManager(logger),
+                                                                 packageInfoManager),
                             parameterInstrumentator,
                             methodInstrumentator),null);
                     if (pluginSettings.isVerboseMode()) {
@@ -183,6 +187,26 @@ public class TrauteJavacPlugin implements Plugin {
                             event.getSourceFile(), writer
                     ));
                 }
+            }
+
+            @Override
+            public void finished(TaskEvent event) {
+                if (event.getKind() != TaskEvent.Kind.PARSE) {
+                    return;
+                }
+                Log log = Log.instance(context);
+                if (log == null) {
+                    throw new RuntimeException(AbstractLogger.getProblemMessage(
+                            "get a javac logger from the current javac context but got <null>"
+                    ));
+                }
+                TrautePluginLogger logger = getPluginLogger(settings.getLogFile().orElse(null), log);
+                CompilationUnitTree compilationUnit = event.getCompilationUnit();
+                if (compilationUnit == null) {
+                    logger.reportDetails("get a prepared compilation unit object but got <null>");
+                    return;
+                }
+                packageInfoManager.onCompilationUnit(compilationUnit);
             }
         });
     }
@@ -266,9 +290,11 @@ public class TrauteJavacPlugin implements Plugin {
 
         applyVerboseMode(logger, builder, options);
         applyNotNullAnnotations(logger, builder, options);
+        applyNullableAnnotations(logger, builder, options);
         applyInstrumentations(logger, builder, options);
         applyExceptionsToThrow(logger, builder, options);
         applyExceptionTextPatterns(logger, builder, options);
+        applyNotNullByDefaultAnnotations(logger, builder, options);
 
         return builder.build();
     }
@@ -282,7 +308,7 @@ public class TrauteJavacPlugin implements Plugin {
             return;
         }
         instrumentationsString = instrumentationsString.trim();
-        String[] instrumentationNamesArray = instrumentationsString.split(TrauteConstants.SEPARATOR);
+        String[] instrumentationNamesArray = instrumentationsString.split(SEPARATOR);
         for (String instrumentationShortName : instrumentationNamesArray) {
             InstrumentationType type = InstrumentationType.byShortName(instrumentationShortName.trim());
             if (type == null) {
@@ -314,11 +340,29 @@ public class TrauteJavacPlugin implements Plugin {
             return;
         }
         notNullAnnotationsString = notNullAnnotationsString.trim();
-        String[] notNullAnnotations = notNullAnnotationsString.split(TrauteConstants.SEPARATOR);
+        String[] notNullAnnotations = notNullAnnotationsString.split(SEPARATOR);
         if (notNullAnnotations.length > 0) {
             builder.withNotNullAnnotations(notNullAnnotations);
             if (logger != null) {
                 logger.info("using the following NotNull annotations: " + Arrays.toString(notNullAnnotations));
+            }
+        }
+    }
+
+    private void applyNullableAnnotations(@Nullable TrautePluginLogger logger,
+                                          @NotNull TrautePluginSettingsBuilder builder,
+                                          @NotNull Map<String, String> options)
+    {
+        String annotationsString = options.get(TrauteConstants.OPTION_ANNOTATIONS_NULLABLE);
+        if (annotationsString == null) {
+            return;
+        }
+        annotationsString = annotationsString.trim();
+        String[] annotations = annotationsString.split(SEPARATOR);
+        if (annotations.length > 0) {
+            builder.withNullableAnnotations(annotations);
+            if (logger != null) {
+                logger.info("using the following Nullable annotations: " + Arrays.toString(annotations));
             }
         }
     }
@@ -357,8 +401,36 @@ public class TrauteJavacPlugin implements Plugin {
             if (type != null) {
                 builder.withExceptionTextPattern(type, entry.getValue());
                 if (logger != null) {
-                    logger.info(String.format("Using custom exception text generator with pattern '%s' "
+                    logger.info(String.format("using custom exception text generator with pattern '%s' "
                                               + "in '%s' checks", entry.getValue(), instrumentationString));
+                }
+            }
+        }
+    }
+
+    private void applyNotNullByDefaultAnnotations(@Nullable TrautePluginLogger logger,
+                                                  @NotNull TrautePluginSettingsBuilder builder,
+                                                  @NotNull Map<String, String> options)
+    {
+        for (Map.Entry<String, String> entry : options.entrySet()) {
+            String key = entry.getKey();
+            if (!key.startsWith(OPTION_PREFIX_ANNOTATIONS_NOT_NULL_BY_DEFAULT)) {
+                continue;
+            }
+            String instrumentationString = key.substring(OPTION_PREFIX_ANNOTATIONS_NOT_NULL_BY_DEFAULT.length());
+            InstrumentationType type = InstrumentationType.byShortName(instrumentationString);
+            if (type == null) {
+                continue;
+            }
+            String[] annotationsArray = entry.getValue().split(SEPARATOR);
+            List<String> annotations = Arrays.stream(annotationsArray)
+                                             .map(String::trim).filter(a -> !a.isEmpty())
+                                             .collect(toList());
+            if (!annotations.isEmpty()) {
+                builder.withNotNullByDefaultAnnotations(type, annotations);
+                if (logger != null) {
+                    logger.info(String.format("using the following NotNullByDefault annotations in '%s' checks: %s",
+                                              type, annotations));
                 }
             }
         }
@@ -368,7 +440,7 @@ public class TrauteJavacPlugin implements Plugin {
                                   @NotNull TrautePluginSettingsBuilder builder,
                                   @NotNull Map<String, String> options)
     {
-        boolean verbose = "true".equalsIgnoreCase(options.get(TrauteConstants.OPTION_LOG_VERBOSE));
+        boolean verbose = "true".equalsIgnoreCase(options.get(OPTION_LOG_VERBOSE));
         if (verbose && logger != null) {
             logger.info("'verbose mode' is on");
         }

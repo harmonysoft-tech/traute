@@ -15,7 +15,9 @@ import tech.harmonysoft.oss.traute.javac.instrumentation.parameter.ParameterToIn
 import javax.lang.model.element.Modifier;
 import javax.tools.JavaCompiler;
 import java.util.*;
+import java.util.concurrent.Callable;
 
+import static java.util.Collections.emptySet;
 import static tech.harmonysoft.oss.traute.common.instrumentation.InstrumentationType.METHOD_PARAMETER;
 import static tech.harmonysoft.oss.traute.common.instrumentation.InstrumentationType.METHOD_RETURN;
 import static tech.harmonysoft.oss.traute.common.util.TrauteConstants.METHOD_RETURN_TYPES_TO_SKIP;
@@ -27,13 +29,15 @@ import static tech.harmonysoft.oss.traute.common.util.TrauteConstants.PRIMITIVE_
  */
 public class InstrumentationApplianceFinder extends TreeScanner<Void, Void> {
 
-    private final Stack<Tree>    parents             = new Stack<>();
-    private final Stack<String>  classNames          = new Stack<>();
-    private final Stack<Boolean> processingInterface = new Stack<>();
+    private final Stack<Tree>    parents                    = new Stack<>();
+    private final Stack<String>  classNames                 = new Stack<>();
+    private final Stack<Boolean> processingInterface        = new Stack<>();
+    private final Stack<String>  parametersNotNullByDefault = new Stack<>();
+    private final Stack<String>  returnNotNullByDefault     = new Stack<>();
 
     @NotNull private final CompilationUnitProcessingContext          context;
     @NotNull private final Instrumentator<ParameterToInstrumentInfo> parameterInstrumenter;
-    @NotNull private final Instrumentator<ReturnToInstrumentInfo>          returnInstrumenter;
+    @NotNull private final Instrumentator<ReturnToInstrumentInfo>    returnInstrumenter;
 
     private String              packageName;
     private String              methodName;
@@ -56,7 +60,11 @@ public class InstrumentationApplianceFinder extends TreeScanner<Void, Void> {
     public Void visitCompilationUnit(CompilationUnitTree node, Void aVoid) {
         ExpressionTree packageName = node.getPackageName();
         this.packageName = packageName == null ? "" : packageName.toString();
-        return super.visitCompilationUnit(node, aVoid);
+        Set<String> packageAnnotations = context.getPackageInfoManager().getPackageAnnotations(this.packageName);
+        String location = this.packageName.isEmpty() ? "default package" : this.packageName + " package";
+        return withDefaultNotNullAnnotations(packageAnnotations,
+                                             location,
+                                             () -> super.visitCompilationUnit(node, aVoid));
     }
 
     @Override
@@ -77,10 +85,51 @@ public class InstrumentationApplianceFinder extends TreeScanner<Void, Void> {
         this.processingInterface.push(processingInterface);
 
         try {
-            return super.visitClass(node, aVoid);
+            return withDefaultNotNullAnnotations(modifiers,
+                                                 className + " class",
+                                                 () -> super.visitClass(node, aVoid));
         } finally {
             classNames.pop();
             this.processingInterface.pop();
+        }
+    }
+
+    private <T> T withDefaultNotNullAnnotations(@Nullable ModifiersTree modifiers,
+                                               @NotNull String location,
+                                               @NotNull Callable<T> action)
+    {
+        return withDefaultNotNullAnnotations(extractAnnotations(modifiers), location, action);
+    }
+
+    private <T> T withDefaultNotNullAnnotations(@NotNull Set<String> annotations,
+                                               @NotNull String location,
+                                               @NotNull Callable<T> action)
+    {
+        TrautePluginSettings settings = context.getPluginSettings();
+
+        Optional<String> parameterNotNullByDefaultAnnotation = findMatch(
+                annotations,
+                settings.getNotNullByDefaultAnnotations(METHOD_PARAMETER)
+        );
+        parameterNotNullByDefaultAnnotation.ifPresent(s -> parametersNotNullByDefault.push(String.format(
+                "%s annotation on the %s", s, location)));
+        Optional<String> returnNotNullByDefaultAnnotation = findMatch(
+                annotations,
+                settings.getNotNullByDefaultAnnotations(METHOD_RETURN)
+        );
+        returnNotNullByDefaultAnnotation.ifPresent(s -> returnNotNullByDefault.push(String.format(
+                "%s annotation on the %s", s, location)));
+        try {
+            return action.call();
+        } catch (Exception e) {
+            throw new IllegalStateException(e);
+        } finally {
+            if (parameterNotNullByDefaultAnnotation.isPresent()) {
+                parametersNotNullByDefault.pop();
+            }
+            if (returnNotNullByDefaultAnnotation.isPresent()) {
+                returnNotNullByDefault.pop();
+            }
         }
     }
 
@@ -95,22 +144,25 @@ public class InstrumentationApplianceFinder extends TreeScanner<Void, Void> {
     @Override
     public Void visitMethod(MethodTree method, Void v) {
         methodName = method.getName().toString();
-        instrumentReturnExpression = shouldInstrumentReturnExpression(method);
-        if (shouldInstrumentMethodParameters(method)) {
-            JCTree.JCBlock methodBody = getMethodBody(method);
-            if (methodBody != null) {
-                instrumentMethodParameters(method, methodBody);
-            }
-        }
-        try {
-            return super.visitMethod(method, v);
-        } finally {
-            methodReturnType = null;
-            methodNotNullAnnotation = null;
-            methodName = null;
-            instrumentReturnExpression = false;
-            tmpVariableCounter = 1;
-        }
+        return withDefaultNotNullAnnotations(
+                method.getModifiers(), getQualifiedMethodName() + " method", () -> {
+                    instrumentReturnExpression = shouldInstrumentReturnExpression(method);
+                    if (shouldInstrumentMethodParameters(method)) {
+                        JCTree.JCBlock methodBody = getMethodBody(method);
+                        if (methodBody != null) {
+                            instrumentMethodParameters(method, methodBody);
+                        }
+                    }
+                    try {
+                        return super.visitMethod(method, v);
+                    } finally {
+                        methodReturnType = null;
+                        methodNotNullAnnotation = null;
+                        methodName = null;
+                        instrumentReturnExpression = false;
+                        tmpVariableCounter = 1;
+                    }
+                });
     }
 
     @SuppressWarnings("SimplifiableIfStatement")
@@ -187,10 +239,16 @@ public class InstrumentationApplianceFinder extends TreeScanner<Void, Void> {
             if (type != null && PRIMITIVE_TYPES.contains(type.toString())) {
                 continue;
             }
-            Optional<String> annotation = findNotNullAnnotation(variable.getModifiers());
-            if (annotation.isPresent()) {
+            Annotations annotations = findAnnotation(variable.getModifiers());
+            if (annotations.notNull.isPresent()
+                || (!parametersNotNullByDefault.isEmpty()) && !annotations.nullable.isPresent())
+            {
+
+                String notNullByDefaultAnnotationDescription =
+                        parametersNotNullByDefault.isEmpty() ? null : parametersNotNullByDefault.peek();
                 variablesToCheck.add(new ParameterToInstrumentInfo(context,
-                                                                   annotation.get(),
+                                                                   annotations.notNull.orElse(null),
+                                                                   notNullByDefaultAnnotationDescription,
                                                                    variable,
                                                                    bodyBlock,
                                                                    getQualifiedMethodName(),
@@ -216,9 +274,11 @@ public class InstrumentationApplianceFinder extends TreeScanner<Void, Void> {
             return false;
         }
 
-        Optional<String> notNullAnnotation = findNotNullAnnotation(method.getModifiers());
-        if (notNullAnnotation.isPresent()) {
-            methodNotNullAnnotation = notNullAnnotation.get();
+        Annotations annotations = findAnnotation(method.getModifiers());
+        if (annotations.notNull.isPresent()
+            || (!returnNotNullByDefault.isEmpty() && !annotations.nullable.isPresent()))
+        {
+            methodNotNullAnnotation = annotations.notNull.orElse(null);
             methodReturnType = (JCTree.JCExpression) returnType;
             return true;
         }
@@ -240,34 +300,45 @@ public class InstrumentationApplianceFinder extends TreeScanner<Void, Void> {
 
     /**
      * Checks if given {@code AST} element's modifiers contain any of the
-     * {@link TrautePluginSettings#getNotNullAnnotations() target} {@code @NotNull} annotation.
+     * {@link TrautePluginSettings#getNotNullAnnotations() NotNull} or
+     * or {@link TrautePluginSettings#getNullableAnnotations() Nullable} annotation.
      *
      * @param modifiers {@code AST} element's modifiers to check
-     * @return          target annotation's name in case the one is found
+     * @return          annotations lookup result
      */
     @NotNull
-    private Optional<String> findNotNullAnnotation(@Nullable ModifiersTree modifiers) {
+    private Annotations findAnnotation(@Nullable ModifiersTree modifiers) {
+        Set<String> annotationsInSource = extractAnnotations(modifiers);
+        if (annotationsInSource.isEmpty()) {
+            return Annotations.EMPTY;
+        }
+        return new Annotations(findMatch(annotationsInSource, context.getPluginSettings().getNotNullAnnotations()),
+                               findMatch(annotationsInSource, context.getPluginSettings().getNullableAnnotations()));
+    }
+
+    @NotNull
+    private Set<String> extractAnnotations(@Nullable ModifiersTree modifiers) {
         if (modifiers == null) {
-            return Optional.empty();
+            return emptySet();
         }
         java.util.List<? extends AnnotationTree> annotations = modifiers.getAnnotations();
         if (annotations == null) {
-            return Optional.empty();
+            return emptySet();
         }
-        Set<String> annotationsInSource = new HashSet<>();
+        Set<String> result = new HashSet<>();
         for (AnnotationTree annotation : annotations) {
             Tree type = annotation.getAnnotationType();
             if (type != null) {
-                annotationsInSource.add(type.toString());
+                result.add(type.toString());
             }
         }
-        return findMatch(annotationsInSource);
+        return result;
     }
 
     /**
      * <p>
      *     Checks if any of the given 'annotations to check' matches any of the
-     *     {@link TrautePluginSettings#getNotNullAnnotations() target annotations}
+     *     {@code target annotations}
      *     considering {@link CompilationUnitProcessingContext#getImports() available imports}.
      * </p>
      * <p>
@@ -281,19 +352,21 @@ public class InstrumentationApplianceFinder extends TreeScanner<Void, Void> {
      * </p>
      *
      * @param annotationsToCheck    annotations to match against the given 'target annotations'
+     * @param targetAnnotations     target annotations to check against the given {@code annotations to check}
      * @return                      a matched annotation (if any)
      */
     @NotNull
-    private Optional<String> findMatch(@NotNull Collection<String> annotationsToCheck) {
+    private Optional<String> findMatch(@NotNull Collection<String> annotationsToCheck,
+                                       @NotNull Set<String> targetAnnotations)
+    {
         for (String annotationInSource : annotationsToCheck) {
-            Set<String> notNullAnnotations = context.getPluginSettings().getNotNullAnnotations();
-            if (notNullAnnotations.contains(annotationInSource)) {
+            if (targetAnnotations.contains(annotationInSource)) {
                 // Qualified annotation, like 'void test(@javax.annotation.Nonnul String s) {}'
                 return Optional.of(annotationInSource);
             }
             if (packageName != null) {
                 String candidate = String.format("%s.%s", packageName, annotationInSource);
-                if (notNullAnnotations.contains(candidate)) {
+                if (targetAnnotations.contains(candidate)) {
                     return Optional.of(candidate);
                 }
             }
@@ -301,12 +374,12 @@ public class InstrumentationApplianceFinder extends TreeScanner<Void, Void> {
                 // Support an import like 'import org.jetbrains.annotations.*;'
                 if (anImport.endsWith(".*")) {
                     String candidate = anImport.substring(0, anImport.length() - 1) + annotationInSource;
-                    if (notNullAnnotations.contains(candidate)) {
+                    if (targetAnnotations.contains(candidate)) {
                         return Optional.of(candidate);
                     }
                     continue;
                 }
-                if (!notNullAnnotations.contains(anImport)) {
+                if (!targetAnnotations.contains(anImport)) {
                     continue;
                 }
                 if (anImport.endsWith(annotationInSource)) {
@@ -413,13 +486,16 @@ public class InstrumentationApplianceFinder extends TreeScanner<Void, Void> {
     @Override
     public Void visitReturn(ReturnTree node, Void aVoid) {
         if (instrumentReturnExpression
-            && methodNotNullAnnotation != null
+            && (methodNotNullAnnotation != null || !returnNotNullByDefault.isEmpty())
             && methodReturnType != null
             && !parents.isEmpty())
         {
             mayBeSetPosition(node, context.getAstFactory());
+            String notNullByDefaultDescription = returnNotNullByDefault.isEmpty() ? null
+                                                                                  : returnNotNullByDefault.peek();
             returnInstrumenter.instrument(new ReturnToInstrumentInfo(context,
                                                                      methodNotNullAnnotation,
+                                                                     notNullByDefaultDescription,
                                                                      node,
                                                                      methodReturnType,
                                                                      getTmpVariableName(),
@@ -427,5 +503,19 @@ public class InstrumentationApplianceFinder extends TreeScanner<Void, Void> {
                                                                      getQualifiedMethodName()));
         }
         return super.visitReturn(node, aVoid);
+    }
+
+    @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
+    private static class Annotations {
+
+        public static final Annotations EMPTY = new Annotations(Optional.empty(), Optional.empty());
+
+        @NotNull public final Optional<String> notNull;
+        @NotNull public final Optional<String> nullable;
+
+        public Annotations(@NotNull Optional<String> notNull, @NotNull Optional<String> nullable) {
+            this.notNull = notNull;
+            this.nullable = nullable;
+        }
     }
 }

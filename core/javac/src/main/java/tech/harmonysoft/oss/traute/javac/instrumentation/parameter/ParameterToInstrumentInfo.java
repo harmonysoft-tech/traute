@@ -14,9 +14,11 @@ import tech.harmonysoft.oss.traute.javac.common.CompilationUnitProcessingContext
 public class ParameterToInstrumentInfo implements InstrumentationInfo {
 
     @NotNull private final CompilationUnitProcessingContext compilationUnitProcessingContext;
-    @NotNull private final String                           notNullAnnotation;
     @NotNull private final VariableTree                     methodParameter;
     @NotNull private final JCTree.JCBlock                   body;
+
+    private final String notNullAnnotation;
+    private final String notNullByDefaultAnnotationDescription;
 
     @Nullable private final String qualifiedMethodName;
 
@@ -25,7 +27,8 @@ public class ParameterToInstrumentInfo implements InstrumentationInfo {
     private final boolean constructor;
 
     public ParameterToInstrumentInfo(@NotNull CompilationUnitProcessingContext compilationUnitProcessingContext,
-                                     @NotNull String notNullAnnotation,
+                                     @Nullable String notNullAnnotation,
+                                     @Nullable String notNullByDefaultAnnotationDescription,
                                      @NotNull VariableTree methodParameter,
                                      @NotNull JCTree.JCBlock body,
                                      @Nullable String qualifiedMethodName,
@@ -33,8 +36,15 @@ public class ParameterToInstrumentInfo implements InstrumentationInfo {
                                      int methodParametersNumber,
                                      boolean constructor)
     {
+        if (notNullAnnotation == null && notNullByDefaultAnnotationDescription == null) {
+            throw new IllegalArgumentException(String.format(
+                    "Detected an invalid attempt to instrument a method parameter - either NotNull annotation or "
+                    + "NotNullByDefault annotations are undefined. Method: %s(), parameter: %s",
+                    qualifiedMethodName, methodParameter.getName()));
+        }
         this.compilationUnitProcessingContext = compilationUnitProcessingContext;
         this.notNullAnnotation = notNullAnnotation;
+        this.notNullByDefaultAnnotationDescription = notNullByDefaultAnnotationDescription;
         this.methodParameter = methodParameter;
         this.body = body;
         this.qualifiedMethodName = qualifiedMethodName;
@@ -56,9 +66,13 @@ public class ParameterToInstrumentInfo implements InstrumentationInfo {
     }
 
     @Override
-    @NotNull
     public String getNotNullAnnotation() {
         return notNullAnnotation;
+    }
+
+    @Override
+    public String getNotNullByDefaultAnnotationDescription() {
+        return notNullByDefaultAnnotationDescription;
     }
 
     /**

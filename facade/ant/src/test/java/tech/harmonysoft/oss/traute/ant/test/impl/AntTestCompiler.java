@@ -1,7 +1,7 @@
 package tech.harmonysoft.oss.traute.ant.test.impl;
 
 import org.jetbrains.annotations.NotNull;
-import tech.harmonysoft.oss.traute.test.api.model.TestSource;
+import tech.harmonysoft.oss.traute.common.settings.TrautePluginSettings;
 import tech.harmonysoft.oss.traute.test.impl.engine.AbstractExternalSystemTestCompiler;
 
 import java.io.File;
@@ -36,7 +36,8 @@ public class AntTestCompiler extends AbstractExternalSystemTestCompiler {
             "</project>";
 
     @Override
-    protected @NotNull File createExternalSystemConfig(@NotNull File projectRootDir, @NotNull TestSource testSource)
+    protected @NotNull File createExternalSystemConfig(@NotNull File projectRootDir,
+                                                       @NotNull TrautePluginSettings settings)
             throws IOException
     {
         File buildXml = new File(projectRootDir, "build.xml");
@@ -47,7 +48,7 @@ public class AntTestCompiler extends AbstractExternalSystemTestCompiler {
                                     .collect(Collectors.joining("\n"));
         content = content.replace(MARKER_DEPENDENCIES, dependencies);
 
-        String compilerArguments = getCompilerArgs(testSource.getSettings())
+        String compilerArguments = getCompilerArgs(settings)
                 .stream()
                 .map(a -> String.format("      <compilerarg value=\"%s\" />", a))
                 .collect(Collectors.joining("\n"));

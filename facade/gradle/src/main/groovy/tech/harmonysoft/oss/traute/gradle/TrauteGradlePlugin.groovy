@@ -15,6 +15,8 @@ class TrautePluginExtension {
 
     // Optional
     def notNullAnnotations
+    def nullableAnnotations
+    def notNullByDefaultAnnotations
     def instrumentations
     def exceptionsToThrow
     def exceptionTexts
@@ -56,6 +58,8 @@ class TrauteGradlePlugin implements Plugin<Project> {
     private static void applyOptions(compilerArgs, extension) {
         compilerArgs << "-Xplugin:${PLUGIN_NAME}"
         mayBeApplyNotNullAnnotations(compilerArgs, extension)
+        mayBeApplyNullableAnnotations(compilerArgs, extension)
+        mayBeApplyNotNullByDefaultAnnotations(compilerArgs, extension)
         mayBeApplyLoggingSettings(compilerArgs, extension)
         mayBeApplyLogFile(compilerArgs, extension)
         mayBeApplyInstrumentations(compilerArgs, extension)
@@ -64,9 +68,33 @@ class TrauteGradlePlugin implements Plugin<Project> {
     }
 
     private static void mayBeApplyNotNullAnnotations(compilerArgs, extension) {
-        def notNullAnnotations = getList(extension, 'notNullAnnotations')
+        def notNullAnnotations = getListFromProperty(extension, 'notNullAnnotations')
         if (notNullAnnotations) {
             compilerArgs << "-A${OPTION_ANNOTATIONS_NOT_NULL}=${notNullAnnotations.join(SEPARATOR)}"
+        }
+    }
+
+    private static void mayBeApplyNullableAnnotations(compilerArgs, extension) {
+        def notNullAnnotations = getListFromProperty(extension, 'nullableAnnotations')
+        if (notNullAnnotations) {
+            compilerArgs << "-A${OPTION_ANNOTATIONS_NULLABLE}=${notNullAnnotations.join(SEPARATOR)}"
+        }
+    }
+
+    private static void mayBeApplyNotNullByDefaultAnnotations(compilerArgs, extension) {
+        if (!extension.notNullByDefaultAnnotations) {
+            return
+        }
+        if (!(extension.notNullByDefaultAnnotations instanceof Map)) {
+            throw new PluginInstantiationException(
+                    "Error on ${PLUGIN_NAME} plugin initialization - expected to find a Map "
+                            + "of strings at the 'notNullByDefaultAnnotations' property but found "
+                            + "a ${extension.notNullByDefaultAnnotations.class.name} "
+            )
+        }
+        extension.notNullByDefaultAnnotations.each { k, v ->
+            def annotations = getListFromValue(v, "'notNullByDefaultAnnotations' value for key '$k'")
+            compilerArgs << "-A${OPTION_PREFIX_ANNOTATIONS_NOT_NULL_BY_DEFAULT}${k}=${annotations.join(SEPARATOR)}"
         }
     }
 
@@ -83,7 +111,7 @@ class TrauteGradlePlugin implements Plugin<Project> {
     }
 
     private static void mayBeApplyInstrumentations(compilerArgs, extension) {
-        def instrumentations = getList(extension, 'instrumentations')
+        def instrumentations = getListFromProperty(extension, 'instrumentations')
         if (!instrumentations) {
             return
         }
@@ -134,8 +162,11 @@ class TrauteGradlePlugin implements Plugin<Project> {
         }
     }
 
-    private static List<String> getList(extension, propertyName) {
-        def value = extension[propertyName]
+    private static List<String> getListFromProperty(extension, propertyName) {
+        return getListFromValue(extension[propertyName], "'$propertyName' property")
+    }
+
+    private static List<String> getListFromValue(value, description) {
         if (!value) {
             return []
         } else if (value instanceof CharSequence) {
@@ -145,7 +176,7 @@ class TrauteGradlePlugin implements Plugin<Project> {
                 if (!(it instanceof CharSequence)) {
                     throw new PluginInstantiationException(
                             "Error on ${PLUGIN_NAME} plugin initialization - expected to find a list "
-                                    + "of strings at the '$propertyName' property but found a ${it.class.name} "
+                                    + "of strings at the $description but found a ${it.class.name} "
                                     + "instance inside the list - '$it'"
                     )
                 }
@@ -154,7 +185,7 @@ class TrauteGradlePlugin implements Plugin<Project> {
         } else {
             throw new PluginInstantiationException(
                     "Error on ${PLUGIN_NAME} plugin initialization - expected to find a string or a "
-                            + "list of string at the '$propertyName' property but got a ${value.class.name} "
+                            + "list of string at the $description but got a ${value.class.name} "
                             + "instance - '$value'"
             )
         }

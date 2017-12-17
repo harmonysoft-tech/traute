@@ -7,10 +7,14 @@ import tech.harmonysoft.oss.traute.common.settings.TrautePluginSettingsBuilder;
 import tech.harmonysoft.oss.traute.test.api.engine.TestCompiler;
 import tech.harmonysoft.oss.traute.test.api.engine.TestRunner;
 import tech.harmonysoft.oss.traute.test.api.model.CompilationResult;
+import tech.harmonysoft.oss.traute.test.api.model.TestSource;
 import tech.harmonysoft.oss.traute.test.impl.expectation.CompilationResultExpectationBuilder;
 import tech.harmonysoft.oss.traute.test.impl.expectation.RunResultExpectationBuilder;
 import tech.harmonysoft.oss.traute.test.impl.model.TestSourceImpl;
 import tech.harmonysoft.oss.traute.test.util.TestUtil;
+
+import static java.util.Arrays.asList;
+import static java.util.Collections.singleton;
 
 @SuppressWarnings("NullableProblems")
 public abstract class AbstractTrauteTest {
@@ -36,6 +40,17 @@ public abstract class AbstractTrauteTest {
         doTest(TestUtil.QUALIFIED_CLASS_NAME, testSource);
     }
 
+    protected void doTest(@NotNull TestSource ... testSources) {
+        CompilationResult compilationResult = compiler.compile(asList(testSources),
+                                                               settingsBuilder.build(),
+                                                               expectCompilationResult.build());
+        try {
+            runner.run(compilationResult, expectRunResult.build());
+        } finally {
+            compiler.release(compilationResult);
+        }
+    }
+
     protected void doTest(@NotNull String qualifiedClassName, @NotNull String testSource) {
         CompilationResult compilationResult = doCompile(qualifiedClassName, testSource);
         try {
@@ -52,9 +67,8 @@ public abstract class AbstractTrauteTest {
 
     @NotNull
     protected CompilationResult doCompile(@NotNull String qualifiedClassName, @NotNull String testSource) {
-        return compiler.compile(new TestSourceImpl(testSource,
-                                                   qualifiedClassName,
-                                                   settingsBuilder.build()),
-                                                                   expectCompilationResult.build());
+        return compiler.compile(singleton(new TestSourceImpl(testSource, qualifiedClassName)),
+                                settingsBuilder.build(),
+                                expectCompilationResult.build());
     }
 }

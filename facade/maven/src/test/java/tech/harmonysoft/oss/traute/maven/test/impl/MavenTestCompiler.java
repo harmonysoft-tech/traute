@@ -3,7 +3,6 @@ package tech.harmonysoft.oss.traute.maven.test.impl;
 import org.jetbrains.annotations.NotNull;
 import tech.harmonysoft.oss.traute.common.settings.TrautePluginSettings;
 import tech.harmonysoft.oss.traute.common.util.TrauteConstants;
-import tech.harmonysoft.oss.traute.test.api.model.TestSource;
 import tech.harmonysoft.oss.traute.test.impl.engine.AbstractExternalSystemTestCompiler;
 
 import java.io.File;
@@ -67,11 +66,11 @@ public class MavenTestCompiler extends AbstractExternalSystemTestCompiler {
 
     @Override
     @NotNull
-    protected File createExternalSystemConfig(@NotNull File projectRootDir, @NotNull TestSource testSource)
+    protected File createExternalSystemConfig(@NotNull File projectRootDir, @NotNull TrautePluginSettings settings)
             throws IOException
     {
         File pom = new File(projectRootDir, "pom.xml");
-        fillPomContent(pom, testSource.getSettings());
+        fillPomContent(pom, settings);
         return pom;
     }
 

@@ -1,7 +1,6 @@
 package tech.harmonysoft.oss.traute.test.api.model;
 
 import org.jetbrains.annotations.NotNull;
-import tech.harmonysoft.oss.traute.common.settings.TrautePluginSettings;
 
 public interface TestSource {
 
@@ -16,7 +15,4 @@ public interface TestSource {
      */
     @NotNull
     String getQualifiedClassName();
-
-    @NotNull
-    TrautePluginSettings getSettings();
 }
