@@ -4,6 +4,7 @@
 * [2. Overview](#2-overview)
 * [3. Sample](#3-sample)
 * [4. Options](#4-options)
+  * [4.1. NotNull Annotations](#41-notnull-annotations)
 
 ## 1. License
 
@@ -37,12 +38,15 @@ A complete standalone sample project can be found [here](https://github.com/deni
 
 ## 4. Options
 
-Any [Traute Javac Plugin setting](../../core/javac/README.md#7-settings) can be provided to the *Ant's* &lt;javac&gt; task through the &lt;compilerarg&gt; element:
+Any [Traute Javac Plugin setting](../../core/javac/README.md#7-settings) can be provided to the *Ant's* &lt;javac&gt; task through the &lt;compilerarg&gt; element.  
+
+### 4.1. NotNull Annotations  
+
+*NotNull* annotations to use are defined through the *-Atraute.annotations.not.null* setting (multiple annotations might be specified separated by *:*):  
 
 ```xml
 <javac srcdir="${src.dir}" destdir="${build.dir}" classpathref="lib.path.id" debug="true">
     <compilerarg value="-Xplugin:Traute"/>
-    <compilerarg value="-Atraute.instrumentations=parameter"/>
-    <compilerarg value="-Atraute.log.verbose=true"/>
+    <compilerarg value="-Atraute.annotations.not.null=my.company.NotNull"/>
 </javac>
 ```
