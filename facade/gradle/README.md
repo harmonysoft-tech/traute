@@ -47,7 +47,7 @@ buildscript {
     mavenCentral()
   }
   dependencies {
-    classpath "gradle.plugin.tech.harmonysoft:traute-gradle:1.0.5"
+    classpath "tech.harmonysoft:traute-gradle:1.0.5"
   }
 }
 
@@ -62,7 +62,7 @@ buildscript {
     jcenter()
   }
   dependencies {
-    classpath "gradle.plugin.tech.harmonysoft:traute-gradle:1.0.5"
+    classpath "tech.harmonysoft:traute-gradle:1.0.5"
   }
 }
 
