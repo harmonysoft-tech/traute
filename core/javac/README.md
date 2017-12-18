@@ -165,10 +165,10 @@ When this code is compiled, *null* checks are generated for *arg1* and *arg2* bu
 @javax.annotation.ParametersAreNonnullByDefault
 public void test(Object arg1, Object arg2, @Nullable Object arg3) {
     if (arg1 == null) {
-        throw new NullPOinterException("'arg1' must not be null");
+        throw new NullPointerException("'arg1' must not be null");
     }
     if (arg2 == null) {
-        throw new NullPOinterException("'arg2' must not be null");
+        throw new NullPointerException("'arg2' must not be null");
     }
 }
 ```  
