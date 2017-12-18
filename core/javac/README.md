@@ -82,7 +82,7 @@ It's also possible to specify a number of plugin-specific options (see below).
 
 All plugin settings are delivered through the *-A* command line switch. See [javac documentation](https://docs.oracle.com/javase/8/docs/technotes/tools/windows/javac.html) for more details.
 
-### 7.1. NonNull Annotations
+### 7.1. NotNull Annotations
 
 The plugin inserts *null*-checks for method parameters and return values marked by the annotations below by default:
 * [org.jetbrains.annotations.NotNull](https://www.jetbrains.com/help/idea/nullable-and-notnull-annotations.html) - IntelliJ IDEA
@@ -107,7 +107,7 @@ Example:
 
   Here *null*-checks will be generated only for our custom annotation class and Eclipse's *@NonNull* annotation
 
-### 7.2. Instrumentations Types
+### 7.2. Instrumentation Types
 
 Following instrumentation types are supported now:
 * [parameter](../common/src/main/java/tech/harmonysoft/oss/traute/common/instrumentation/InstrumentationType.java#L31) - adds *null*-checks for method parameters
