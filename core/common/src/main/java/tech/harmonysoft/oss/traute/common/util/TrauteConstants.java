@@ -71,7 +71,7 @@ public class TrauteConstants {
      *     {@code ParametersAreNonnullByDefault} annotation.
      * </p>
      */
-    public static final String OPTION_PREFIX_ANNOTATIONS_NOT_NULL_BY_DEFAULT = "traute.not.null.by.default.";
+    public static final String OPTION_PREFIX_ANNOTATIONS_NOT_NULL_BY_DEFAULT = "traute.annotations.not.null.by.default.";
 
     /**
      * <p>
