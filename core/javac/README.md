@@ -8,8 +8,13 @@
 * [6. Usage](#6-usage)
 * [7. Settings](#7-settings)
   * [7.1. NotNull Annotations](#71-notnull-annotations)
-  * [7.2. Instrumentations Types](#72-instrumentation-types)
-  * [7.3. Exception to Throw](#73-exception-to-throw)
+  * [7.2. NotNullByDefault Annotations](#72-notnullbydefault-annotations)
+  * [7.3. Nullable Annotations](#73-nullable-annotations)
+  * [7.4. Instrumentations Types](#74-instrumentation-types)
+  * [7.5. Exception to Throw](#75-exception-to-throw)
+  * [7.6. Exception Text](#76-exception-text)
+  * [7.7. Logging](#77-logging)
+  * [7.8. Log Location](#78-log-location)
 * [8. Evolution](#8-evolution)
 * [9. Implementation](#9-implementation)
 * [10. Releases](#10-releases)
@@ -92,6 +97,7 @@ The plugin inserts *null*-checks for method parameters and return values marked 
 * [android.support.annotation.NonNull](https://developer.android.com/reference/android/support/annotation/NonNull.html) - Android
 * [org.eclipse.jdt.annotation.NonNull](http://help.eclipse.org/oxygen/index.jsp?topic=%2Forg.eclipse.jdt.doc.user%2Ftasks%2Ftask-using_null_annotations.htm) - Eclipse
 * [lombok.NonNull](https://projectlombok.org/api/lombok/NonNull.html) - Lombok
+* [org.springframework.lang.NonNull](https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/lang/NonNull.html)
 
 It's possible to define a custom list of annotations to use through the *traute.annotations.not.null* option.  
 
@@ -107,7 +113,82 @@ Example:
 
   Here *null*-checks will be generated only for our custom annotation class and Eclipse's *@NonNull* annotation
 
-### 7.2. Instrumentation Types
+### 7.2. NotNullByDefault Annotations
+
+It's possible to specify that method parameters/return types are not *null* by default, e.g. consider a *package-info.java* file with the content like below:  
+
+```java
+@ParametersAreNonnullByDefault
+package my.company;
+
+import javax.annotation.ParametersAreNonnullByDefault;
+```  
+
+Here *my.company* package is marked by the [*ParametersAreNonnullByDefault*](https://static.javadoc.io/com.google.code.findbugs/jsr305/3.0.1/javax/annotation/ParametersAreNonnullByDefault.html) annotation. That means that all method parameters for classes in the target package are treated as if they are marked by *NotNull* annotation (except those which are explicitly marked by *Nullable* annotations).  
+
+*Traute* supports such *NotNullByDefault* annotations on package, class and method level.  
+
+It's possible to specify that annotations through the *traute.annotations.not.null.by.default.* option prefix followed by the [instrumentation type](https://github.com/denis-zhdanov/traute/blob/master/core/common/src/main/java/tech/harmonysoft/oss/traute/common/instrumentation/InstrumentationType.java#L69).  
+
+Example:  
+
+```javac -cp <classpath> -Xplugin:Traute -Atraute.annotations.not.null.by.default.parameter=my.custom.NotNullByDefault```  
+
+This instructs the plugin to use *my.custom.NotNullByDefault* annotation as a *NotNullByDefault* during instrumenting method parameters.  
+
+It's possible to specify more than one annotation separating by the colon (*:*).  
+
+Following annotations are used by default for processing method parameters:  
+* [org.eclipse.jdt.annotation.NonNullByDefault](https://help.eclipse.org/mars/index.jsp?topic=%2Forg.eclipse.jdt.doc.isv%2Freference%2Fapi%2Forg%2Feclipse%2Fjdt%2Fannotation%2FNonNullByDefault.html)
+* [javax.annotation.ParametersAreNonnullByDefault](https://static.javadoc.io/com.google.code.findbugs/jsr305/3.0.1/javax/annotation/ParametersAreNonnullByDefault.html)
+* [org.springframework.lang.NonNullApi](https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/lang/NonNullApi.html)  
+
+Following annotations are used by default for processing method return values:  
+* [org.springframework.lang.NonNullApi](https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/lang/NonNullApi.html)  
+
+### 7.3. Nullable Annotations
+
+As mentioned above, it's possible to specify that target method parameters/return values are *NotNullByDefault*. However, we might want to allow *null* method parameters/return types for particular use-cases. They can be marked by a *Nullable* annotation then.  
+
+Consider an example below:  
+
+```java
+@javax.annotation.ParametersAreNonnullByDefault
+public void test(Object arg1, Object arg2, @Nullable Object arg3) {
+}
+
+```  
+
+When this code is compiled, *null* checks are generated for *arg1* and *arg2* but not for *arg3*:  
+
+```java
+@javax.annotation.ParametersAreNonnullByDefault
+public void test(Object arg1, Object arg2, @Nullable Object arg3) {
+    if (arg1 == null) {
+        throw new NullPOinterException("'arg1' must not be null");
+    }
+    if (arg2 == null) {
+        throw new NullPOinterException("'arg2' must not be null");
+    }
+}
+```  
+
+It's possible to specify *Nullable* annotations to use through the *traute.annotations.nullable* option:  
+
+```javac -cp <classpath> -Xplugin:Traute -Atraute.annotations.nullable=mycompany.util.Nullable <classes-to-compile>```  
+
+Multiple annotations separated by colon (*:*) might be provided.  
+
+Following annotations are used by default:  
+* [org.jetbrains.annotations.Nullable](https://www.jetbrains.com/help/idea/nullable-and-notnull-annotations.html#nullable)
+* [javax.annotation.Nullable](https://jcp.org/en/jsr/detail?id=305)
+* [javax.validation.constraints.Null](https://docs.oracle.com/javaee/7/api/javax/validation/constraints/Null.html)
+* [edu.umd.cs.findbugs.annotations.Nullable](http://findbugs.sourceforge.net/api/edu/umd/cs/findbugs/annotations/Nullable.html)
+* [android.support.annotation.Nullable](https://developer.android.com/reference/android/support/annotation/Nullable.html)
+* [org.eclipse.jdt.annotation.Nullable](http://help.eclipse.org/oxygen/index.jsp?topic=%2Forg.eclipse.jdt.doc.user%2Ftasks%2Ftask-using_null_annotations.htm)
+* [org.springframework.lang.Nullable](https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/lang/Nullable.html)
+
+### 7.4. Instrumentation Types
 
 Following instrumentation types are supported now:
 * [parameter](../common/src/main/java/tech/harmonysoft/oss/traute/common/instrumentation/InstrumentationType.java#L31) - adds *null*-checks for method parameters
@@ -121,7 +202,7 @@ Example:
 
 This effectively disables *return* instrumentation.
 
-### 7.3. Exception to Throw
+### 7.5. Exception to Throw
 
 *NullPointerException* is thrown in case of a failed check by default. However, it's possible to specify another exceptions to be thrown. It's defined through the *traute.exception.* prefix followed by the [instrumentation type](https://github.com/denis-zhdanov/traute/blob/master/core/common/src/main/java/tech/harmonysoft/oss/traute/common/instrumentation/InstrumentationType.java#L69).  
 
@@ -131,9 +212,9 @@ Example:
 
 This specifies an *IllegalArgumentException* to be thrown when a *null* is received for a *@NotNull* method parameter and *IllegalStateException* to be thrown when a method marked by *@NotNull* tries to return *null*.
 
-**Exception Text**
+### 7.6. Exception Text
 
-The plugin uses pre-defined error text in *null*-checks, however, it's possible to customize that. It's defined through the [traute.failure.text.](https://github.com/denis-zhdanov/traute/blob/master/core/common/src/main/java/tech/harmonysoft/oss/traute/common/util/TrauteConstants.java#L88) prefix followed by the [instrumentation type](https://github.com/denis-zhdanov/traute/blob/master/core/common/src/main/java/tech/harmonysoft/oss/traute/common/instrumentation/InstrumentationType.java#L69).  
+The plugin uses pre-defined error text in *null*-checks, however, it's possible to customize that. It's defined through the *traute.failure.text.* option prefix followed by the [instrumentation type](https://github.com/denis-zhdanov/traute/blob/master/core/common/src/main/java/tech/harmonysoft/oss/traute/common/instrumentation/InstrumentationType.java#L69).  
 
 It's possible to use substitutions in the custom text value. They are defined through the `${VAR_NAME}` syntax. Following variables are supported now:  
 * *PARAMETER_NAME* - expands to the name of the method parameter marked by *@NotNull* where *null* is received (available in *parameter* checks only)  
@@ -155,7 +236,7 @@ public void test(@NotNull Object myArg) {
 }
 ```
 
-**Logging**
+### 7.7. Logging
 
 The plugin logs only custom options by default:  
 
@@ -166,7 +247,7 @@ Compiler output:
 [Traute plugin]: using the following instrumentations: [parameter]
 ```
 
-It's possible to turn on *verbose mode* through the [traute.log.verbose](https://github.com/denis-zhdanov/traute/blob/master/core/common/src/main/java/tech/harmonysoft/oss/traute/common/util/TrauteConstants.java#L50) to get detailed information about performed instrumentations.  
+It's possible to turn on *verbose mode* through the *traute.log.verbose* option to get detailed information about performed instrumentations.  
 
 Example:  
 
@@ -184,9 +265,9 @@ Output:
 [Traute plugin]: added 1 instrumentation to the /Users/denis/sample/src/main/java/org/Test2.java - METHOD_PARAMETER: 1
 ```
 
-**Log location**
+### 7.8. Log Location
 
-The plugin logs into compiler's output by default. However, it's possible to configure a custom file to hold that data. Corresponding option is [traute.log.file](https://github.com/denis-zhdanov/traute/blob/master/core/common/src/main/java/tech/harmonysoft/oss/traute/common/util/TrauteConstants.java#L55).  
+The plugin logs into compiler's output by default. However, it's possible to configure a custom file to hold that data. Corresponding option is *traute.log.file*.  
 
 Example:  
 
@@ -198,7 +279,6 @@ The logs will be written into `/home/me/traute.log`
 
 Current feature set is a must-have for runtime *null*-checks, however, it's possible to extend it. Here are some ideas on what might be done:
 * support *NotNull* annotations on fields - insert *null*-checks in constructors for *final* fields and add *null*-check to call-sites for non-*final* fields
-* allow to specify that method arguments are *NotNull* by default (through plugin settings with filters like package/class or source code annotations like [@ParametersAreNonnullByDefault](https://www.jetbrains.com/help/idea/parametersarenonnullbydefault-annotation.html#ParametersAreNonnullByDefault) or [@NonNullByDefault](https://help.eclipse.org/mars/index.jsp?topic=%2Forg.eclipse.jdt.doc.isv%2Freference%2Fapi%2Forg%2Feclipse%2Fjdt%2Fannotation%2FNonNullByDefault.html)) and treat all parameters not annotated by *@Nullable* as implicitly marked by *@NotNull*
 * support more checks implied by existing annotations like [@Contract](https://www.jetbrains.com/help/idea/contract-annotations.html) or introduce new 'assure something' annotations
 
 ## 9. Implementation
