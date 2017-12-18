@@ -82,7 +82,7 @@ More details on that can be found [here](../../core/javac/README.md#72-notnullby
 ```xml
 <javac srcdir="${src.dir}" destdir="${build.dir}" classpathref="lib.path.id" debug="true">
     <compilerarg value="-Xplugin:Traute"/>
-    <!-- Do not generate null-checks for method parameters/return values marked by @my.company.NotNull -->
+    <!-- Do not generate null-checks for method parameters/return values marked by @my.company.Nullable -->
     <compilerarg value="-Atraute.annotations.not.null=my.company.Nullable"/>
 </javac>
 ```
