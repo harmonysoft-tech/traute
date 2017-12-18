@@ -260,9 +260,9 @@ Output:
 [Traute plugin]: added a null-check for argument 'i2' in the method org.Test.test()
 [Traute plugin]: added a null-check for argument 'i1' in the method org.Test.test()
 [Traute plugin]: added a null-check for 'return' expression in method org.Test.test()
-[Traute plugin]: added 3 instrumentations to the /Users/denis/sample/src/main/java/org/Test.java - METHOD_PARAMETER: 2, METHOD_RETURN: 1
+[Traute plugin]: added 3 instrumentations to the class /Users/denis/sample/src/main/java/org/Test.java - METHOD_PARAMETER: 2, METHOD_RETURN: 1
 [Traute plugin]: added a null-check for argument 'i1' in the method org.Test2.test()
-[Traute plugin]: added 1 instrumentation to the /Users/denis/sample/src/main/java/org/Test2.java - METHOD_PARAMETER: 1
+[Traute plugin]: added 1 instrumentation to the class /Users/denis/sample/src/main/java/org/Test2.java - METHOD_PARAMETER: 1
 ```
 
 ### 7.8. Log Location

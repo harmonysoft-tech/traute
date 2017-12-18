@@ -474,7 +474,7 @@ public class TrauteJavacPlugin implements Plugin {
             fileName = fileName.substring(1);
         }
         logger.info(String.format(
-                "added %d instrumentation%s to the %s - %s",
+                "added %d instrumentation%s to the class %s - %s",
                 totalInstrumentationsNumber, totalInstrumentationsNumber > 1 ? "s" : "", fileName, details)
         );
     }
