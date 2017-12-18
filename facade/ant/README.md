@@ -89,7 +89,7 @@ More details on that can be found [here](../../core/javac/README.md#72-notnullby
 
 More details on that can be found [here](../../core/javac/README.md#73-nullable-annotations).
 
-### 4.4. Instrumentations Types  
+### 4.4. Instrumentation Types  
 
 Instrumentations types to use are defined through the *traute.instrumentations* option:  
 
