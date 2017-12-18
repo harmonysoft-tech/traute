@@ -5,6 +5,7 @@
 * [3. Sample](#3-sample)
 * [4. Options](#4-options)
   * [4.1. NotNull Annotations](#41-notnull-annotations)
+  * [4.2. Instrumentations Types](#42-instrumentation-types)
 
 ## 1. License
 
@@ -42,11 +43,28 @@ Any [Traute Javac Plugin setting](../../core/javac/README.md#7-settings) can be 
 
 ### 4.1. NotNull Annotations  
 
-*NotNull* annotations to use are defined through the *-Atraute.annotations.not.null* setting (multiple annotations might be specified separated by *:*):  
+*NotNull* annotations to use are defined through the *traute.annotations.not.null* option (multiple annotations might be specified separated by *:*):  
 
 ```xml
 <javac srcdir="${src.dir}" destdir="${build.dir}" classpathref="lib.path.id" debug="true">
     <compilerarg value="-Xplugin:Traute"/>
+    <!-- Add null-checks only for method parameters/return values marked by @my.company.NotNull -->
     <compilerarg value="-Atraute.annotations.not.null=my.company.NotNull"/>
 </javac>
-```
+```  
+
+More details on that can be found [here](../../core/javac/README.md#71-notnull-annotations).
+
+### 4.2. Instrumentations Types  
+
+Instrumentations types to use are defined through the *traute.instrumentations* option:  
+
+```xml
+<javac srcdir="${src.dir}" destdir="${build.dir}" classpathref="lib.path.id" debug="true">
+    <compilerarg value="-Xplugin:Traute"/>
+    <!-- Add checks only for method parameters (do not add check for return values) -->
+    <compilerarg value="-Atraute.instrumentations=parameter"/>
+</javac>
+```  
+
+More details on that can be found [here](../../core/javac/README.md#72-instrumentation-types).
