@@ -122,6 +122,19 @@ traute {
 
 More details on that can be found [here](../../core/javac/README.md#73-nullable-annotations).  
 
+### 4.4. Instrumentation Types  
+
+Instrumentations types to use are defined through the *instrumentations* option:  
+
+```groovy
+traute {
+    // Add checks only for method parameters (do not add check for return values)
+    instrumentations = [ 'parameter' ]
+}
+```  
+
+More details on that can be found [here](../../core/javac/README.md#74-instrumentation-types).
+
 ### 4.5. Exception to Throw  
 
 Custom exception class to throw from failed *null*-checks is defined through the *exceptionsToThrow* option as a *Map* where [instrumentation type](https://github.com/denis-zhdanov/traute/blob/master/core/common/src/main/java/tech/harmonysoft/oss/traute/common/instrumentation/InstrumentationType.java#L69) is used as a key:  
