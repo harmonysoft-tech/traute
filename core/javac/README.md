@@ -7,6 +7,9 @@
 * [5. Limitations](#5-limitations)
 * [6. Usage](#6-usage)
 * [7. Settings](#7-settings)
+  * [7.1. NotNull Annotations](#71-notnull-annotations)
+  * [7.2. Instrumentations Types](#72-instrumentation-types)
+  * [7.3. Exception to Throw](#73-exception-to-throw)
 * [8. Evolution](#8-evolution)
 * [9. Implementation](#9-implementation)
 * [10. Releases](#10-releases)
@@ -61,8 +64,8 @@ The plugin works with *JDK8* or later - [Compiler Plugin API](https://docs.oracl
 
 ## 6. Usage
 
-1. Put plugin's jar to compiler's classpath
-2. Add *-Xplugin:Traute* option to the *javac* command
+1. Put the plugin's jar to compiler's classpath
+2. Add *-Xplugin:Traute* option to the *javac* command line
 
 Example:
 ```
@@ -79,9 +82,9 @@ It's also possible to specify a number of plugin-specific options (see below).
 
 All plugin settings are delivered through the *-A* command line switch. See [javac documentation](https://docs.oracle.com/javase/8/docs/technotes/tools/windows/javac.html) for more details.
 
-**NotNull Annotations**
+### 7.1. NonNull Annotations
 
-Following annotations are checked by default:
+The plugin inserts *null*-checks for method parameters and return values marked by the annotations below by default:
 * [org.jetbrains.annotations.NotNull](https://www.jetbrains.com/help/idea/nullable-and-notnull-annotations.html) - IntelliJ IDEA
 * [javax.annotation.Nonnull](https://jcp.org/en/jsr/detail?id=305) - JSR-305
 * [javax.validation.constraints.NotNull](https://docs.oracle.com/javaee/7/api/javax/validation/constraints/NotNull.html) - JavaEE
@@ -90,27 +93,27 @@ Following annotations are checked by default:
 * [org.eclipse.jdt.annotation.NonNull](http://help.eclipse.org/oxygen/index.jsp?topic=%2Forg.eclipse.jdt.doc.user%2Ftasks%2Ftask-using_null_annotations.htm) - Eclipse
 * [lombok.NonNull](https://projectlombok.org/api/lombok/NonNull.html) - Lombok
 
-It's possible to define a custom list of annotations to use through the [traute.annotations.not.null](https://github.com/denis-zhdanov/traute/blob/master/core/common/src/main/java/tech/harmonysoft/oss/traute/common/util/TrauteConstants.java#L38) option.  
+It's possible to define a custom list of annotations to use through the *traute.annotations.not.null* option.  
 
 Example:
 * single custom annotation:  
 
   ```javac -cp <classpath> -Xplugin:Traute -Atraute.annotations.not.null=mycompany.util.NotNull <classes-to-compile>```  
 
-  This instructs the plugin not generating a check for, say, a method defined like ```void service(@org.jetbrains.annotations.NotNull Sring param)``` (default annotations to use are replaced by a single given annotation)
+  This instructs the plugin not generating a check for, say, a method parameter defined like ```void service(@org.jetbrains.annotations.NotNull Sring param)``` (default annotations to use are replaced by the single given annotation)
 * multiple annotations:  
 
   ```javac -cp <classpath> -Xplugin:Traute -Atraute.annotations.not.null=mycompany.util.NotNull:org.eclipse.jdt.annotation.NonNull <classes-to-compile>```  
 
-  Here *null*-checks will be generated only for our custom annotation class and eclipse *@NonNull* annotation
+  Here *null*-checks will be generated only for our custom annotation class and Eclipse's *@NonNull* annotation
 
-**Instrumentations Types**
+### 7.2. Instrumentations Types
 
 Following instrumentation types are supported now:
 * [parameter](../common/src/main/java/tech/harmonysoft/oss/traute/common/instrumentation/InstrumentationType.java#L31) - adds *null*-checks for method parameters
 * [return](https://github.com/denis-zhdanov/traute/blob/master/core/common/src/main/java/tech/harmonysoft/oss/traute/common/instrumentation/InstrumentationType.java#L53) - re-writes *return* instructions in method bodies
 
-Even though they are [thoroughly tested](../test/src/test/java/tech/harmonysoft/oss/traute/test/suite) it's not possible to exclude a possibility that particular use-case is not covered (e.g. we encountered tricky situations like [here](https://github.com/denis-zhdanov/traute/blob/master/core/test/src/test/java/tech/harmonysoft/oss/traute/test/suite/MethodReturnTest.java#L251)). That's why we allow to skip particular instrumentations through the [traute.instrumentations](https://github.com/denis-zhdanov/traute/blob/master/core/common/src/main/java/tech/harmonysoft/oss/traute/common/util/TrauteConstants.java#L57) option.  
+Even though they are [thoroughly tested](../test/src/test/java/tech/harmonysoft/oss/traute/test/suite) it's not possible to exclude a possibility that particular use-case is not covered (e.g. we encountered tricky situations like [here](https://github.com/denis-zhdanov/traute/blob/master/core/test/src/test/java/tech/harmonysoft/oss/traute/test/suite/MethodReturnTest.java#L251)). That's why we allow to skip particular instrumentations through the *traute.instrumentations* option.  
 
 Example:  
 
@@ -118,9 +121,9 @@ Example:
 
 This effectively disables *return* instrumentation.
 
-**Exception to Throw**
+### 7.3. Exception to Throw
 
-*NullPointerException* is thrown in case of failed check by default. However, it's possible to specify another exceptions to be thrown. It's defined through the [traute.exception.](https://github.com/denis-zhdanov/traute/blob/master/core/common/src/main/java/tech/harmonysoft/oss/traute/common/util/TrauteConstants.java#L75) prefix followed by the [instrumentation type](https://github.com/denis-zhdanov/traute/blob/master/core/common/src/main/java/tech/harmonysoft/oss/traute/common/instrumentation/InstrumentationType.java#L69).  
+*NullPointerException* is thrown in case of a failed check by default. However, it's possible to specify another exceptions to be thrown. It's defined through the *traute.exception.* prefix followed by the [instrumentation type](https://github.com/denis-zhdanov/traute/blob/master/core/common/src/main/java/tech/harmonysoft/oss/traute/common/instrumentation/InstrumentationType.java#L69).  
 
 Example:  
 
