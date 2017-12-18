@@ -49,7 +49,7 @@ Any [Traute Javac Plugin setting](../../core/javac/README.md#7-settings) can be 
 
 ### 4.1. NotNull Annotations  
 
-*NotNull* annotations to use are defined through the *traute.annotations.not.null* option (multiple annotations might be specified separated by *:*):  
+*NotNull* annotations to use are defined through the *traute.annotations.not.null* option (multiple annotations might be specified separated by the colon (*:*)):  
 
 ```xml
 <javac srcdir="${src.dir}" destdir="${build.dir}" classpathref="lib.path.id" debug="true">
