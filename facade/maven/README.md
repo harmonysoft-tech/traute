@@ -132,7 +132,7 @@ More details on that can be found [here](../../core/javac/README.md#72-notnullby
 ```xml
 <compilerArgs>
   <arg>-Xplugin:Traute</arg>
-  <!-- Do not generate null-checks for method parameters/return values marked by @my.company.NotNull -->
+  <!-- Do not generate null-checks for method parameters/return values marked by @my.company.Nullable -->
   <arg>-Atraute.annotations.not.null=my.company.Nullable</arg>
 </compilerArgs>
 ```
