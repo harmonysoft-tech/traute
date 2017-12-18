@@ -134,9 +134,9 @@ Example:
 
 ```javac -cp <classpath> -Xplugin:Traute -Atraute.annotations.not.null.by.default.parameter=my.custom.NotNullByDefault```  
 
-This instructs the plugin to use *my.custom.NotNullByDefault* annotation as a *NotNullByDefault* during instrumenting method parameters.  
+This instructs the plugin to use *my.custom.NotNullByDefault* annotation as a *NotNullByDefault* during method parameters instrumentation.  
 
-It's possible to specify more than one annotation separating by the colon (*:*).  
+It's possible to specify more than one annotation such separated by the colon (*:*).  
 
 Following annotations are used by default for processing method parameters:  
 * [org.eclipse.jdt.annotation.NonNullByDefault](https://help.eclipse.org/mars/index.jsp?topic=%2Forg.eclipse.jdt.doc.isv%2Freference%2Fapi%2Forg%2Feclipse%2Fjdt%2Fannotation%2FNonNullByDefault.html) - Eclipse
@@ -148,7 +148,7 @@ Following annotations are used by default for processing method return values:
 
 ### 7.3. Nullable Annotations
 
-As mentioned above, it's possible to specify that target method parameters/return values are *NotNullByDefault*. However, we might want to allow *null* method parameters/return types for particular use-cases. They can be marked by a *Nullable* annotation then.  
+As mentioned above, it's possible to specify that target method parameters/return values are *NotNullByDefault*. However, we might want to allow *null* in particular use-cases. Such method parameters/return types can be marked by a *Nullable* annotation then.  
 
 Consider an example below:  
 
