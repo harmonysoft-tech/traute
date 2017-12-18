@@ -139,12 +139,12 @@ This instructs the plugin to use *my.custom.NotNullByDefault* annotation as a *N
 It's possible to specify more than one annotation separating by the colon (*:*).  
 
 Following annotations are used by default for processing method parameters:  
-* [org.eclipse.jdt.annotation.NonNullByDefault](https://help.eclipse.org/mars/index.jsp?topic=%2Forg.eclipse.jdt.doc.isv%2Freference%2Fapi%2Forg%2Feclipse%2Fjdt%2Fannotation%2FNonNullByDefault.html)
-* [javax.annotation.ParametersAreNonnullByDefault](https://static.javadoc.io/com.google.code.findbugs/jsr305/3.0.1/javax/annotation/ParametersAreNonnullByDefault.html)
-* [org.springframework.lang.NonNullApi](https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/lang/NonNullApi.html)  
+* [org.eclipse.jdt.annotation.NonNullByDefault](https://help.eclipse.org/mars/index.jsp?topic=%2Forg.eclipse.jdt.doc.isv%2Freference%2Fapi%2Forg%2Feclipse%2Fjdt%2Fannotation%2FNonNullByDefault.html) - Eclipse
+* [javax.annotation.ParametersAreNonnullByDefault](https://static.javadoc.io/com.google.code.findbugs/jsr305/3.0.1/javax/annotation/ParametersAreNonnullByDefault.html) - JSR-305
+* [org.springframework.lang.NonNullApi](https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/lang/NonNullApi.html) - Spring Framework  
 
 Following annotations are used by default for processing method return values:  
-* [org.springframework.lang.NonNullApi](https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/lang/NonNullApi.html)  
+* [org.springframework.lang.NonNullApi](https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/lang/NonNullApi.html) - Spring Framework  
 
 ### 7.3. Nullable Annotations
 
@@ -180,13 +180,13 @@ It's possible to specify *Nullable* annotations to use through the *traute.annot
 Multiple annotations separated by colon (*:*) might be provided.  
 
 Following annotations are used by default:  
-* [org.jetbrains.annotations.Nullable](https://www.jetbrains.com/help/idea/nullable-and-notnull-annotations.html#nullable)
-* [javax.annotation.Nullable](https://jcp.org/en/jsr/detail?id=305)
-* [javax.validation.constraints.Null](https://docs.oracle.com/javaee/7/api/javax/validation/constraints/Null.html)
-* [edu.umd.cs.findbugs.annotations.Nullable](http://findbugs.sourceforge.net/api/edu/umd/cs/findbugs/annotations/Nullable.html)
-* [android.support.annotation.Nullable](https://developer.android.com/reference/android/support/annotation/Nullable.html)
-* [org.eclipse.jdt.annotation.Nullable](http://help.eclipse.org/oxygen/index.jsp?topic=%2Forg.eclipse.jdt.doc.user%2Ftasks%2Ftask-using_null_annotations.htm)
-* [org.springframework.lang.Nullable](https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/lang/Nullable.html)
+* [org.jetbrains.annotations.Nullable](https://www.jetbrains.com/help/idea/nullable-and-notnull-annotations.html#nullable) - IntelliJ IDEA
+* [javax.annotation.Nullable](https://jcp.org/en/jsr/detail?id=305) - JSR-305
+* [javax.validation.constraints.Null](https://docs.oracle.com/javaee/7/api/javax/validation/constraints/Null.html) - JavaEE
+* [edu.umd.cs.findbugs.annotations.Nullable](http://findbugs.sourceforge.net/api/edu/umd/cs/findbugs/annotations/Nullable.html) - FindBugs
+* [android.support.annotation.Nullable](https://developer.android.com/reference/android/support/annotation/Nullable.html) - Android
+* [org.eclipse.jdt.annotation.Nullable](http://help.eclipse.org/oxygen/index.jsp?topic=%2Forg.eclipse.jdt.doc.user%2Ftasks%2Ftask-using_null_annotations.htm) - Eclipse
+* [org.springframework.lang.Nullable](https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/lang/Nullable.html) - Spring Framework
 
 ### 7.4. Instrumentation Types
 
