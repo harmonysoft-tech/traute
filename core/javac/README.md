@@ -128,7 +128,7 @@ Here *my.company* package is marked by the [*ParametersAreNonnullByDefault*](htt
 
 *Traute* supports such *NotNullByDefault* annotations on package, class and method level.  
 
-It's possible to specify that annotations through the *traute.annotations.not.null.by.default.* option prefix followed by the [instrumentation type](https://github.com/denis-zhdanov/traute/blob/master/core/common/src/main/java/tech/harmonysoft/oss/traute/common/instrumentation/InstrumentationType.java#L69).  
+We can customize that annotations through the *traute.annotations.not.null.by.default.* option prefix followed by the [instrumentation type](https://github.com/denis-zhdanov/traute/blob/master/core/common/src/main/java/tech/harmonysoft/oss/traute/common/instrumentation/InstrumentationType.java#L69).  
 
 Example:  
 
