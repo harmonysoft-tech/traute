@@ -3,6 +3,7 @@ package tech.harmonysoft.oss.traute.test.suite;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.extension.ExtendWith;
 import tech.harmonysoft.oss.traute.common.settings.TrautePluginSettingsBuilder;
 import tech.harmonysoft.oss.traute.test.api.engine.TestCompiler;
 import tech.harmonysoft.oss.traute.test.api.engine.TestRunner;
@@ -11,12 +12,14 @@ import tech.harmonysoft.oss.traute.test.api.model.TestSource;
 import tech.harmonysoft.oss.traute.test.impl.expectation.CompilationResultExpectationBuilder;
 import tech.harmonysoft.oss.traute.test.impl.expectation.RunResultExpectationBuilder;
 import tech.harmonysoft.oss.traute.test.impl.model.TestSourceImpl;
+import tech.harmonysoft.oss.traute.test.util.TestDurationPrinter;
 import tech.harmonysoft.oss.traute.test.util.TestUtil;
 
 import static java.util.Arrays.asList;
 import static java.util.Collections.singleton;
 
 @SuppressWarnings("NullableProblems")
+@ExtendWith(TestDurationPrinter.class)
 public abstract class AbstractTrauteTest {
 
     public static final String ACTIVATION_PROPERTY = AbstractTrauteTest.class.getName();
