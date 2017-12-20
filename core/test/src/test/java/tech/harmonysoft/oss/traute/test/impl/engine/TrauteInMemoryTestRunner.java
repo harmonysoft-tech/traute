@@ -26,13 +26,13 @@ public class TrauteInMemoryTestRunner implements TestRunner {
     @Override
     @NotNull
     public RunResult run(@NotNull CompilationResult compilationResult) {
-        Map<String, @NotNull byte[]> compiled = compilationResult.getCompiledClassesSupplier().get()
+        Map<String, byte[]> compiled = compilationResult.getCompiledClassesSupplier().get()
                                                                  .stream()
                                                                  .collect(toMap(ClassFile::getName,
                                                                                 ClassFile::getBinaries));
         ClassLoader classLoader = new ClassLoader() {
             @Override
-            protected Class<?> findClass(String name) throws ClassNotFoundException {
+            protected Class<?> findClass(String name) {
                 byte[] compiledBinaries = compiled.get(name);
                 if (compiledBinaries == null) {
                     throw new IllegalArgumentException(String.format(
