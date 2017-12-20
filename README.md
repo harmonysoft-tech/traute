@@ -26,7 +26,7 @@ public Integer service(@NotNull Integer i) {
 ```  
 
 Couple of notes:
-* this is a default behavior, the plugin provides a number of [configuration options](core/javac/README.md#7-settings) like an ability to define exception to throw, customize its text etc
+* this is default behavior, the plugin provides a number of [configuration options](core/javac/README.md#7-settings) like an ability to define exception to throw, customize its text etc
 * explicitly marking all target method parameters/return types by *@NotNull* might be tedious, so, the plugin can be configured to consider them to be not-*null* by default - see the [NotNullByDefault](core/javac/README.md#72-notnullbydefault-annotations) and [Nullable](core/javac/README.md#73-nullable-annotations)
 
 ## Table of Contents
@@ -99,7 +99,7 @@ The core functionality is a [*Javac* plugin](core/javac/README.md) which adds *n
 
 ### 5.2. Gradle
 
-There is a [dedicated plugin](facade/gradle/README.md#3-usage) for the [Gradle](https://gradle.org/) build system
+There is a [dedicated Traute plugin](facade/gradle/README.md#3-usage) for the [Gradle](https://gradle.org/) build system
 
 ### 5.3. Maven
 
