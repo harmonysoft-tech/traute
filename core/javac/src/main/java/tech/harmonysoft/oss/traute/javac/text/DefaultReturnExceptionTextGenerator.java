@@ -14,7 +14,7 @@ public class DefaultReturnExceptionTextGenerator implements ExceptionTextGenerat
                                  + "due to %s",
                                  context.getQualifiedMethodName(), context.getNotNullByDefaultAnnotationDescription());
         } else {
-            return String.format("Detected an attempt to return null from a method %s() marked by %s",
+            return String.format("Detected an attempt to return null from a method %s() marked by @%s",
                                  context.getQualifiedMethodName(), notNullAnnotation);
         }
     }
