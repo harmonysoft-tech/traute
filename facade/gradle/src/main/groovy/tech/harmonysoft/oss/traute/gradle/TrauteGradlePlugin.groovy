@@ -2,18 +2,18 @@ package tech.harmonysoft.oss.traute.gradle
 
 import org.gradle.api.Plugin
 import org.gradle.api.Project
+import org.gradle.api.file.FileCollection
 import org.gradle.api.plugins.PluginInstantiationException
+import org.gradle.api.tasks.compile.CompileOptions
 import org.gradle.api.tasks.compile.JavaCompile
+import org.jetbrains.annotations.NotNull
 import tech.harmonysoft.oss.traute.common.instrumentation.InstrumentationType
+import tech.harmonysoft.oss.traute.common.settings.TrautePluginSettingsBuilder
+import tech.harmonysoft.oss.traute.javac.log.TrautePluginLogger
 
 import static tech.harmonysoft.oss.traute.common.util.TrauteConstants.*
 
 class TrautePluginExtension {
-    // One of the options below must be specified
-    def javacPluginVersion
-    def javacPluginSpec
-
-    // Optional
     def notNullAnnotations
     def nullableAnnotations
     def notNullByDefaultAnnotations
@@ -29,42 +29,41 @@ class TrauteGradlePlugin implements Plugin<Project> {
     @Override
     void apply(Project project) {
         def extension = project.extensions.create('traute', TrautePluginExtension)
+        def javacPluginFiles = getJavacPluginFiles(project)
 
         project.afterEvaluate {
-            addTrauteDependency(project, extension)
-
             project.tasks.withType(JavaCompile) {
-                applyOptions(options.compilerArgs, extension)
+                applyOptions(javacPluginFiles, options, extension)
             }
         }
     }
 
-    private static void addTrauteDependency(Project project, TrautePluginExtension extension) {
-        if (extension.javacPluginSpec) {
-            project.dependencies.add('compileOnly', extension.javacPluginSpec)
-            project.dependencies.add('testCompileOnly', extension.javacPluginSpec)
-            return
-        }
-        if (!extension.javacPluginVersion) {
-            throw new PluginInstantiationException(
-                    "Error on ${PLUGIN_NAME} plugin initialization - mandatory 'javacPluginVersion' option "
-                            + "is undefined"
-            )
-        }
-        project.dependencies.add('compileOnly', "tech.harmonysoft:traute-javac:$extension.javacPluginVersion")
-        project.dependencies.add('testCompileOnly', "tech.harmonysoft:traute-javac:$extension.javacPluginVersion")
+    @NotNull
+    private static FileCollection getJavacPluginFiles(@NotNull Project project) {
+        def roots = [].toSet()
+        roots << findRootInClassPath(TrautePluginLogger)
+        roots << findRootInClassPath(TrautePluginSettingsBuilder)
+        roots << findRootInClassPath('META-INF/services/com.sun.source.util.Plugin')
+        return project.files(roots.collect { new File(it) })
     }
 
-    private static void applyOptions(compilerArgs, extension) {
-        compilerArgs << "-Xplugin:${PLUGIN_NAME}"
-        mayBeApplyNotNullAnnotations(compilerArgs, extension)
-        mayBeApplyNullableAnnotations(compilerArgs, extension)
-        mayBeApplyNotNullByDefaultAnnotations(compilerArgs, extension)
-        mayBeApplyLoggingSettings(compilerArgs, extension)
-        mayBeApplyLogFile(compilerArgs, extension)
-        mayBeApplyInstrumentations(compilerArgs, extension)
-        mayBeApplyExceptionsToThrow(compilerArgs, extension)
-        mayBeApplyExceptionTexts(compilerArgs, extension)
+    private static void applyOptions(FileCollection javacPluginFiles, CompileOptions options, extension) {
+        if (options.annotationProcessorPath) {
+            options.annotationProcessorPath << javacPluginFiles
+        } else {
+            options.annotationProcessorPath = javacPluginFiles
+        }
+
+
+        options.compilerArgs << "-Xplugin:${PLUGIN_NAME}"
+        mayBeApplyNotNullAnnotations(options.compilerArgs, extension)
+        mayBeApplyNullableAnnotations(options.compilerArgs, extension)
+        mayBeApplyNotNullByDefaultAnnotations(options.compilerArgs, extension)
+        mayBeApplyLoggingSettings(options.compilerArgs, extension)
+        mayBeApplyLogFile(options.compilerArgs, extension)
+        mayBeApplyInstrumentations(options.compilerArgs, extension)
+        mayBeApplyExceptionsToThrow(options.compilerArgs, extension)
+        mayBeApplyExceptionTexts(options.compilerArgs, extension)
     }
 
     private static void mayBeApplyNotNullAnnotations(compilerArgs, extension) {
@@ -189,5 +188,41 @@ class TrauteGradlePlugin implements Plugin<Project> {
                             + "instance - '$value'"
             )
         }
+    }
+
+    @NotNull
+    static String findRootInClassPath(@NotNull Class<?> anchor) {
+        return findRootInClassPath(anchor.name.replace('.', '/') + '.class')
+    }
+
+    @NotNull
+    static String findRootInClassPath(@NotNull String anchor) {
+        def url = TrauteGradlePlugin.class.classLoader.getResource(anchor)
+        if (!url) {
+            throw new IllegalStateException(
+                    "Can't setup gradle test compiler - failed to find resource '$anchor' in classpath"
+            )
+        }
+
+        def path = url.file
+        if (!path) {
+            throw new IllegalStateException(
+                    "Can't setup gradle test compiler - failed to map classpath resource '$url' to a file"
+            )
+        }
+
+        // When a resource is located inside a jar, an url looks like file://<my-path>/<my-jar>.jar!/<anchor>.
+        // We want to reference a jar then
+        def result = path.substring(0, path.indexOf(anchor))
+        if (result.endsWith('/')) {
+            result = result[0..-2]
+        }
+        if (result.endsWith('!')) {
+            result = result[0..-2]
+        }
+        if (result.startsWith('file:')) {
+            result = result.substring('file:'.length())
+        }
+        return result
     }
 }

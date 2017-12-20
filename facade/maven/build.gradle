@@ -1,7 +1,5 @@
 apply plugin: 'maven'
 
-version = '1.0.0'
-
 dependencies {
     testCompile project(':core:common')
     testCompile project(path: ':core:test-common', configuration: 'testCompile')

@@ -35,7 +35,7 @@ Add the following to your *build.gradle*:
 
 ```groovy
 plugins {
-  id "tech.harmonysoft.oss.traute" version "1.0.5"
+  id "tech.harmonysoft.oss.traute" version "1.1.0"
 }
 ```
 
@@ -47,7 +47,7 @@ buildscript {
     mavenCentral()
   }
   dependencies {
-    classpath "tech.harmonysoft:traute-gradle:1.0.5"
+    classpath "tech.harmonysoft:traute-gradle:1.1.0"
   }
 }
 
@@ -62,7 +62,7 @@ buildscript {
     jcenter()
   }
   dependencies {
-    classpath "tech.harmonysoft:traute-gradle:1.0.5"
+    classpath "tech.harmonysoft:traute-gradle:1.1.0"
   }
 }
 
@@ -73,15 +73,7 @@ apply plugin: "tech.harmonysoft.oss.traute"
 
 As current plugin just seamlessly applies [Traute Javac Plugin](../../core/javac/README.md) to end-user's *Gradle* project, it provides the same [feature set](../../core/javac/README.md#7-settings).  
 
-All configuration settings are specified in the `traute` *build.gradle* section. The only mandatory option is `javacPluginVersion` - it specifies *Traute Javac Plugin* version to use (note that *Traute Javac Plugin* is available either in *Maven Central* or *JCenter*):
-
-```groovy
-traute {
-    javacPluginVersion = '1.0.10'
-}
-```
-
-*Optional settings*
+All configuration settings are specified in the `traute` *build.gradle* section.  
 
 ### 4.1. NotNull Annotations  
 

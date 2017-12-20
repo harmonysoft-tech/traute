@@ -7,6 +7,7 @@ import org.junit.Test
 import tech.harmonysoft.oss.traute.common.instrumentation.InstrumentationType
 import tech.harmonysoft.oss.traute.common.settings.TrautePluginSettings
 import tech.harmonysoft.oss.traute.common.settings.TrautePluginSettingsBuilder
+import tech.harmonysoft.oss.traute.gradle.TrauteGradlePlugin
 import tech.harmonysoft.oss.traute.javac.TrauteJavacPlugin
 import tech.harmonysoft.oss.traute.test.fixture.NN
 import tech.harmonysoft.oss.traute.test.impl.engine.AbstractExternalSystemTestCompiler
@@ -17,6 +18,7 @@ import static tech.harmonysoft.oss.traute.common.settings.TrautePluginSettingsBu
 import static tech.harmonysoft.oss.traute.common.settings.TrautePluginSettingsBuilder.DEFAULT_NULLABLE_ANNOTATIONS
 import static tech.harmonysoft.oss.traute.common.settings.TrautePluginSettingsBuilder.DEFAULT_PARAMETERS_NOT_NULL_BY_DEFAULT_ANNOTATIONS
 import static tech.harmonysoft.oss.traute.common.settings.TrautePluginSettingsBuilder.DEFAULT_RETURN_NOT_NULL_BY_DEFAULT_ANNOTATIONS
+import static tech.harmonysoft.oss.traute.gradle.TrauteGradlePlugin.findRootInClassPath
 
 class GradleTestCompiler extends AbstractExternalSystemTestCompiler {
 
@@ -31,10 +33,14 @@ class GradleTestCompiler extends AbstractExternalSystemTestCompiler {
     private static final def MARKER_EXCEPTIONS_TO_THROW = '<EXCEPTIONS_TO_THROW>'
     private static final def MARKER_EXCEPTION_TEXTS = '<EXCEPTION_TEXTS>'
     private static final def BUILD_GRADLE_CONTENT =
-            """plugins {
-              |    id 'java'
-              |    id 'tech.harmonysoft.oss.traute'
+            """buildscript {
+              |    dependencies {
+              |        classpath ${getTrauteJavacDependencySpec()}
+              |    }
               |}
+              |
+              |apply plugin: 'java'
+              |apply plugin: 'tech.harmonysoft.oss.traute'
               |
               |sourceCompatibility = 1.8
               |
@@ -44,7 +50,6 @@ class GradleTestCompiler extends AbstractExternalSystemTestCompiler {
               |}
               |
               |traute {
-              |    javacPluginSpec = ${getTrauteJavacDependencySpec()}
               |    $MARKER_NOT_NULL_ANNOTATION
               |    $MARKER_NULLABLE_ANNOTATION
               |    $MARKER_NOT_NULL_BY_DEFAULT_ANNOTATION
@@ -202,6 +207,8 @@ class GradleTestCompiler extends AbstractExternalSystemTestCompiler {
     @NotNull
     private static String getTrauteJavacDependencySpec() {
         def roots = [].toSet()
+        roots << findRootInClassPath('META-INF/gradle-plugins/tech.harmonysoft.oss.traute.properties')
+        roots << findRootInClassPath(TrauteGradlePlugin)
         roots << findRootInClassPath(TrauteJavacPlugin)
         roots << findRootInClassPath(TrautePluginSettingsBuilder)
         roots << findRootInClassPath('META-INF/services/com.sun.source.util.Plugin')
@@ -218,38 +225,5 @@ class GradleTestCompiler extends AbstractExternalSystemTestCompiler {
     @Test
     private static String getCommonDependency() {
         return "files('${findRootInClassPath(NN)}')"
-    }
-
-    @NotNull
-    private static String findRootInClassPath(@NotNull Class<?> anchor) {
-        return findRootInClassPath(anchor.name.replace('.', '/') + '.class')
-    }
-
-    @NotNull
-    private static String findRootInClassPath(@NotNull String anchor) {
-        def url = GradleTestCompiler.classLoader.getResource(anchor)
-        if (!url) {
-            throw new IllegalStateException(
-                    "Can't setup gradle test compiler - failed to find resource '$anchor' in classpath"
-            )
-        }
-
-        def path = url.file
-        if (!path) {
-            throw new IllegalStateException(
-                    "Can't setup gradle test compiler - failed to map classpath resource '$url' to a file"
-            )
-        }
-
-        // When a resource is located inside a jar, an url looks like file://<my-path>/<my-jar>.jar!/<anchor>.
-        // We want to reference a jar then
-        def result = path.substring(0, path.indexOf(anchor))
-        if (result.endsWith('/')) {
-            result = result[0..-2]
-        }
-        if (result.endsWith('!')) {
-            result = result[0..-2]
-        }
-        return result
     }
 }
