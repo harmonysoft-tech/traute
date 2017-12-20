@@ -1,3 +1,34 @@
+## TL;DR
+
+*Traute* is a *javac* plugin which makes bytecode for source code below  
+
+```java
+@NotNull
+public Integer service(@NotNull Integer i) {
+    return adjust(i);
+}
+```  
+
+look like if it's compiled from this:  
+
+```java
+@NotNull
+public Integer service(@NotNull Integer i) {
+    if (i == null) {
+        throw new NullPointerException("Argument 'i' of type Integer (#0 out of 1, zero-based) is marked by @NotNull but got null for it");
+    }
+    Integer tmpVar1 = adjust(i);
+    if (tmpVar1 == null) {
+        throw new NullPointerException("Detected an attempt to return null from method MyClass.service() marked by @NotNull");
+    }
+    return tmpVar1;
+}
+```  
+
+Couple of notes:
+* this is a default behavior, the plugin provides a number of [configuration options](core/javac/README.md#7-settings) like an ability to define exception to throw, customize its text etc
+* explicitly marking all target method parameters/return types by *@NotNull* might be tedious, so, the plugin can be configured to consider them to be not-*null* by default - see the [NotNullByDefault](core/javac/README.md#72-notnullbydefault-annotations) and [Nullable](core/javac/README.md#73-nullable-annotations)
+
 ## Table of Contents
 
 * [1. License](#1-license)
@@ -5,13 +36,18 @@
 * [3. Alternatives](#3-alternatives)
 * [4. Name Choice](#4-name-choice)
 * [5. Usage](#5-usage)
+  * [5.1. Command Line](#51-command-line)
+  * [5.2. Gradle](#52-gradle)
+  * [5.3. Maven](#53-maven)
+  * [5.4. Ant](#54-ant)
 * [6. Build](#6-build)
 * [7. Releases](#7-releases)
 * [8. How to Contribute](#8-how-to-contribute)
 * [9. Contributors](#9-contributors)
 * [10. Evolution](#10-evolution)
 * [11. Feedback](#11-feedback)
-* [12. Acknowledgments](#12-acknowledgments)
+* [12. Users](#12-users)
+* [13. Acknowledgments](#13-acknowledgments)
 
 ## 1. License
 
@@ -23,18 +59,8 @@ Null references are [considered](https://en.wikipedia.org/wiki/Null_pointer#Hist
 * [*Kotlin*](https://kotlinlang.org/) fights them at the [language level](https://kotlinlang.org/docs/reference/null-safety.html)
 * many tools try to report it as early as possible, for example, here [*IntelliJ IDEA*](https://www.jetbrains.com/idea/) warns us about a possible *NPE*: 
 
-  ![warning-intellij.png](docs/img/warning-intellij.png)
+  <img src="/docs/img/warning-intellij.png" height="100px">
 
-  Moreover, when the code above is compiled by the *IDE*, it automatically inserts *null*-checks:
-
-  ```java
-  public void service(@NotNull String input) {
-      if (input == null) {
-          throw new NullPointerException("Argument for @NotNull parameter 'input' must not be null");
-      }
-      // Process the input
-  }
-  ```
 * production code often looks like below:
 
   ```java
@@ -48,18 +74,16 @@ Null references are [considered](https://en.wikipedia.org/wiki/Null_pointer#Hist
   }
   ```
 
-*Kotlin* really solves the problem but *Java* is still a very popular language, so, we have to deal with nullable values. It's not always convenient to use *IntelliJ* build system for compiling sources to get that *null*-checks and the code which explicitly ensures preconditions via *checkNotNull()* or explicit *if (input == null) { throw new NullPointerException("<description>") }* also looks not that appealing.  
-
-More common setup is to configure a build through [*Gradle*](https://gradle.org/)/[*Maven*](http://maven.apache.org/)/[*Ant*](https://ant.apache.org/). It would not harm to get *IDE* tips on possible *null*-related problems and that auto-generated runtime checks without explicitly putting them into code.  
-
-Current tool solves the second problem - it allows to add *null*-checks into *\*.class* files during compilation based on source code annotations.
+*Kotlin* really solves the problem but *Java* is still a very popular language, so, we have to deal with nullable values. Current tool allows to automate such 'enforce nullability contract' checks generation.
 
 ## 3. Alternatives
 
 I found the only alternative which provides similar functionality - [*Project Lombok*](https://projectlombok.org/features/NonNull). Here are pros and cons for using it:
 * only [*lombok.NonNull*](https://projectlombok.org/api/lombok/NonNull.html) annotation is supported - there might be problems with *IDE* highlighting possible *NPE*s in source code
 * the feature is implemented through a custom [*Annotaton Processing Tool*](https://docs.oracle.com/javase/7/docs/technotes/guides/apt/index.html), which means that there are two set of *\*.class* files after the compilation - one from original code and another one with the tool-added instrumentations. Compiler plugin-based approach is more natural for such task as it's completely transparent for the further assembly construction
+* *Lombok* doesn't support [NotNullByDefault](core/javac/README.md#72-notnullbydefault-annotations)
 * a solution offered by the current project [works only for the javac8](core/javac/README.md#5-limitations), *Lombok* might operate with *javac6* and *javac7* (as *APT API* is available starting from *java6*, however, I have not verified that)
+* *Lombok* is more mature and popular at the moment
 
 ## 4. Name Choice
 
@@ -69,10 +93,21 @@ I really like German - how it sounds, language rules, everything, so, wanted to 
 
 ## 5. Usage
 
-The core functionality is a [*Javac* plugin](core/javac/README.md) which adds *null*-checks into the generated *\*.class* files. Even though it's possible to [use the plugin directly](core/javac/README.md#6-usage) from a command line, there are a number of adapters for popular build systems:
-* [from *Gradle*](facade/gradle/README.md#3-usage)
-* [from *Maven*](facade/maven/README.md#3-usage)
-* [from *Ant*](facade/ant/README.md#3-sample)
+### 5.1. Command Line
+
+The core functionality is a [*Javac* plugin](core/javac/README.md) which adds *null*-checks into the generated *\*.class* files. It's possible to [use the plugin directly](core/javac/README.md#6-usage) from a command line, however, there are a number of adapters for popular build systems
+
+### 5.2. Gradle
+
+There is a [dedicated plugin](facade/gradle/README.md#3-usage) for the [Gradle](https://gradle.org/) build system
+
+### 5.3. Maven
+
+[This page](facade/maven/README.md#3-usage) contains instructions on how to use *Traute* from [Maven](http://maven.apache.org/)
+
+### 5.4. Ant
+
+[This page](facade/ant/README.md#3-sample) contains instructions on how to use *Traute* from [Ant](https://ant.apache.org/)
 
 ## 6. Build
 
@@ -106,7 +141,11 @@ Please use any of the channels below to provide your feedback, it's really valua
 * [twitter](https://twitter.com/traute_java)
 * [facebook](https://www.facebook.com/java.traute/)
 
-## 12. Acknowledgments
+## 12. Users
+
+* [AndroidUtilCode](https://github.com/Blankj/AndroidUtilCode)
+
+## 13. Acknowledgments
 
 <img src="/docs/img/intellij.png" height="70px">
 
