@@ -132,7 +132,7 @@ Custom exception class to throw from failed *null*-checks is defined through the
 
 ```groovy
 traute {
-    notNullByDefaultAnnotations = [
+    exceptionsToThrow = [
         // Throw a IllegalArgumentException when a null is given to a method parameter marked by @NotNull
         'parameter': 'IllegalArgumentException',
         // Throw a IllegalStateException when a null is given from a method marked by @NotNull
@@ -149,7 +149,7 @@ Custom exception text to use in exceptions thrown from failed *null*-checks is d
 
 ```groovy
 traute {
-    // Use exception message like 'MyArg must not be null' for a method parameter names 'myArg'
+    // Use exception message like 'MyArg must not be null' for a method parameter named 'myArg'
     exceptionTexts = [ 'parameter': '${capitalize(PARAMETER_NAME)} must not be null' ]
 }
 ```
