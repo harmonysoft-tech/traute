@@ -117,7 +117,7 @@ There is a [Travis](https://travis-ci.org/) Continuous Integration - [![Build St
 
 ## 10. Releases
 
-[Release Notes](../../RELEASE.md)
+[Release Notes](RELEASE.md)
 
 *Javac Plugin*  
 <a href='https://bintray.com/bintray/jcenter/tech.harmonysoft%3Atraute-javac?source=watch' alt='Get automatic notifications about new "tech.harmonysoft:traute-javac" versions'><img src='https://www.bintray.com/docs/images/bintray_badge_color.png'></a>
