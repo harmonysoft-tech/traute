@@ -1,4 +1,4 @@
-**v.1.1.0**  
+**v.1.1.1**  
 Tickets:
 * [bundling javac plugin within gradle plugin](https://github.com/denis-zhdanov/traute/issues/78)  
 * [changed default error text for failed 'return' checks](https://github.com/denis-zhdanov/traute/issues/69)  
@@ -10,9 +10,9 @@ Tickets:
 * [mistyped properties are reported](https://github.com/denis-zhdanov/traute/issues/62)  
 
 Binaries:
-* [Gradle Plugins Registry](https://plugins.gradle.org/plugin/tech.harmonysoft.oss.traute/1.1.0)
-* [Maven Central](https://repo1.maven.org/maven2/tech/harmonysoft/traute-gradle/1.1.0/)
-* [JCenter](https://repo.jfrog.org/artifactory/libs-release-bintray/tech/harmonysoft/traute-gradle/1.1.0/)
+* [Gradle Plugins Registry](https://plugins.gradle.org/plugin/tech.harmonysoft.oss.traute/1.1.1)
+* [Maven Central](https://repo1.maven.org/maven2/tech/harmonysoft/traute-gradle/1.1.1/)
+* [JCenter](https://repo.jfrog.org/artifactory/libs-release-bintray/tech/harmonysoft/traute-gradle/1.1.1/)
 
 **v.1.0.5**  
 Tickets:
