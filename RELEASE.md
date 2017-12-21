@@ -9,9 +9,14 @@ Tickets:
 * [log format](https://github.com/denis-zhdanov/traute/issues/63)  
 * [mistyped properties are reported](https://github.com/denis-zhdanov/traute/issues/62)  
 
-Binaries:
-* [Maven Central](https://repo1.maven.org/maven2/tech/harmonysoft/traute-javac/1.1.1/)
-* [JCenter](https://repo.jfrog.org/artifactory/libs-release-bintray/tech/harmonysoft/traute-javac/1.1.1/)
+Javac Plugin binaries:
+* Maven Central - https://repo1.maven.org/maven2/tech/harmonysoft/traute-javac/1.1.1/
+* jCenter - https://repo.jfrog.org/artifactory/libs-release-bintray/tech/harmonysoft/traute-javac/1.1.1/
+
+Gradle Plugin binaries
+* Gradle Plugins Registry - https://plugins.gradle.org/plugin/tech.harmonysoft.oss.traute/1.1.1
+* Maven Central - https://repo1.maven.org/maven2/tech/harmonysoft/traute-gradle/1.1.1/
+* jCenter - https://repo.jfrog.org/artifactory/libs-release-bintray/tech/harmonysoft/traute-gradle/1.1.1/  
 
 **v.1.0.10**  
 Tickets:
