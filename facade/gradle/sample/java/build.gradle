@@ -14,7 +14,6 @@ repositories {
 }
 
 traute {
-    javacPluginVersion = '1.1.0'
     verbose = true
 }
 

@@ -33,7 +33,7 @@ class TrauteGradlePlugin implements Plugin<Project> {
 
         project.afterEvaluate {
             project.tasks.withType(JavaCompile) {
-                applyOptions(javacPluginFiles, options, extension)
+                applyOptions(project, javacPluginFiles, it, extension)
             }
         }
     }
@@ -47,23 +47,27 @@ class TrauteGradlePlugin implements Plugin<Project> {
         return project.files(roots.collect { new File(it) })
     }
 
-    private static void applyOptions(FileCollection javacPluginFiles, CompileOptions options, extension) {
-        if (options.annotationProcessorPath) {
-            options.annotationProcessorPath << javacPluginFiles
+    private static void applyOptions(Project project, FileCollection javacPluginFiles, JavaCompile task, extension) {
+        if (task.getClass().name.contains('ndroid')) {
+            // This is an Android project
+            project.dependencies.add('annotationProcessor', javacPluginFiles)
         } else {
-            options.annotationProcessorPath = javacPluginFiles
+            if (task.options.annotationProcessorPath) {
+                task.options.annotationProcessorPath << javacPluginFiles
+            } else {
+                task.options.annotationProcessorPath = javacPluginFiles
+            }
         }
 
-
-        options.compilerArgs << "-Xplugin:${PLUGIN_NAME}"
-        mayBeApplyNotNullAnnotations(options.compilerArgs, extension)
-        mayBeApplyNullableAnnotations(options.compilerArgs, extension)
-        mayBeApplyNotNullByDefaultAnnotations(options.compilerArgs, extension)
-        mayBeApplyLoggingSettings(options.compilerArgs, extension)
-        mayBeApplyLogFile(options.compilerArgs, extension)
-        mayBeApplyInstrumentations(options.compilerArgs, extension)
-        mayBeApplyExceptionsToThrow(options.compilerArgs, extension)
-        mayBeApplyExceptionTexts(options.compilerArgs, extension)
+        task.options.compilerArgs << "-Xplugin:${PLUGIN_NAME}"
+        mayBeApplyNotNullAnnotations(task.options.compilerArgs, extension)
+        mayBeApplyNullableAnnotations(task.options.compilerArgs, extension)
+        mayBeApplyNotNullByDefaultAnnotations(task.options.compilerArgs, extension)
+        mayBeApplyLoggingSettings(task.options.compilerArgs, extension)
+        mayBeApplyLogFile(task.options.compilerArgs, extension)
+        mayBeApplyInstrumentations(task.options.compilerArgs, extension)
+        mayBeApplyExceptionsToThrow(task.options.compilerArgs, extension)
+        mayBeApplyExceptionTexts(task.options.compilerArgs, extension)
     }
 
     private static void mayBeApplyNotNullAnnotations(compilerArgs, extension) {
