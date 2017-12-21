@@ -14,12 +14,12 @@ import static org.junit.jupiter.api.Assertions.fail;
 
 public class RunResultExpectation implements Expectation<RunResult> {
 
-    @Nullable private final Class<?> exceptionClass;
+    @Nullable private final String exceptionClass;
     @Nullable private final String   exceptionMessageSnippet;
     @Nullable private final String   exceptionMessageText;
     @Nullable private final Integer  thrownAtLine;
 
-    public RunResultExpectation(@Nullable Class<?> exceptionClass,
+    public RunResultExpectation(@Nullable String exceptionClass,
                                 @Nullable String exceptionMessageSnippet,
                                 @Nullable String exceptionMessageText,
                                 @Nullable Integer thrownAtLine)
@@ -59,13 +59,13 @@ public class RunResultExpectation implements Expectation<RunResult> {
         if (exceptionClass == null) {
             exceptionDescription = "an exception";
         } else {
-            if (exceptionClass != actual.getClass()) {
+            if (!exceptionClass.equals(actual.getClass().getName())) {
                 fail(String.format(
                         "Expected that running the program below throws a %s but got a %s.%n%s",
-                        exceptionClass.getName(), actual.getClass().getName(), input
+                        exceptionClass, actual.getClass().getName(), input
                 ));
             }
-            exceptionDescription = "a " + exceptionClass.getName();
+            exceptionDescription = "a " + exceptionClass;
         }
 
         if (exceptionMessageSnippet != null) {
@@ -118,7 +118,7 @@ public class RunResultExpectation implements Expectation<RunResult> {
         if (exceptionClass == null) {
             result.append("an exception");
         } else {
-            result.append("an exception of class ").append(exceptionClass.getName());
+            result.append("an exception of class ").append(exceptionClass);
         }
 
         if (exceptionMessageSnippet != null) {

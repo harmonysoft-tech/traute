@@ -571,4 +571,41 @@ public abstract class MethodParameterTest extends AbstractTrauteTest {
         settingsBuilder.withNullableAnnotations(NN.class.getName());
         doTest(CLASS_NAME, testSource);
     }
+
+    @Test
+    public void customNotBuiltinException() {
+        String testClassSource = String.format(
+                "package %s;\n" +
+                "\n" +
+                "@%s\n" +
+                "public class %s {\n" +
+                "\n" +
+                "  public %s(Integer intParam) {\n" +
+                "  }\n" +
+                "\n" +
+                "  public static void main(String[] args) {\n" +
+                "    new %s(null);\n" +
+                "  }\n" +
+                "}", PACKAGE, ParametersAreNonnullByDefault.class.getName(), CLASS_NAME, CLASS_NAME, CLASS_NAME);
+
+        String exceptionPackage = PACKAGE + ".util";
+        String exceptionClass = "MyException";
+        String qualifiedExceptionClass = exceptionPackage + "." + exceptionClass;
+        String exceptionSource = String.format(
+                "package %s;\n"+
+                "\n" +
+                "public class %s extends RuntimeException {\n" +
+                "    public %s(String message) {\n" +
+                "        super(message);\n" +
+                "    }\n" +
+                "}\n" +
+                "\n",
+                exceptionPackage, exceptionClass, exceptionClass);
+        settingsBuilder.withExceptionToThrow(InstrumentationType.METHOD_PARAMETER, qualifiedExceptionClass);
+        expectRunResult.withExceptionClass(qualifiedExceptionClass)
+                       .withExceptionMessageSnippet("intParam")
+                       .atLine(findLineNumber(testClassSource, "intParam"));
+        doTest(new TestSourceImpl(testClassSource, PACKAGE + "." + CLASS_NAME),
+               new TestSourceImpl(exceptionSource, qualifiedExceptionClass));
+    }
 }

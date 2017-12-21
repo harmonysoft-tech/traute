@@ -6,10 +6,10 @@ import org.jetbrains.annotations.Nullable;
 @SuppressWarnings("UnusedReturnValue")
 public class RunResultExpectationBuilder {
 
-    @Nullable private Class<?> expectedExceptionClass;
-    @Nullable private String   expectedExceptionMessageSnippet;
-    @Nullable private String   expectedExceptionMessageText;
-    @Nullable private Integer  thrownAtLine;
+    @Nullable private String  expectedExceptionClass;
+    @Nullable private String  expectedExceptionMessageSnippet;
+    @Nullable private String  expectedExceptionMessageText;
+    @Nullable private Integer thrownAtLine;
 
     @NotNull
     public static RunResultExpectationBuilder expectRunResult() {
@@ -18,6 +18,11 @@ public class RunResultExpectationBuilder {
 
     @NotNull
     public RunResultExpectationBuilder withExceptionClass(@NotNull Class<?> clazz) {
+        return withExceptionClass(clazz.getName());
+    }
+
+    @NotNull
+    public RunResultExpectationBuilder withExceptionClass(@NotNull String clazz) {
         expectedExceptionClass = clazz;
         return this;
     }

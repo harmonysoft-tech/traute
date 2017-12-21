@@ -50,9 +50,7 @@ public class InstrumentationUtil {
                                 factory.NewClass(
                                         null,
                                         nil(),
-                                        factory.Ident(
-                                                symbolsTable.fromString(exceptionToThrow)
-                                        ),
+                                        buildExceptionClassExpression(exceptionToThrow, factory, symbolsTable),
                                         List.of(factory.Literal(TypeTag.CLASS, errorMessage)),
                                         null
                                 )
@@ -60,5 +58,19 @@ public class InstrumentationUtil {
                 )),
                 null
         );
+    }
+
+    @NotNull
+    public static JCTree.JCExpression buildExceptionClassExpression(@NotNull String exceptionClass,
+                                                                    @NotNull TreeMaker factory,
+                                                                    @NotNull Names symbolsTable)
+    {
+        String[] parts = exceptionClass.split("\\.");
+        JCTree.JCIdent identifier = factory.Ident(symbolsTable.fromString(parts[0]));
+        JCTree.JCFieldAccess selector = null;
+        for (int i = 1; i < parts.length; i++) {
+            selector = factory.Select(selector == null ? identifier : selector, symbolsTable.fromString(parts[i]));
+        }
+        return selector == null ? identifier : selector;
     }
 }
