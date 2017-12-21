@@ -17,7 +17,6 @@
   * [7.8. Log Location](#78-log-location)
 * [8. Evolution](#8-evolution)
 * [9. Implementation](#9-implementation)
-* [10. Releases](#10-releases)
 
 ## 1. License
 
@@ -284,9 +283,3 @@ Current feature set is a must-have for runtime *null*-checks, however, it's poss
 ## 9. Implementation
 
 Implementation details are described [in this blog post](http://blog.harmonysoft.tech/2017/10/how-to-write-javac-plugin.html).
-
-## 10. Releases
-
-[Release Notes](RELEASE.md)
-
-<a href='https://bintray.com/bintray/jcenter/tech.harmonysoft%3Atraute-javac?source=watch' alt='Get automatic notifications about new "tech.harmonysoft:traute-javac" versions'><img src='https://www.bintray.com/docs/images/bintray_badge_color.png'></a>

@@ -13,7 +13,6 @@
   * [4.7. Logging](#47-logging)
   * [4.8. Log Location](#48-log-location)
 * [5. Samples](#5-samples)
-* [6. Releases](#6-releases)
 
 ## 1. License
 
@@ -229,9 +228,3 @@ Exception in thread "main" java.lang.NullPointerException: Detected an attempt t
         at tech.harmonysoft.oss.traute.Test.main(Test.java:8)
 :execute FAILED
 ```
-
-## 6. Releases
-
-[Release Notes](RELEASE.md)
-
-<a href='https://bintray.com/denis-zhdanov/harmonysoft.tech/traute-gradle?source=watch' alt='Get automatic notifications about new "traute-gradle" versions'><img src='https://www.bintray.com/docs/images/bintray_badge_color.png'></a>
