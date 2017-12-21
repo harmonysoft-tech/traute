@@ -1,3 +1,15 @@
+Javac Plugin binaries:
+* Maven Central - https://repo1.maven.org/maven2/tech/harmonysoft/traute-javac/
+* jCenter - https://repo.jfrog.org/artifactory/libs-release-bintray/tech/harmonysoft/traute-javac/
+
+Gradle Plugin binaries
+* Gradle Plugins Registry - https://plugins.gradle.org/plugin/tech.harmonysoft.oss.traute
+* Maven Central - https://repo1.maven.org/maven2/tech/harmonysoft/traute-gradle/
+* jCenter - https://repo.jfrog.org/artifactory/libs-release-bintray/tech/harmonysoft/traute-gradle/
+
+**v.1.1.2**  
+* [correct custom exception processing](https://github.com/denis-zhdanov/traute/issues/81)    
+
 **v.1.1.1**  
 Tickets:
 * [bundling javac plugin within gradle plugin](https://github.com/denis-zhdanov/traute/issues/78)  
