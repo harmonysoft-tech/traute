@@ -163,7 +163,7 @@ Logging verbosity is defined through the *verbose* option:
 ```groovy
 traute {
     // Use verbose logging
-    verbose: true
+    verbose = true
 }
 ```  
 
