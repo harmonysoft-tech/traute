@@ -81,7 +81,7 @@ public class RunResultExpectation implements Expectation<RunResult> {
                 fail(String.format(
                         "Expected that running the program below throws %s with a text which contains '%s'. "
                         + "However, the text is different: '%s'.%n%s",
-                        exceptionDescription, exceptionMessageSnippet, exceptionMessageText, input
+                        exceptionDescription, exceptionMessageSnippet, message, input
                 ));
             }
         }

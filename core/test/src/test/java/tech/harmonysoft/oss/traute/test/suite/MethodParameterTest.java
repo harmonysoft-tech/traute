@@ -608,4 +608,22 @@ public abstract class MethodParameterTest extends AbstractTrauteTest {
         doTest(new TestSourceImpl(testClassSource, PACKAGE + "." + CLASS_NAME),
                new TestSourceImpl(exceptionSource, qualifiedExceptionClass));
     }
+
+    @Test
+    public void parametersOrder_primitiveTypes() {
+        String testSource = String.format(
+                "public class %s {\n" +
+                "\n" +
+                "  public %s(int i, @%s Integer intParam) {\n" +
+                "  }\n" +
+                "\n" +
+                "  public static void main(String[] args) {\n" +
+                "    new %s(1, null);\n" +
+                "  }\n" +
+                "}", CLASS_NAME, CLASS_NAME, NotNull.class.getName(), CLASS_NAME);
+        expectRunResult.withExceptionClass(NullPointerException.class)
+                       .withExceptionMessageSnippet("Argument 'intParam' of type Integer (#1 out of 2, zero-based)")
+                       .atLine(findLineNumber(testSource, "intParam"));
+        doTest(CLASS_NAME, testSource);
+    }
 }

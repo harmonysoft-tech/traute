@@ -229,9 +229,10 @@ public class InstrumentationApplianceFinder extends TreeScanner<Void, Void> {
                 // by a NotNull, then for the previous before the last etc
                 (o1, o2) -> o2.getMethodParameterIndex() - o1.getMethodParameterIndex()
         );
-        int parameterIndex = 0;
+        int parameterIndex = -1;
         int parametersNumber = method.getParameters().size();
         for (VariableTree variable : method.getParameters()) {
+            parameterIndex++;
             if (variable == null) {
                 continue;
             }
@@ -256,7 +257,6 @@ public class InstrumentationApplianceFinder extends TreeScanner<Void, Void> {
                                                                    parametersNumber,
                                                                    method.getReturnType() == null));
             }
-            parameterIndex++;
         }
 
         for (ParameterToInstrumentInfo info : variablesToCheck) {
