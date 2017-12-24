@@ -123,7 +123,7 @@ public abstract class MethodParameterTest extends AbstractTrauteTest {
             String testSource = prepareParameterTestSource(
                     NotNull.class.getName(),
                     String.format("public void %s(@NotNull %s arg) {}", METHOD_NAME, primitiveType),
-                    "(" + primitiveType + ")1"
+                    "boolean".equals(primitiveType) ? "true" : "(" + primitiveType + ")1"
             );
             doTest(testSource);
             // We expect that no instrumentation occurs for primitive types, otherwise we get a compilation

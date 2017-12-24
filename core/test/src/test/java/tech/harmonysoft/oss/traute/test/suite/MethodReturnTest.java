@@ -395,13 +395,15 @@ public abstract class MethodReturnTest extends AbstractTrauteTest {
                     "\n" +
                     "  @%s\n" +
                     "  public %s test() {\n" +
-                    "    return (%s)1;\n" +
+                    "    return %s;\n" +
                     "  }\n" +
                     "\n" +
                     "  public static void main(String[] args) {\n" +
                     "    new Test().test();\n" +
                     "  }\n" +
-                    "}", PACKAGE, CLASS_NAME, NotNull.class.getName(), type, type);
+                    "}",
+                    PACKAGE, CLASS_NAME, NotNull.class.getName(), type,
+                    "boolean".equals(type) ? "true" : String.format("(%s)1", type));
             doTest(testSource);
         }
     }
