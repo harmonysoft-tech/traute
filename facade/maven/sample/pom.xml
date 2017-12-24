@@ -10,12 +10,6 @@
 
     <dependencies>
         <dependency>
-            <groupId>tech.harmonysoft</groupId>
-            <artifactId>traute-javac</artifactId>
-            <version>1.1.5</version> <!-- use the latest available version here -->
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
             <groupId>org.jetbrains</groupId>
             <artifactId>annotations</artifactId>
             <version>15.0</version>
@@ -36,6 +30,13 @@
                         <arg>-Xplugin:Traute</arg>
                         <arg>-Atraute.log.verbose=true</arg>
                     </compilerArgs>
+                    <annotationProcessorPaths>
+                        <path>
+                            <groupId>tech.harmonysoft</groupId>
+                            <artifactId>traute-javac</artifactId>
+                            <version>1.1.5</version>
+                        </path>
+                    </annotationProcessorPaths>
                 </configuration>
             </plugin>
         </plugins>

@@ -26,24 +26,11 @@ It does not make sense to create a *Maven* plugin for simplifying the [*Javac* p
 
 **Mandatory**
 
-It's necessary to do two things:
-* define a dependency to the [*Javac* plugin](../../core/javac/README.md) 
-* configure *maven-compiler* to use the plugin
+It's necessary to configure *maven-compiler* to use the [*Javac* plugin](../../core/javac/README.md)
 
 ```xml
 <project>
 
-  <!-- ... -->
-
-  <dependencies>
-    <dependency>
-      <groupId>tech.harmonysoft</groupId>
-      <artifactId>traute-javac</artifactId>
-      <version>1.1.5</version> <!-- use the latest available version here -->
-      <scope>provided</scope><!-- make the jar eligible for compilation only -->
-    </dependency>
-  </dependencies>
-  
   <!-- ... -->
   
   <build>
@@ -58,6 +45,13 @@ It's necessary to do two things:
           <compilerArgs>
             <arg>-Xplugin:Traute</arg>
           </compilerArgs>
+          <annotationProcessorPaths>
+            <path>
+              <groupId>tech.harmonysoft</groupId>
+              <artifactId>traute-javac</artifactId>
+              <version>1.1.5</version> <!-- use the latest available version here -->
+            </path>
+          </annotationProcessorPaths>
         </configuration>
       </plugin>
     </plugins>
