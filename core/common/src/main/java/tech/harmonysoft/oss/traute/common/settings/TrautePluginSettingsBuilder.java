@@ -36,7 +36,16 @@ public class TrautePluginSettingsBuilder {
             "lombok.NonNull",
 
             // Spring - https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/lang/NonNull.html
-            "org.springframework.lang.NonNull"
+            "org.springframework.lang.NonNull",
+
+            // Checker - https://checkerframework.org/api/org/checkerframework/checker/nullness/qual/NonNull.html
+            "org.checkerframework.checker.nullness.qual.NonNull",
+
+            // Checker - https://checkerframework.org/api/org/checkerframework/checker/nullness/compatqual/NonNullDecl.html
+            "org.checkerframework.checker.nullness.compatqual.NonNullDecl",
+
+            // Checker - https://checkerframework.org/api/org/checkerframework/checker/nullness/compatqual/NonNullType.html
+            "org.checkerframework.checker.nullness.compatqual.NonNullType"
     ));
 
     /**
@@ -85,7 +94,16 @@ public class TrautePluginSettingsBuilder {
             "org.eclipse.jdt.annotation.Nullable",
 
             // Spring - https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/lang/Nullable.html
-            "org.springframework.lang.Nullable"
+            "org.springframework.lang.Nullable",
+
+            // Checker - https://checkerframework.org/api/org/checkerframework/checker/nullness/qual/Nullable.html
+            "org.checkerframework.checker.nullness.qual.Nullable",
+
+            // Checker - https://checkerframework.org/api/org/checkerframework/checker/nullness/compatqual/NullableDecl.html
+            "org.checkerframework.checker.nullness.compatqual.NullableDecl",
+
+            // Checker - https://checkerframework.org/api/org/checkerframework/checker/nullness/compatqual/NullableType.html
+            "org.checkerframework.checker.nullness.compatqual.NullableType"
     ));
 
     public static final Set<InstrumentationType> DEFAULT_INSTRUMENTATIONS_TO_APPLY =

@@ -1,6 +1,8 @@
 package tech.harmonysoft.oss.traute.test.suite;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
+import org.checkerframework.checker.nullness.compatqual.NonNullDecl;
+import org.checkerframework.checker.nullness.compatqual.NonNullType;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.junit.jupiter.api.DisplayName;
@@ -58,6 +60,13 @@ public abstract class MethodParameterTest extends AbstractTrauteTest {
     @Test
     public void default_spring() {
         doTestAnnotationWithDifferentDeclarationTypes(org.springframework.lang.NonNull.class);
+    }
+
+    @Test
+    public void default_checker() {
+        doTestAnnotationWithDifferentDeclarationTypes(org.checkerframework.checker.nullness.qual.NonNull.class);
+        doTestAnnotationWithDifferentDeclarationTypes(NonNullDecl.class);
+        doTestAnnotationWithDifferentDeclarationTypes(NonNullType.class);
     }
 
     private void doTestAnnotationWithDifferentDeclarationTypes(@NotNull Class<?> notNullAnnotationClass) {

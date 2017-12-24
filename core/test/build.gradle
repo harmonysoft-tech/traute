@@ -12,6 +12,7 @@ dependencies {
     testCompile 'com.android.support:support-annotations:26.1.0'
     testCompile 'org.eclipse.jdt:org.eclipse.jdt.annotation:2.1.0'
     testCompile 'org.springframework:spring-core:5.0.1.RELEASE'
+    testCompile 'org.checkerframework:checker:2.3.0'
 }
 
 task testJar(type: Jar) {

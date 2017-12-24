@@ -97,6 +97,9 @@ The plugin inserts *null*-checks for method parameters and return values marked 
 * [org.eclipse.jdt.annotation.NonNull](http://help.eclipse.org/oxygen/index.jsp?topic=%2Forg.eclipse.jdt.doc.user%2Ftasks%2Ftask-using_null_annotations.htm) - Eclipse
 * [lombok.NonNull](https://projectlombok.org/api/lombok/NonNull.html) - Lombok
 * [org.springframework.lang.NonNull](https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/lang/NonNull.html)
+* [org.checkerframework.checker.nullness.qual.NonNull](https://checkerframework.org/api/org/checkerframework/checker/nullness/qual/NonNull.html) - Checker
+* [org.checkerframework.checker.nullness.compatqual.NonNullDecl](https://checkerframework.org/api/org/checkerframework/checker/nullness/compatqual/NonNullDecl.html) - Checker
+* [org.checkerframework.checker.nullness.compatqual.NonNullType](https://checkerframework.org/api/org/checkerframework/checker/nullness/compatqual/NonNullType.html) - Checker
 
 It's possible to define a custom list of annotations to use through the *traute.annotations.not.null* option.  
 
@@ -186,6 +189,9 @@ Following annotations are used by default:
 * [android.support.annotation.Nullable](https://developer.android.com/reference/android/support/annotation/Nullable.html) - Android
 * [org.eclipse.jdt.annotation.Nullable](http://help.eclipse.org/oxygen/index.jsp?topic=%2Forg.eclipse.jdt.doc.user%2Ftasks%2Ftask-using_null_annotations.htm) - Eclipse
 * [org.springframework.lang.Nullable](https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/lang/Nullable.html) - Spring Framework
+* [org.checkerframework.checker.nullness.qual.Nullable](https://checkerframework.org/api/org/checkerframework/checker/nullness/qual/Nullable.html) - Checker
+* [org.checkerframework.checker.nullness.compatqual.NullableDecl](https://checkerframework.org/api/org/checkerframework/checker/nullness/compatqual/NullableDecl.html) - Checker
+* [org.checkerframework.checker.nullness.compatqual.NullableType](https://checkerframework.org/api/org/checkerframework/checker/nullness/compatqual/NullableType.html) - Checker
 
 ### 7.4. Instrumentation Types
 

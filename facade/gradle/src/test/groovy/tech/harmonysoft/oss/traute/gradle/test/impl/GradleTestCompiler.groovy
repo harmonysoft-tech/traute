@@ -69,6 +69,7 @@ class GradleTestCompiler extends AbstractExternalSystemTestCompiler {
               |    compile 'org.eclipse.jdt:org.eclipse.jdt.annotation:2.1.0'
               |    compile 'org.eclipse.jdt:org.eclipse.jdt.annotation:2.1.0'
               |    compile 'org.springframework:spring-core:5.0.1.RELEASE'
+              |    compile 'org.checkerframework:checker:2.3.0'
               |    compile ${getCommonDependency()}
               |}""".stripMargin()
 
