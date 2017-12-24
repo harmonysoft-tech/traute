@@ -13,7 +13,7 @@ public class TrauteConstants {
     public static final String PLUGIN_NAME = "Traute";
 
     public static final Set<String> PRIMITIVE_TYPES = Collections.unmodifiableSet(new HashSet<>(asList(
-            "byte", "short", "char", "int", "long", "float", "double"
+            "boolean", "byte", "short", "char", "int", "long", "float", "double"
     )));
 
     public static final Set<String> METHOD_RETURN_TYPES_TO_SKIP;

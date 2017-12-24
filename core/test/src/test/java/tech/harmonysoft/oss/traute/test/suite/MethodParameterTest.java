@@ -626,4 +626,22 @@ public abstract class MethodParameterTest extends AbstractTrauteTest {
                        .atLine(findLineNumber(testSource, "intParam"));
         doTest(CLASS_NAME, testSource);
     }
+
+    @Test
+    public void booleanParameter() {
+        String testSource = String.format(
+                "package %s;\n" +
+                "\n" +
+                "@%s\n" +
+                "public class %s {\n" +
+                "\n" +
+                "  public %s(boolean expression) {\n" +
+                "  }\n" +
+                "\n" +
+                "  public static void main(String[] args) {\n" +
+                "    new %s(true);\n" +
+                "  }\n" +
+                "}", PACKAGE, ParametersAreNonnullByDefault.class.getName(), CLASS_NAME, CLASS_NAME, CLASS_NAME);
+        doTest(testSource);
+    }
 }
