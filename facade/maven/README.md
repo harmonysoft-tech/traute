@@ -39,7 +39,7 @@ It's necessary to do two things:
     <dependency>
       <groupId>tech.harmonysoft</groupId>
       <artifactId>traute-javac</artifactId>
-      <version>1.1.4</version> <!-- use the latest available version here -->
+      <version>1.1.5</version> <!-- use the latest available version here -->
       <scope>provided</scope><!-- make the jar eligible for compilation only -->
     </dependency>
   </dependencies>
