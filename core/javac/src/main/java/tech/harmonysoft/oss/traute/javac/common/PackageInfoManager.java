@@ -10,7 +10,6 @@ import java.lang.annotation.Annotation;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
-import java.util.stream.Collectors;
 
 import static java.util.Collections.emptySet;
 import static java.util.stream.Collectors.toList;
@@ -95,6 +94,7 @@ public class PackageInfoManager {
                 }
             }
         }
+        resultingPackageAnnotations.addAll(packageAnnotationsInSource);
         packageAnnotations.computeIfAbsent(packageName, p -> new HashSet<>()).addAll(resultingPackageAnnotations);
     }
 }

@@ -494,6 +494,29 @@ public abstract class MethodParameterTest extends AbstractTrauteTest {
     }
 
     @Test
+    public void notNullByDefault_package_qualifiedName() {
+        String packageInfoSource = String.format(
+                "@%s\n" +
+                "package %s;\n",
+                ParametersAreNonnullByDefault.class.getName(), PACKAGE);
+        String testSource = String.format(
+                "package %s;\n" +
+                "" +
+                "public class %s {\n" +
+                "\n" +
+                "  public %s(Integer intParam) {\n" +
+                "  }\n" +
+                "\n" +
+                "  public static void main(String[] args) {\n" +
+                "    new %s(null);\n" +
+                "  }\n" +
+                "}", PACKAGE, CLASS_NAME, CLASS_NAME, CLASS_NAME);
+        expectNpeFromParameterCheck(testSource, "intParam", expectRunResult);
+        doTest(new TestSourceImpl(testSource, PACKAGE + "." + CLASS_NAME),
+               new TestSourceImpl(packageInfoSource, PACKAGE + "." + PACKAGE_INFO));
+    }
+
+    @Test
     public void notNullByDefault_class() {
         String testSource = String.format(
                 "@%s\n" +
