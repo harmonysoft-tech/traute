@@ -1,3 +1,6 @@
+[![Build Status](https://travis-ci.org/denis-zhdanov/traute.svg?branch=master)](https://travis-ci.org/denis-zhdanov/traute)
+[![Maven Central](https://img.shields.io/maven-metadata/v/http/central.maven.org/maven2/tech/harmonysoft/traute-javac/maven-metadata.xml.svg)](https://img.shields.io/maven-metadata/v/http/central.maven.org/maven2/tech/harmonysoft/traute-javac/maven-metadata.xml.svg)
+
 ## TL;DR
 
 *Traute* is a *javac* plugin which makes bytecode for source code below  
@@ -40,14 +43,12 @@ Couple of notes:
   * [5.2. Gradle](#52-gradle)
   * [5.3. Maven](#53-maven)
   * [5.4. Ant](#54-ant)
-* [6. Build](#6-build)
-* [7. Releases](#7-releases)
-* [8. How to Contribute](#8-how-to-contribute)
-* [9. Contributors](#9-contributors)
-* [10. Evolution](#10-evolution)
-* [11. Feedback](#11-feedback)
-* [12. Users](#12-users)
-* [13. Acknowledgments](#13-acknowledgments)
+* [6. Releases](#6-releases)
+* [7. How to Contribute](#7-how-to-contribute)
+* [8. Contributors](#8-contributors)
+* [9. Evolution](#9-evolution)
+* [10. Feedback](#10-feedback)
+* [11. Acknowledgments](#11-acknowledgments)
 
 ## 1. License
 
@@ -109,13 +110,7 @@ There is a [dedicated Traute plugin](facade/gradle/README.md#3-usage) for the [G
 
 [This page](facade/ant/README.md#3-sample) contains instructions on how to use *Traute* from [Ant](https://ant.apache.org/)
 
-## 6. Build
-
-There is a [Travis](https://travis-ci.org/) Continuous Integration - [![Build Status](https://travis-ci.org/denis-zhdanov/traute.svg?branch=master)](https://travis-ci.org/denis-zhdanov/traute)
-
-## 7. Releases
-
-## 10. Releases
+## 6. Releases
 
 [Release Notes](RELEASE.md)
 
@@ -128,32 +123,28 @@ There is a [Travis](https://travis-ci.org/) Continuous Integration - [![Build St
 
 You can also subscribe for the new versions notification through [twitter](https://twitter.com/traute_java) and [facebook](https://www.facebook.com/java.traute/).
 
-## 8. How to Contribute
+## 7. How to Contribute
 
 * [report a problem/ask for enhancement](https://github.com/denis-zhdanov/traute/issues)
 * [submit a pull request](https://github.com/denis-zhdanov/traute/pulls)
 * help me to make small presents to my wife in order to persuade her that spending free time on *OSS* might be not the worst idea :yum: [![paypal](https://www.paypalobjects.com/en_US/i/btn/btn_donateCC_LG.gif)](https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=3GJDPN3TH8T48&lc=RU&item_name=Traute&currency_code=USD&bn=PP%2dDonationsBF%3abtn_donateCC_LG%2egif%3aNonHosted)
 
-## 9. Contributors
+## 8. Contributors
 
 * [Denis Zhdanov](https://github.com/denis-zhdanov)
 
-## 10. Evolution
+## 9. Evolution
 
 As the project is basically a [*Javac* plugin](core/javac/README.md) and convenient build system-specific adapters to it, new features should be added to the core part. Please check the [corresponding chapter](core/javac/README.md#8-evolution).
 
-## 11. Feedback
+## 10. Feedback
 
 Please use any of the channels below to provide your feedback, it's really valuable for me:
 * [email](mailto:traute.java@gmail.com)
 * [twitter](https://twitter.com/traute_java)
 * [facebook](https://www.facebook.com/java.traute/)
 
-## 12. Users
-
-* [AndroidUtilCode](https://github.com/Blankj/AndroidUtilCode)
-
-## 13. Acknowledgments
+## 11. Acknowledgments
 
 <img src="/docs/img/intellij.png" height="70px">
 
