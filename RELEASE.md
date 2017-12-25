@@ -7,6 +7,9 @@ Gradle Plugin binaries
 * Maven Central - https://repo1.maven.org/maven2/tech/harmonysoft/traute-gradle/
 * jCenter - https://repo.jfrog.org/artifactory/libs-release-bintray/tech/harmonysoft/traute-gradle/
 
+**v.1.1.6**  
+* [Support fully-qualified package-level annotations](https://github.com/denis-zhdanov/traute/issues/86)
+
 **v.1.1.5**  
 * [do not attempt to instrument boolean](https://github.com/denis-zhdanov/traute/issues/83)
 * [Check Framework's nullability annotations are supported by default](https://github.com/denis-zhdanov/traute/issues/84)

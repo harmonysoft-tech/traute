@@ -1,5 +1,5 @@
 plugins {
-    id "tech.harmonysoft.oss.traute" version "1.1.5"
+    id "tech.harmonysoft.oss.traute" version "1.1.6"
 }
 
 group 'tech.harmonysoft.oss.traute'
