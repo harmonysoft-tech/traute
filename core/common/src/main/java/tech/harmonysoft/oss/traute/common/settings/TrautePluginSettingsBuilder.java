@@ -80,12 +80,16 @@ public class TrautePluginSettingsBuilder {
 
             // JSR-305 - status=dormant - https://jcp.org/en/jsr/detail?id=305
             "javax.annotation.Nullable",
+            "javax.annotation.CheckForNull",
 
             // JavaEE - https://docs.oracle.com/javaee/7/api/javax/validation/constraints/Null.html
             "javax.validation.constraints.Null",
 
             // FindBugs - http://findbugs.sourceforge.net/api/edu/umd/cs/findbugs/annotations/Nullable.html
             "edu.umd.cs.findbugs.annotations.Nullable",
+
+            // FindBugs - http://findbugs.sourceforge.net/api/edu/umd/cs/findbugs/annotations/CheckForNull.html
+            "edu.umd.cs.findbugs.annotations.CheckForNull",
 
             // Android - https://developer.android.com/reference/android/support/annotation/Nullable.html
             "android.support.annotation.Nullable",
