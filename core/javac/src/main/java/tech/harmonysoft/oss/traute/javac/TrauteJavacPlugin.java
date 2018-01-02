@@ -40,6 +40,7 @@ import java.lang.ref.WeakReference;
 import java.lang.reflect.Field;
 import java.util.*;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static java.lang.reflect.Modifier.*;
@@ -125,6 +126,7 @@ public class TrauteJavacPlugin implements Plugin {
             )));
         }
         Context context = ((BasicJavacTask) task).getContext();
+        AtomicBoolean contextClosed = new AtomicBoolean();
         TrautePluginSettings settings = getPluginSettings(context);
         pluginSettingsRef.set(settings);
         task.addTaskListener(new TaskListener() {
@@ -218,10 +220,14 @@ public class TrauteJavacPlugin implements Plugin {
              * @return      {@code true} if current context is closed; {@code false} otherwise
              */
             private boolean isContextClosed() {
+                if (contextClosed.get()) {
+                    return true;
+                }
                 try {
                     Log.instance(context);
                     return false;
                 } catch (Exception e) {
+                    contextClosed.set(true);
                     return true;
                 }
             }
