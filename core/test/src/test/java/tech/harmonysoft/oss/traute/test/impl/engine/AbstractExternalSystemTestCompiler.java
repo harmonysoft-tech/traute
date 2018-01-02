@@ -129,7 +129,7 @@ public abstract class AbstractExternalSystemTestCompiler implements TestCompiler
     }
 
     @NotNull
-    protected static byte[] read(@NotNull File file) throws IOException {
+    public static byte[] read(@NotNull File file) throws IOException {
         ByteArrayOutputStream bOut = new ByteArrayOutputStream();
         byte[] buffer = new byte[1024];
         int read;

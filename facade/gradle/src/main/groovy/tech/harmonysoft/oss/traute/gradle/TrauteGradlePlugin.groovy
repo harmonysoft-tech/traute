@@ -4,7 +4,6 @@ import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.file.FileCollection
 import org.gradle.api.plugins.PluginInstantiationException
-import org.gradle.api.tasks.compile.CompileOptions
 import org.gradle.api.tasks.compile.JavaCompile
 import org.jetbrains.annotations.NotNull
 import tech.harmonysoft.oss.traute.common.instrumentation.InstrumentationType
@@ -52,6 +51,18 @@ class TrauteGradlePlugin implements Plugin<Project> {
             // This is an Android project
             project.dependencies.add('annotationProcessor', javacPluginFiles)
         } else {
+            def aptOptions = task.convention.plugins['net.ltgt.apt']?.aptOptions
+            if (aptOptions) {
+                try {
+                    if (aptOptions.processorpath) {
+                        aptOptions.processorpath = aptOptions.processorpath + javacPluginFiles
+                    } else {
+                        aptOptions.processorpath = javacPluginFiles
+                    }
+                } catch (ignore) {
+                }
+            }
+
             if (task.options.annotationProcessorPath) {
                 task.options.annotationProcessorPath << javacPluginFiles
             } else {

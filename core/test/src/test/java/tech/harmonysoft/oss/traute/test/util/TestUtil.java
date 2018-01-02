@@ -4,7 +4,12 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import tech.harmonysoft.oss.traute.test.api.model.TestSource;
 import tech.harmonysoft.oss.traute.test.impl.expectation.RunResultExpectationBuilder;
+import tech.harmonysoft.oss.traute.test.impl.model.TestSourceImpl;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.Collection;
 
 import static java.util.stream.Collectors.joining;
@@ -164,5 +169,24 @@ public class TestUtil {
         return sources.stream()
                       .map(s -> s.getQualifiedClassName() + ".java:\n\n" + s.getSourceText())
                       .collect(joining("\n\n"));
+    }
+
+    @NotNull
+    public static TestSource findInClassPath(@NotNull String root, @NotNull String qualifiedClassName) {
+        InputStream in = ClassLoader
+                .getSystemClassLoader()
+                .getResourceAsStream(root + "/" + qualifiedClassName.replace('.', '/') + ".java");
+        byte[] buffer = new byte[1024];
+        ByteArrayOutputStream bOut = new ByteArrayOutputStream();
+        int read;
+        try {
+            while ((read = in.read(buffer)) >= 0) {
+                bOut.write(buffer, 0, read);
+            }
+        } catch (IOException e) {
+            throw new IllegalStateException(String.format("Can't read source text for the class %s from source "
+                                                          + "root '%s'", qualifiedClassName, root), e);
+        }
+        return new TestSourceImpl(new String(bOut.toByteArray(), StandardCharsets.UTF_8), qualifiedClassName);
     }
 }

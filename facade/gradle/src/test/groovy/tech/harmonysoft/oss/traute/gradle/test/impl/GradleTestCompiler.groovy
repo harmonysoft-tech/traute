@@ -206,7 +206,7 @@ class GradleTestCompiler extends AbstractExternalSystemTestCompiler {
      * @return  dependency spec to the {@code 'javac-plugin'} classpath root(s)
      */
     @NotNull
-    private static String getTrauteJavacDependencySpec() {
+    static String getTrauteJavacDependencySpec() {
         def roots = [].toSet()
         roots << findRootInClassPath('META-INF/gradle-plugins/tech.harmonysoft.oss.traute.properties')
         roots << findRootInClassPath(TrauteGradlePlugin)

@@ -1,0 +1,36 @@
+buildscript {
+    dependencies {
+        classpath TRAUTE_SPEC
+    }
+}
+
+plugins {
+    id "net.ltgt.apt" version "0.13"
+}
+
+apply plugin: "tech.harmonysoft.oss.traute"
+
+traute {
+    verbose = true
+}
+
+group 'tech.harmonysoft.oss.traute'
+version '1.0.0-SNAPSHOT'
+
+apply plugin: 'java'
+
+sourceCompatibility = 1.8
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    compileOnly 'com.google.auto.value:auto-value:1.5'
+    compile 'org.jetbrains:annotations:15.0'
+    apt 'com.google.auto.value:auto-value:1.5'
+}
+
+traute {
+    exceptionsToThrow = ['parameter': 'IllegalArgumentException']
+}
