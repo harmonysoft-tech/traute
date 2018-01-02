@@ -10,5 +10,5 @@
 ./gradlew closeRepository
 ./gradlew releaseRepository
 
-v.1.1.7 is released.
+v.1.1.8 is released.
 Changes - http://traute.oss.harmonysoft.tech/RELEASE.html
