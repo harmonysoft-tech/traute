@@ -2,6 +2,7 @@ package tech.harmonysoft.oss.traute.gradle
 
 import org.gradle.api.Plugin
 import org.gradle.api.Project
+import org.gradle.api.artifacts.Configuration
 import org.gradle.api.file.FileCollection
 import org.gradle.api.plugins.PluginInstantiationException
 import org.gradle.api.tasks.compile.JavaCompile
@@ -30,6 +31,13 @@ class TrauteGradlePlugin implements Plugin<Project> {
         def extension = project.extensions.create('traute', TrautePluginExtension)
         def javacPluginFiles = getJavacPluginFiles(project)
 
+        // We support Android projects by configuring Traute as a 'annotationProcessor' configuration's dependency
+        // (https://developer.android.com/studio/build/gradle-plugin-3-0-0-migration.html#annotationProcessor_config).
+        // We need to do that before the configuration is resolved (https://github.com/denis-zhdanov/traute/issues/89),
+        // so, that is done at the very beginning of plugin's initialization.
+        def conf = project.configurations.maybeCreate('annotationProcessor')
+        conf.dependencies.add(project.dependencies.create(javacPluginFiles))
+
         project.afterEvaluate {
             project.tasks.withType(JavaCompile) {
                 applyOptions(project, javacPluginFiles, it, extension)
@@ -47,10 +55,9 @@ class TrauteGradlePlugin implements Plugin<Project> {
     }
 
     private static void applyOptions(Project project, FileCollection javacPluginFiles, JavaCompile task, extension) {
-        if (task.getClass().name.contains('ndroid')) {
-            // This is an Android project
-            project.dependencies.add('annotationProcessor', javacPluginFiles)
-        } else {
+        if (!task.getClass().name.contains('ndroid')) {
+            // We do configure Android projects at the very beginning of the plugin's initialization, so,
+            // non-Android configuration lives here.
             def aptOptions = task.convention.plugins['net.ltgt.apt']?.aptOptions
             if (aptOptions) {
                 try {
