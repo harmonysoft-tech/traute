@@ -100,11 +100,13 @@ allprojects {
                 }
 
                 repository(url: "https://oss.sonatype.org/service/local/staging/deploy/maven2/") {
-                    authentication(userName: ossrhUsername, password: ossrhPassword)
+                    authentication(userName: project.hasProperty('ossrhUsername') ? ossrhUsername : '',
+                                   password: project.hasProperty('ossrhPassword') ? ossrhPassword : '')
                 }
 
                 snapshotRepository(url: "https://oss.sonatype.org/content/repositories/snapshots/") {
-                    authentication(userName: ossrhUsername, password: ossrhPassword)
+                    authentication(userName: project.hasProperty('ossrhUsername') ? ossrhUsername : '',
+                                   password: project.hasProperty('ossrhPassword') ? ossrhPassword : '')
                 }
 
                 pom.project {
