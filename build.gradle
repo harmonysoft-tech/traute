@@ -20,8 +20,8 @@ allprojects {
 
         setupBintray = {
             bintray {
-                user = bintrayUser
-                key = bintrayApiKey
+                user = project.hasProperty('bintrayUser') ? bintrayUser : ''
+                key = project.hasProperty('bintrayApiKey') ? bintrayApiKey : ''
                 publications = ['MyPublication']
 
                 pkg {
@@ -44,7 +44,9 @@ allprojects {
     apply plugin: 'org.junit.platform.gradle.plugin'
     apply plugin: 'maven'
     apply plugin: 'maven-publish'
-    if (!System.getenv('CI_ENV')) {
+
+    def shouldSign = !System.getenv('CI_ENV') && project.hasProperty('signing.keyId')
+    if (shouldSign) {
         apply plugin: 'signing'
     }
 
@@ -86,7 +88,7 @@ allprojects {
         archives javadocJar, sourcesJar
     }
 
-    if (!System.getenv('CI_ENV')) {
+    if (shouldSign) {
         signing {
             sign configurations.archives
         }
