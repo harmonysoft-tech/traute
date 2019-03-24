@@ -7,6 +7,9 @@ Gradle Plugin binaries
 * Maven Central - https://repo1.maven.org/maven2/tech/harmonysoft/traute-gradle/
 * jCenter - https://repo.jfrog.org/artifactory/libs-release-bintray/tech/harmonysoft/traute-gradle/
 
+**v.1.1.9**
+* removed unnecessary classes which [broke androidx build](https://github.com/denis-zhdanov/traute/issues/93)
+
 **v.1.1.8**  
 * [Supported Gradle 'apt' plugin](https://github.com/denis-zhdanov/traute/issues/88)
 * [Supported another annotation processors in Android projects](https://github.com/denis-zhdanov/traute/issues/89)

@@ -7,7 +7,7 @@
         <conf name="compile"/>
     </configurations>
     <dependencies>
-        <dependency org="tech.harmonysoft" name="traute-javac" rev="1.1.8" conf="compileOnly->default"/>
+        <dependency org="tech.harmonysoft" name="traute-javac" rev="1.1.9" conf="compileOnly->default"/>
         <dependency org="org.jetbrains" name="annotations" rev="15.0" conf="compile->default"/>
     </dependencies>
 </ivy-module>
