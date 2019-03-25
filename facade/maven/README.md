@@ -49,7 +49,7 @@ It's necessary to configure *maven-compiler* to use the [*Javac* plugin](../../c
             <path>
               <groupId>tech.harmonysoft</groupId>
               <artifactId>traute-javac</artifactId>
-              <version>1.1.9</version> <!-- use the latest available version here -->
+              <version>1.1.10</version> <!-- use the latest available version here -->
             </path>
           </annotationProcessorPaths>
         </configuration>

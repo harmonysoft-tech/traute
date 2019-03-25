@@ -45,7 +45,6 @@ task createClasspathManifest {
 }
 
 dependencies {
-    compileOnly project(':core:common')
     compileOnly project(':core:javac-plugin')
 
     testCompile gradleTestKit()
